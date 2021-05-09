@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<UnitBaseXml>
+  <name>Hold</name>
+  <buffs>
+  </buffs>
+  <abilitiesCode>
+  </abilitiesCode>
+  <unitTags>
+  </unitTags>
+  <race>greenrace</race>
+  <armourType>1</armourType>
+  <movementType>0</movementType>
+  <dayVision>5</dayVision>
+  <nightVision>5</nightVision>
+  <hP>1000</hP>
+  <mP>0</mP>
+  <armour>1</armour>
+  <infiltrator>false</infiltrator>
+  <movementTotal>0</movementTotal>
+  <captureRate>0</captureRate>
+  <neutral>false</neutral>
+  <buildingCover>1</buildingCover>
+  <buildingConversions>
+    <BuildingConversion>
+      <race>Unaligned</race>
+      <building>barracks</building>
+    </BuildingConversion>
+    <BuildingConversion>
+      <race>greenrace</race>
+      <building>hold</building>
+    </BuildingConversion>
+  </buildingConversions>
+</UnitBaseXml>

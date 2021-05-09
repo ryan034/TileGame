@@ -1,0 +1,272 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
+using static Globals;
+
+public class AssetManager : MonoBehaviour
+{
+    public static AssetManager globalInstance;
+
+    [SerializeField] private Mesh tileDefault;
+
+    //Addressables.LoadAsset<GameObject>("AssetAddress");
+    //Addressables.Instantiate<GameObject>("AssetAddress");
+    //yes, you can call LoadAsset() twice, and you'll get a ref count of 2, but won't actually re-load the thing. 
+    //You'll need two ReleaseAsset() calls to get the ref count back to 0.
+    //Using Addressables instantiation intefraces will load the asset, then immediately adds it to your Scene.
+
+    private Dictionary<string, GameObject> tileCache = new Dictionary<string, GameObject>();
+    private Dictionary<string, GameObject> unitBaseCache = new Dictionary<string, GameObject>();
+    private Dictionary<string, UnitBaseData> unitDataCache = new Dictionary<string, UnitBaseData>();
+
+    public Unit InstantiateUnit(Vector3Int localPlace, string asset, int unitTeam)
+    {
+        if (asset != "")
+        {
+            if (!unitBaseCache.ContainsKey(asset))
+            {
+                //GameObject rootGameObject = new GameObject { name = asset };
+                //rootGameObject.AddComponent<Unit>();
+                //rootGameObject.AddComponent<UnitAnimator>();
+                if (File.Exists(unitModAssetPath + asset + '/' + asset))
+                {
+                    AssetBundle myLoadedAssetBundle = AssetBundle.LoadFromFile(unitModAssetPath + asset + '/' + asset);
+                    GameObject myLoadedGameObject = myLoadedAssetBundle.LoadAsset<GameObject>(asset);
+                    myLoadedGameObject.name = asset;
+                    //myLoadedGameObject.transform.parent = rootGameObject.transform;
+                    unitBaseCache[asset] = myLoadedGameObject;
+                }
+                else
+                {
+                    GameObject myLoadedGameObject = Resources.Load(unitAssetPath + asset + '/' + asset) as GameObject;
+                    //myLoadedGameObject.transform.parent = rootGameObject.transform;
+                    unitBaseCache[asset] = myLoadedGameObject;
+                }
+            }
+            GameObject p = unitBaseCache[asset];
+            p = Instantiate(p, new Vector3(0, 0, 0), rotation);
+            GameObject rootGameObject = new GameObject();
+            rootGameObject.AddComponent<Unit>();
+            rootGameObject.AddComponent<UnitAnimator>();
+            p.transform.parent = rootGameObject.transform;
+            Unit unit = rootGameObject.GetComponent<Unit>();
+            UnitBaseData data = LoadUnitBaseData(asset);
+            unit.Load(localPlace, data, unitTeam);
+            return unit;
+        }
+        return null;
+    }
+
+    public Building InstantiateBuilding(Vector3Int localPlace, string asset, int buildingTeam)
+    {
+        //check if streamingassets has adressable if not check in system assets for building prefab
+        // if addresable in streaming assets then: 
+        //add unit component to gameobject
+        //cache loaded unit and use next time is called
+
+        //check if streamingassets has adressable if not check in system assets for buildingscript
+        // if addresable in streaming assets then: 
+        //newBuilding.Load(v, unitScript, unitTeam);
+        //cache loaded unit and use next time is called  
+        if (asset != "")
+        {
+            if (!unitBaseCache.ContainsKey(asset))
+            {
+                //GameObject rootGameObject = new GameObject();
+                //rootGameObject.AddComponent<Building>();
+                //rootGameObject.AddComponent<UnitAnimator>();
+                if (File.Exists(buildingModAssetPath + asset + '/' + asset))
+                {
+                    AssetBundle myLoadedAssetBundle = AssetBundle.LoadFromFile(buildingModAssetPath + asset + '/' + asset);
+                    GameObject myLoadedGameObject = myLoadedAssetBundle.LoadAsset<GameObject>(asset);
+                    myLoadedGameObject.name = asset;
+                    //myLoadedGameObject.transform.parent = rootGameObject.transform;
+                    unitBaseCache[asset] = myLoadedGameObject;
+                }
+                else
+                {
+                    GameObject myLoadedGameObject = Resources.Load(buildingAssetPath + asset + '/' + asset) as GameObject;
+                    //myLoadedGameObject.transform.parent = rootGameObject.transform;
+                    unitBaseCache[asset] = myLoadedGameObject;
+                }
+            }
+            GameObject p = unitBaseCache[asset];
+            p = Instantiate(p, new Vector3(0, 0, 0), rotation);
+            GameObject rootGameObject = new GameObject();
+            rootGameObject.AddComponent<Building>();
+            rootGameObject.AddComponent<UnitAnimator>();
+            p.transform.parent = rootGameObject.transform;
+            Building building = rootGameObject.GetComponent<Building>();
+            UnitBaseData data = LoadUnitBaseData(asset);
+            building.Load(localPlace, data, buildingTeam);
+            return building;
+        }
+        return null;
+    }
+
+    public GameObject InstantiateModel(string model)
+    {
+        if (model != "" )
+        {
+            if (!unitBaseCache.ContainsKey(model))
+            {
+                if (File.Exists(buildingModAssetPath + model + '/' + model))
+                {
+                    AssetBundle myLoadedAssetBundle = AssetBundle.LoadFromFile(buildingModAssetPath + model + '/' + model);
+                    GameObject myLoadedGameObject = myLoadedAssetBundle.LoadAsset<GameObject>(model);
+                    myLoadedGameObject.name = model;
+                    unitBaseCache[model] = myLoadedGameObject;
+                }
+                else
+                {
+                    GameObject myLoadedGameObject = Resources.Load(buildingAssetPath + model + '/' + model) as GameObject;
+                    unitBaseCache[model] = myLoadedGameObject;
+                }
+            }
+            GameObject p = unitBaseCache[model];
+            p = Instantiate(p, new Vector3(0, 0, 0), rotation);
+            return p;
+        }
+        return null;
+    }
+
+    public Buff LoadBuff(string buffScript)
+    {
+        Buff loaded = new Buff(BuffXml.Load(buffScript));
+        if (loaded == null)
+        {
+            loaded = new Buff(Resources.Load(buffScriptPath + buffScript) as BuffScript);
+        }
+        return loaded;
+    }
+
+    public UnitBaseData LoadUnitBaseData( string form )
+    {
+        //unitScriptPath +
+        if (!unitDataCache.ContainsKey(form))
+        {
+            //look for xml in modfile
+            UnitBaseData loaded = new UnitBaseData(UnitBaseXml.Load(form));
+            if (loaded == null)
+            {
+                loaded = new UnitBaseData(Resources.Load(unitBaseScriptPath + form ) as UnitBaseScript);
+            }
+            unitDataCache[form] = loaded;
+        }
+        return unitDataCache[form];
+    }
+
+    public int SpawnMap(string mapName)
+    {
+        //Dictionary<string, GameObject> tileCache = new Dictionary<string, GameObject>();
+        MapXml map = MapXml.Load(mapName);
+        if (map == null)
+        {
+            MapScript mapScript = Resources.Load(mapScriptPath + mapName) as MapScript;
+            foreach (MapScript.TileInfo t in mapScript.tilesInfo)
+            {
+                InstantiateTile(t.prefab, t.localPlace, t.terrain, t.skyTerrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
+                //TileObject spawnedtile = gameObject.AddComponent<TileObject>();
+                //spawnedtile.Load(t.localPlace, t.terrain, t.skyTerrain/*sprite and animation information*/);
+            }
+            return mapScript.teamsTotal;
+        }
+        else
+        {
+            foreach (MapXml.TileInfo t in map.tilesInfo)
+            {
+                InstantiateTile(t.prefab, t.localPlace, t.terrain, t.skyTerrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
+                //TileObject spawnedtile = gameObject.AddComponent<TileObject>();
+                //spawnedtile.Load(t.localPlace, t.terrain, t.skyTerrain/*sprite and animation information*/);
+            }
+            return map.teamsTotal;
+        }
+        //teamcolours = map.teamcolours;
+        //Instantiate(cursorprefab, new Vector3(0, 0, 0), Quaternion.identity);
+        //maxX = map.maxX;
+        //maxY = map.maxY;
+        //Pointer.globalInstance.Spawn(tiles[new Vector3Int(0, 0, 0)]);
+        //return map;
+    }
+
+    private void Awake()
+    {
+        if (globalInstance == null)
+        {
+            globalInstance = this;
+        }
+        else if (globalInstance != this)
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    //private void InstantiateTile(string asset, Vector3Int localPlace, int terrain, int skyTerrain, string unit, string building, int unitTeam, int buildingTeam) => StartCoroutine(InstantiateTileCoRoutine(asset, localPlace, terrain, skyTerrain, unit, building, unitTeam, buildingTeam));
+    private void InstantiateTile(string asset, Vector3Int localPlace, int terrain, int skyTerrain, string unit, string building, int unitTeam, int buildingTeam)
+    {
+        if (!tileCache.ContainsKey(asset))
+        {
+            //yield return bundleLoadRequest;
+            if (File.Exists(tileModAssetPath + asset))
+            {
+                //myLoadedAssetBundle = Resources.Load(tileAssetPath + asset) as AssetBundle;
+                //Debug.Log(tileAssetPath + asset);
+                //yield return bundleResourceRequest;
+                AssetBundle myLoadedAssetBundle = AssetBundle.LoadFromFile(tileModAssetPath + asset);
+                GameObject p = myLoadedAssetBundle.LoadAsset<GameObject>(asset);
+                p.AddComponent<TileObject>();
+                p.GetComponent<MeshFilter>().mesh = tileDefault;
+                tileCache[asset] = p;
+            }
+            else
+            {
+                GameObject p = Resources.Load(tileAssetPath + asset) as GameObject;
+                tileCache[asset] = p;
+            }
+        }
+        GameObject prefab = tileCache[asset];
+        prefab = Instantiate(prefab as GameObject, new Vector3(0, 0, 0), rotation);
+        prefab.GetComponent<TileObject>().Load(localPlace, terrain, skyTerrain);
+
+        InstantiateBuilding(localPlace, building, buildingTeam);
+        InstantiateUnit(localPlace, unit, unitTeam);
+    }
+    /*
+    private IEnumerator InstantiateTileCoRoutine(string asset, Vector3Int localPlace, int terrain, int skyTerrain, string unit, string building, int unitTeam, int buildingTeam)
+    {
+        if (!tileCache.ContainsKey(asset))
+        {
+            AssetBundleCreateRequest bundleLoadRequest = AssetBundle.LoadFromFileAsync(tileModAssetPath + asset);
+            yield return bundleLoadRequest;
+
+            AssetBundle myLoadedAssetBundle = bundleLoadRequest.assetBundle;
+            if (myLoadedAssetBundle == null)
+            {
+                Debug.Log(tileAssetPath + asset);
+                ResourceRequest bundleResourceRequest = Resources.LoadAsync(tileAssetPath + asset);
+                //Debug.Log(tileAssetPath + asset);
+                yield return bundleResourceRequest;
+                myLoadedAssetBundle = bundleResourceRequest.asset as AssetBundle;
+            }
+            if (!tileCache.ContainsKey(asset))
+            {
+                tileCache.Add(asset, myLoadedAssetBundle);
+            }
+        }
+
+        AssetBundleRequest assetLoadRequest = tileCache[asset].LoadAssetAsync<GameObject>(asset);
+        yield return assetLoadRequest;
+
+        GameObject prefab = Instantiate(assetLoadRequest.asset as GameObject, new Vector3(0, 0, 0), rotation);
+
+        //myLoadedAssetBundle.Unload(false);
+        prefab.GetComponent<MeshFilter>().mesh = tileDefault;
+        TileObject tile = prefab.AddComponent<TileObject>();
+        tile.Load(localPlace, terrain, skyTerrain);
+
+        InstantiateBuilding(localPlace, building, buildingTeam);
+        InstantiateUnit(localPlace, unit, unitTeam);
+    }*/
+}

@@ -1,0 +1,203 @@
+﻿using System.Collections.Generic;
+using UnityEngine;
+using static Globals;
+using System;
+
+public class Buff
+{
+    // Start is called before the first frame update
+
+    private UnitBase owner;
+
+    //private Dictionary<string, EventCodeBlock> code = new Dictionary<string, EventCodeBlock>();// all the information about events
+    private Dictionary<string, EventCodeBlock> code = new Dictionary<string, EventCodeBlock>();
+    private List<string> unitTags = new List<string>();
+    private int duration;
+    public int Duration { get => duration; set { if (duration != -1) { duration = Math.Max(value, 0); /*if duration==0, then remove buff and update ui*/} } }
+
+    public readonly string name;
+    public readonly int armour;
+    public readonly int hP;
+    public readonly int mP;
+    public readonly bool invisible;
+    public readonly bool notHostile;
+    public readonly bool rooted;
+    public readonly bool disarmed;
+    public readonly bool silenced;
+    public readonly int dayVision;
+    public readonly int nightVision;
+
+    public readonly int buildingCover;
+    public readonly int movementTotal;
+    public readonly int captureRate;
+
+    public bool HasTag(string tag) => unitTags.Contains(tag);
+
+    private struct EventCodeBlock
+    {
+        public readonly CodeObject filterCode;
+        public readonly CodeObject logicCode;
+        public readonly CodeObject animationCode;
+
+        public EventCodeBlock(string trigger, string code, string animation)
+        {
+            filterCode = CodeObject.LoadCode(trigger);
+            logicCode = CodeObject.LoadCode(code);
+            animationCode = CodeObject.LoadCode(animation);
+        }
+    }
+    /*
+//buff bonuses
+public int hp;//flat
+public int mp;
+public int hpregen;
+public int mpregen;
+
+public int damage;//damageincrease percentage based like armour system
+public int range;//rangeincrease
+public int attacktype;//attack type for damage increase 0=all
+public int damagetype;//damage type for damage increase
+
+public int armour;//armour bonus
+public int armourtype;//armour type for armour bonus
+
+public int movementtotal;//movement increase percentage based like armour system
+public int movementtype;//movement type for increase
+
+
+public int aurarange;//range of buff >0 means its a aura
+public int auratype;//0 means allies only, 1 means enemies only, 2 means all
+
+public bool invisible;
+public bool disarmed;
+public bool silenced;
+public bool rooted;
+
+public int roundduration;
+public int turnduration;
+
+public bool enemy;//if the buff was placed by ally or enemy
+*/
+    private void Enable(string s)
+    {
+        switch (s)
+        {
+            case "OnAttack":
+                //execute parsed code for selected abilities
+                EventsManager.OnAttack += OnAttack;
+                break;
+            case "OnDestroy":
+                EventsManager.OnDestroy += OnDestroy;
+                break;
+            case "OnDeath":
+                EventsManager.OnDeath += OnDeath;
+                break;
+        }
+    }
+
+
+    private void OnAttack(UnitBase attacker, UnitBase defender)
+    {
+        if (code.ContainsKey("OnAttack") && owner.ParseBool(code["OnAttack"].filterCode, new List<UnitBase>() { attacker, defender }))
+        {
+            EventsManager.globalInstance.AddToStack(code["OnAttack"].logicCode, name, owner, code["OnAttack"].animationCode, null, new List<UnitBase>() { attacker, defender });
+            //this is where counterattack would be triggered
+        }
+    }
+
+    private void OnDestroy(UnitBase destroyer, UnitBase destroyee)
+    {
+        if (code.ContainsKey("OnDestroy") && owner.ParseBool(code["OnDestroy"].filterCode, new List<UnitBase>() { destroyer, destroyee }))
+        {
+            EventsManager.globalInstance.AddToStack(code["OnDestroy"].logicCode, name, owner, code["OnDestroy"].animationCode, null, new List<UnitBase>() { destroyer, destroyee });
+        }
+    }
+
+    private void OnDeath(UnitBase dead)
+    {
+        if (code.ContainsKey("OnDeath") && owner.ParseBool(code["OnDeath"].filterCode, new List<UnitBase>() { dead }))
+        {
+            //extract animation code from s and set it to animation
+            EventsManager.globalInstance.AddToStack(code["OnDeath"].logicCode, name, owner, code["OnDeath"].animationCode, null, new List<UnitBase>() { dead });
+        }
+    }
+
+    private void OnSpawn(Building spawner, Unit spawned)
+    {
+        if (code.ContainsKey("OnSpawn") && owner.ParseBool(code["OnSpawn"].filterCode, new List<UnitBase>() { spawner, spawned }))
+        {
+            EventsManager.globalInstance.AddToStack(code["OnSpawn"].logicCode, name, owner, code["OnSpawn"].animationCode, null, new List<UnitBase>() { spawner, spawned });
+        }
+    }
+
+    public static Buff Load(UnitBase unit, string script)
+    {
+        Buff loaded = AssetManager.globalInstance.LoadBuff(script);
+        loaded.owner = unit;
+        /*
+        name = loaded.buffName;
+
+        armour = loaded.armour;
+        hP = loaded.hP;
+        mP = loaded.mP;
+        invisible = loaded.invisible;
+        //otherCode = loaded.otherCode;
+        */
+        foreach (string item in loaded.code.Keys)
+        {
+            //code.Add(item.event_, new CodeBlock(item.trigger,item.code, item.animation));
+            //add itself to events
+            loaded.Enable(item);
+        }
+        return loaded;
+    }
+
+    public Buff(BuffScript loaded)
+    {
+        name = loaded.buffName;
+        armour = loaded.armour;
+        hP = loaded.hP;
+        mP = loaded.mP;
+        invisible = loaded.invisible;
+        unitTags = loaded.unitTags;
+        notHostile = loaded.notHostile;
+        rooted = loaded.rooted;
+        disarmed = loaded.disarmed;
+        silenced = loaded.silenced;
+        dayVision = loaded.dayVision;
+        nightVision = loaded.nightVision;
+        buildingCover = loaded.buildingCover;
+        movementTotal = loaded.movementTotal;
+        captureRate = loaded.captureRate;
+        foreach (BuffScript.EventCodeBlock b in loaded.code)
+        {
+            code[b.event_] = new EventCodeBlock(b.trigger, b.code, b.animation);
+        }
+    }
+
+    public Buff(BuffXml loaded)
+    {
+        name = loaded.name;
+        armour = loaded.armour;
+        hP = loaded.hP;
+        mP = loaded.mP;
+        invisible = loaded.invisible;
+        duration = loaded.duration;
+        //private Dictionary<string, EventCodeBlock> code = new Dictionary<string, EventCodeBlock>();// all the information about events
+        unitTags = loaded.unitTags;
+        notHostile = loaded.notHostile;
+        rooted = loaded.rooted;
+        disarmed = loaded.disarmed;
+        silenced = loaded.silenced;
+        dayVision = loaded.dayVision;
+        nightVision = loaded.nightVision;
+        buildingCover = loaded.buildingCover;
+        movementTotal = loaded.movementTotal;
+        captureRate = loaded.captureRate;
+
+        foreach (BuffXml.EventCodeBlock b in loaded.code)
+        {
+            code[b.event_] = new EventCodeBlock(b.trigger, b.code, b.animation);
+        }
+    }
+}
