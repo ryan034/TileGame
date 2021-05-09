@@ -51,7 +51,7 @@ public class Unit : UnitBase
         base.AddToMenu(s, menu);
         switch (GetCode(s).Task)
         {
-            case "capture":
+            case "Capture":
                 if (TileManager.globalInstance.HostileVisibleBuildingOnTile(this, Tile.LocalPlace))
                 {
                     menu.Add(s);
@@ -66,7 +66,7 @@ public class Unit : UnitBase
         base.ExecuteChosenAbility(s);
         switch (GetCode(s).Task)
         {
-            case "capture":
+            case "Capture":
                 EventsManager.globalInstance.AddToStack(AbilityCode, abilityKey, this, AbilityAnimation, null, new List<UnitBase>() { this, Tile.Building });
                 EventsManager.InvokeOnBeforeCapture(this, Tile.Building);
                 abilityKey = "";

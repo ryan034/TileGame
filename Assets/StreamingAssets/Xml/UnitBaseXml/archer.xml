@@ -29,6 +29,21 @@
         </CodeObject>]]>
       </animation>
     </ActiveAbility>
+    <ActiveAbility>
+      <name>Capture</name>
+      <code>
+        <![CDATA[<CodeObject>
+          <task>Capture</task>
+        </CodeObject>]]>
+      </code>
+      <animation>
+        <![CDATA[<CodeObject>
+          <task>Animate</task>
+          <duration>finish</duration>
+          <animation>Capture</animation>
+        </CodeObject>]]>
+      </animation>
+    </ActiveAbility>
   </abilitiesCode>
   <unitTags>
     <string>biological</string>

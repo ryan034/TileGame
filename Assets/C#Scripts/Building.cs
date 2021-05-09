@@ -49,6 +49,10 @@ public class Building : UnitBase
             {
                 return TileManager.globalInstance.TeamTurn;
             }
+            else if (Race == "Unaligned")
+            {
+                return -1;
+            }
             else
             {
                 return base.Team;
@@ -57,10 +61,10 @@ public class Building : UnitBase
         set
         {
             base.Team = value;
-            if (value == -1)
-            {
-                Race = "Unaligned";
-            }
+//            if (value == -1)
+//            {
+//                Race = "Unaligned";
+//            }
         }
     }
 
@@ -100,7 +104,7 @@ public class Building : UnitBase
         //parse code
         //unit.Destroy_v(this);
         hold.Clear();
-        Team = -1;
+        Race = "Unaligned";
         //Race_ = Race.noRace;
     }
 

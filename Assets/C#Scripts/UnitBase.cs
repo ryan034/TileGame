@@ -408,27 +408,6 @@ public abstract class UnitBase : MonoBehaviour
         return false;
     }
 
-    protected bool ParseCurrentBool(CodeObject filter, List<UnitBase> list, List<int> listInt)
-    {
-
-        if (filter.Task == "CanCounterAttack")
-        {
-            if (filter.GetVariable("from") == "")
-            {
-                return CanCounterAttack(list[int.Parse(filter.GetVariable("to"))]);
-            }
-            else
-            {
-                return list[int.Parse(filter.GetVariable("from"))].CanCounterAttack(list[int.Parse(filter.GetVariable("to"))]);
-            }
-        }
-        if (filter.GetVariable("scope") == "all") { return true; }
-        // if trigger  == validhostile target return validhostiletarget 
-        if (filter.Task == "OnAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this); }
-        if (filter.Task == "OnBeforeAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this) /*CanCounterAttack(list[0])*/; }
-        return false;
-    }
-
     public void ParseCurrent(CodeObject filter, StackItem stack)
     {
         if (stack.code.Task == "Attack")
@@ -449,5 +428,26 @@ public abstract class UnitBase : MonoBehaviour
                 stack.unitData[int.Parse(stack.code.GetVariable("from"))].CounterAttack(stack.unitData[int.Parse(stack.code.GetVariable("to"))]);
             }
         }
+    }
+
+    protected bool ParseCurrentBool(CodeObject filter, List<UnitBase> list, List<int> listInt)
+    {
+
+        if (filter.Task == "CanCounterAttack")
+        {
+            if (filter.GetVariable("from") == "")
+            {
+                return CanCounterAttack(list[int.Parse(filter.GetVariable("to"))]);
+            }
+            else
+            {
+                return list[int.Parse(filter.GetVariable("from"))].CanCounterAttack(list[int.Parse(filter.GetVariable("to"))]);
+            }
+        }
+        if (filter.GetVariable("scope") == "all") { return true; }
+        // if trigger  == validhostile target return validhostiletarget 
+        if (filter.Task == "OnAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this); }
+        if (filter.Task == "OnBeforeAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this) /*CanCounterAttack(list[0])*/; }
+        return false;
     }
 }
