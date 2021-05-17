@@ -197,7 +197,7 @@ public class TileManager : MonoBehaviour
         int terrain = tileOf.TerrainType;
         if (IsDay) { vision = unit.DayVision; }
         else { vision = unit.NightVision; }
-        if (tileOf.TerrainType == 6 || (unit.MovementType != 6 || unit.MovementType != 7)) { vision += 3; }
+        if (tileOf.TerrainType == 6 && (unit.MovementType != 6 || unit.MovementType != 7)) { vision += 3; }
         if (terrain == 4 || terrain == 8) { vision = 1; }
         List<Vector3Int> offsets = CircleCoords(1, vision, tileOf.LocalPlace);
         foreach (Vector3Int v in offsets)

@@ -10,11 +10,6 @@ public class UnitAnimator : MonoBehaviour
     private Animator animator;
     private UnitBase unit;
 
-    private void Start()
-    {
-        animator = transform.GetChild(0).gameObject.GetComponent<Animator>();
-    }
-
     private IEnumerator WaitForAnimation(string s)
     {
         while (IsPlaying(s))
@@ -29,32 +24,77 @@ public class UnitAnimator : MonoBehaviour
         yield return new WaitForSeconds(duration);
     }
 
+    public void Load(UnitBase unitBase)
+    {
+        unit = unitBase;
+        animator = transform.GetChild(0).gameObject.GetComponent<Animator>();
+    }
+
     public void RefreshSprite()
     {
         //called when team is  or unit is actioned or if tile goes in fog
-        /*if (!moving)
+        float r = 1;
+        float g = 1;
+        float b = 1;
+        float a = 1f;
+        float w = 1f;
+        bool active = true;
+        if (!unit.Tile.CanSee)
         {
-            float r = 1;
-            float g = 1;
-            float b = 1;
-            float a = 1.0f;
-            float w = 1.0f;
-            bool active = true;
-            if (!tile.cansee)
-            {
-                //hide sprite
-                active = false;
-            }
-            else if (invisible)
+            //hide sprite
+            active = false;
+        }
+        else if (unit.Invisible)
+        {
+            if (unit.Team != TileManager.globalInstance.TeamTurn)
             {
                 //sprite is opaque
                 a = .5f;
             }
-            if (unit.Actioned) { w = .5f; }
+            else
+            {
+                //hide sprite
+                active = false;
+            }
+        }
+        if (unit.Actioned) { w = .5f; }
 
-            GetComponent<SpriteRenderer>().color = new Color(r * w, g * w, b * w, a);
-            GetComponent<SpriteRenderer>().enabled = active;
-        }*/
+        foreach (Transform child in transform)
+        {
+            //need to look into this
+            //child.GetComponent<Renderer>().material.color = new Color(r * w, g * w, b * w, a);
+            child.gameObject.SetActive(active);
+        }
+    }
+
+    public void RefreshBuildingSprite()
+    {
+        //called when team is  or unit is actioned or if tile goes in fog
+        float r = 1;
+        float g = 1;
+        float b = 1;
+        float a = 1f;
+        float w = 1f;
+        bool active = true;
+        if (!unit.Tile.CanSee)
+        {
+            //go to default form of building
+            ChangeModel(unit.GetConvertedForm("Unaligned"));
+            w = .5f;
+        }
+        else if (unit.Invisible)
+        {
+            //sprite is opaque
+            a = .5f;
+        }
+        if (unit.Actioned) { w = .5f; }
+
+        foreach (Transform child in transform)
+        {
+            //need to look into this
+            //child.GetComponent<Renderer>().material.color = new Color(r * w, g * w, b * w, a);
+            child.gameObject.SetActive(active);
+        }
     }
 
     public void Animate(string code)
@@ -100,11 +140,12 @@ public class UnitAnimator : MonoBehaviour
         {
             child.gameObject.SetActive(false);
         }
-        if (transform.Find(model).gameObject == null)
+        if (transform.Find(model) == null)
         {
             AssetManager.globalInstance.InstantiateModel(model).transform.parent = gameObject.transform;
         }
         transform.Find(model).gameObject.SetActive(true);
         animator = transform.Find(model).gameObject.GetComponent<Animator>();
     }
+
 }

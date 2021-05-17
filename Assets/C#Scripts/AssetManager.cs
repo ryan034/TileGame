@@ -46,7 +46,8 @@ public class AssetManager : MonoBehaviour
                 }
             }
             GameObject p = unitBaseCache[asset];
-            p = Instantiate(p, new Vector3(0, 0, 0), rotation);
+            //p = Instantiate(p, new Vector3(0, 0, 0), rotation);
+            p = Instantiate(p, asset);
             GameObject rootGameObject = new GameObject();
             rootGameObject.AddComponent<Unit>();
             rootGameObject.AddComponent<UnitAnimator>();
@@ -93,7 +94,8 @@ public class AssetManager : MonoBehaviour
                 }
             }
             GameObject p = unitBaseCache[asset];
-            p = Instantiate(p, new Vector3(0, 0, 0), rotation);
+            //p = Instantiate(p, new Vector3(0, 0, 0), rotation);
+            p = Instantiate(p, asset);
             GameObject rootGameObject = new GameObject();
             rootGameObject.AddComponent<Building>();
             rootGameObject.AddComponent<UnitAnimator>();
@@ -126,7 +128,8 @@ public class AssetManager : MonoBehaviour
                 }
             }
             GameObject p = unitBaseCache[model];
-            p = Instantiate(p, new Vector3(0, 0, 0), rotation);
+            //p = Instantiate(p, new Vector3(0, 0, 0), rotation);
+            p = Instantiate(p, model);
             return p;
         }
         return null;
@@ -201,6 +204,13 @@ public class AssetManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    private GameObject Instantiate(GameObject p, string name)
+    {
+        GameObject g = Instantiate(p, new Vector3(0, 0, 0), rotation);
+        g.name = name;
+        return g;
     }
 
     //private void InstantiateTile(string asset, Vector3Int localPlace, int terrain, int skyTerrain, string unit, string building, int unitTeam, int buildingTeam) => StartCoroutine(InstantiateTileCoRoutine(asset, localPlace, terrain, skyTerrain, unit, building, unitTeam, buildingTeam));

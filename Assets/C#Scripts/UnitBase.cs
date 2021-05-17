@@ -51,7 +51,7 @@ public abstract class UnitBase : MonoBehaviour
     //public bool Magical => data.Magical;
 
     public virtual string Race { get => data.race; protected set { } }
-    public virtual int Team { get => internalVariables.team; set { if (internalVariables.team != value) { internalVariables.team = value; RefreshSprite(); } } }
+    public virtual int Team { get => internalVariables.team; set { internalVariables.team = value; RefreshSprite(); } }
 
     public int DayVision => data.dayVision + buffs.Sum(x => x.dayVision);
     public int NightVision => data.nightVision + buffs.Sum(x => x.nightVision);
@@ -67,7 +67,7 @@ public abstract class UnitBase : MonoBehaviour
     public double HPPercentage => Math.Max((double)HPCurrent / HP, 0);
     public int DamageType => int.Parse(AbilityCode.GetVariable("damageType"));
 
-    public bool Actioned { get => internalVariables.actioned; set { if (internalVariables.actioned != value) { internalVariables.actioned = value; RefreshSprite(); } } } //alreadymoved and attacked
+    public bool Actioned { get => internalVariables.actioned; set { internalVariables.actioned = value; RefreshSprite();  } } //alreadymoved and attacked
     public bool Invisible { get => internalVariables.invisible; set { internalVariables.invisible = value; RefreshSprite(); } }
 
     public IEnumerable<string> Abilities => data.Abilities;
@@ -99,6 +99,7 @@ public abstract class UnitBase : MonoBehaviour
     {
         internalVariables = new InternalVariables();
         animator = transform.GetComponent<UnitAnimator>();
+        animator.Load(this);
         this.data = data;
         //Team = team;
         foreach (string s in data.Buffs)
@@ -220,6 +221,7 @@ public abstract class UnitBase : MonoBehaviour
     public string GetConvertedForm(string race) => data.GetConvertedForm(race);
 
     public void RefreshSprite() => animator.RefreshSprite();
+    public void RefreshBuildingSprite() => animator.RefreshBuildingSprite();
 
     public bool IsPlaying(string animation) => animator.IsPlaying(animation);
 

@@ -40,9 +40,9 @@ public class Unit : UnitBase
 
     public override void Load(Vector3Int localPlace, UnitBaseData data, int team)
     {
+        TileManager.globalInstance.AddUnit(this, localPlace);
         base.Load(localPlace, data, team);
         Team = team;
-        TileManager.globalInstance.AddUnit(this, localPlace);
     }
 
     protected override void AddToMenu(string s, List<string> menu)
