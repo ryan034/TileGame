@@ -71,14 +71,11 @@ public class TileManager : MonoBehaviour
 
     private void SpawnMap(string mapName)
     {
-        int teams = AssetManager.globalInstance.SpawnMap(mapName);
+        AssetManager.globalInstance.SpawnMap(mapName);
         //set up player dictionary
-        for (int i = 0; i < teams; i++)
-        {
-            players[i] = new Player();
-        }
         RefreshFogOfWar();
     }
+
 
     private bool SomewhereToMove
     {
@@ -228,6 +225,13 @@ public class TileManager : MonoBehaviour
         }
     }
 
+    public void Load(int teams)
+    {
+        for (int i = 0; i < teams; i++)
+        {
+            players[i] = new Player();
+        }
+    }
     public void UpdateSelectedTile(Vector3Int vector3Int)
     {
         if (tiles.ContainsKey(vector3Int + CurrentLocation))

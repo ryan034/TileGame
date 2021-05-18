@@ -39,26 +39,17 @@ public class UnitAnimator : MonoBehaviour
         float a = 1f;
         float w = 1f;
         bool active = true;
-        if (!unit.Tile.CanSee)
+        if (unit.Team != TileManager.globalInstance.TeamTurn)
         {
-            //hide sprite
-            active = false;
+            if (!unit.Tile.CanSee || unit.Invisible)//hide sprite
+            { active = false; }
         }
-        else if (unit.Invisible)
+        else if (unit.Invisible && unit.Team == TileManager.globalInstance.TeamTurn)
         {
-            if (unit.Team != TileManager.globalInstance.TeamTurn)
-            {
-                //sprite is opaque
-                a = .5f;
-            }
-            else
-            {
-                //hide sprite
-                active = false;
-            }
+            //sprite is opaque
+            a = .5f;
         }
         if (unit.Actioned) { w = .5f; }
-
         foreach (Transform child in transform)
         {
             //need to look into this

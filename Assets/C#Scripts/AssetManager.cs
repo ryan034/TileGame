@@ -161,30 +161,30 @@ public class AssetManager : MonoBehaviour
         return unitDataCache[form];
     }
 
-    public int SpawnMap(string mapName)
+    public void SpawnMap(string mapName)
     {
         //Dictionary<string, GameObject> tileCache = new Dictionary<string, GameObject>();
         MapXml map = MapXml.Load(mapName);
         if (map == null)
         {
             MapScript mapScript = Resources.Load(mapScriptPath + mapName) as MapScript;
+            TileManager.globalInstance.Load(mapScript.teamsTotal);
             foreach (MapScript.TileInfo t in mapScript.tilesInfo)
             {
                 InstantiateTile(t.prefab, t.localPlace, t.terrain, t.skyTerrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
                 //TileObject spawnedtile = gameObject.AddComponent<TileObject>();
                 //spawnedtile.Load(t.localPlace, t.terrain, t.skyTerrain/*sprite and animation information*/);
             }
-            return mapScript.teamsTotal;
         }
         else
         {
+            TileManager.globalInstance.Load(map.teamsTotal);
             foreach (MapXml.TileInfo t in map.tilesInfo)
             {
                 InstantiateTile(t.prefab, t.localPlace, t.terrain, t.skyTerrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
                 //TileObject spawnedtile = gameObject.AddComponent<TileObject>();
                 //spawnedtile.Load(t.localPlace, t.terrain, t.skyTerrain/*sprite and animation information*/);
             }
-            return map.teamsTotal;
         }
         //teamcolours = map.teamcolours;
         //Instantiate(cursorprefab, new Vector3(0, 0, 0), Quaternion.identity);
