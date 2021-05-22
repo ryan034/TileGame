@@ -18,29 +18,44 @@ public abstract class UnitBase : MonoBehaviour
     protected List<Vector3Int> targetList = new List<Vector3Int>();
     protected List<Buff> buffs = new List<Buff>();
 
-    protected int DamageTaken
+    protected virtual int DamageTaken
     {
         get => internalVariables.damageTaken;
         set
         {
-            if (internalVariables.damageTaken < HP && internalVariables.damageTaken < value)
+            if (/*internalVariables.damageTaken < HP && */internalVariables.damageTaken < value)//getting damaged
             {
                 if (value >= HP)
                 {
                     DestroyThis();
                     internalVariables.damageTaken = HP;
-                    //Takedamage_v(damagetype, damage);
-                    //unit.Dealtdamage_v(damagetype, damage);
-                    //parse code
+                    //parse code triggers
                 }
                 else
                 {
                     internalVariables.damageTaken = value;
+                    //Takedamage_v(damagetype, damage);
+                    //unit.Dealtdamage_v(damagetype, damage);
+                    //parse code
                 }
             }
-            //need logic for healing, specifically considering building cant heal from 0
+            if (internalVariables.damageTaken > value)//getting healed
+            {
+                if (value < 0)
+                {
+                    //healed, if race is not unaligned
+                    internalVariables.damageTaken = 0;
+                    //parse code triggers
+                }
+                else
+                {
+                    internalVariables.damageTaken = value;
+                    //parse code triggers
+                }
+            }
         }
     }
+
     protected int manaUsed;//may need to mvoe this into internal variables
 
     public string Name => data.name;
@@ -67,7 +82,7 @@ public abstract class UnitBase : MonoBehaviour
     public double HPPercentage => Math.Max((double)HPCurrent / HP, 0);
     public int DamageType => int.Parse(AbilityCode.GetVariable("damageType"));
 
-    public bool Actioned { get => internalVariables.actioned; set { internalVariables.actioned = value; RefreshSprite();  } } //alreadymoved and attacked
+    public bool Actioned { get => internalVariables.actioned; set { internalVariables.actioned = value; RefreshSprite(); } } //alreadymoved and attacked
     public bool Invisible { get => internalVariables.invisible; set { internalVariables.invisible = value; RefreshSprite(); } }
 
     public IEnumerable<string> Abilities => data.Abilities;

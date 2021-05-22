@@ -35,8 +35,20 @@ public class Building : UnitBase
     //public int currentcapturehp; //normally 20
     //damaging building is like permanently partially capturing a building but to the nuetral side
 
-    private List<KeyValuePair<int, int>> hold = new List<KeyValuePair<int, int>>();
+    private Dictionary<int, int> hold = new Dictionary<int, int>();
     //private string race;
+
+    protected override int DamageTaken
+    {
+        get => base.DamageTaken;
+        set
+        {
+            if (Race != "Unaligned" && base.DamageTaken > value)//can only heal if building not unaligned
+            {
+                base.DamageTaken = value;
+            }
+        }
+    }
 
     public bool Neutral => data.neutral;
     public int BuildingCover => data.buildingCover + buffs.Sum(x => x.buildingCover)/*+ other modifiers*/;
@@ -61,19 +73,15 @@ public class Building : UnitBase
         set
         {
             base.Team = value;
-//            if (value == -1)
-//            {
-//                Race = "Unaligned";
-//            }
         }
     }
 
     public override string Race
     {
-        get => data.race;
+        get => base.Race;
         protected set
         {
-            if (value != data.race)
+            if (value != base.Race)
             {
                 if (GetConvertedForm(value) != "")
                 {
@@ -103,7 +111,7 @@ public class Building : UnitBase
         //Destroyed_v();
         //parse code
         //unit.Destroy_v(this);
-        hold.Clear();
+        ClearHold();
         Race = "Unaligned";
         //Race_ = Race.noRace;
     }
@@ -122,12 +130,10 @@ public class Building : UnitBase
             //unit.Dealtdamage_v(damagetype, damage);
             //parse code
         }*/
-        if (HPCurrent > 0)
-        {
-            //rebalance hold of building
-            //if team holds all then building is converted
-            RebalanceHold(damage, unit);
-        }
+        //rebalance hold of building
+        //if team holds all then building is converted
+        RebalanceHold(damage, unit);
+
     }
 
     public override void ExecuteChosenAbility(string s)
@@ -173,8 +179,8 @@ public class Building : UnitBase
         {
             if (Tile.Unit == null || Tile.Unit.Team == Team)
             {
-                hold.Clear();
-                hold.Add(new KeyValuePair<int, int>(Team, HPCurrent));
+                ClearHold();
+                hold[Team] = HPCurrent;
             }
         }
     }
@@ -183,95 +189,81 @@ public class Building : UnitBase
     {
         Race = unit.Race;
         Team = unit.Team;
-        //heal the building some logic here
+        Actioned = true;
+        TileManager.globalInstance.RefreshFogOfWar();
+        //TileManager.globalInstance.WipeTiles();
+        Animate("Capture");
+    }
+
+    private void ClearHold()
+    {
+        foreach (int i in hold.Keys)
+        {
+            hold[i] = 0;
+        }
+    }
+
+    private int RemoveFromHold(int damage, int team)
+    {
+        int residual = damage;
+        foreach (int i in hold.Keys)
+        {
+            if (i != team)
+            {
+                hold[i] -= residual;
+                if (hold[i] > 0)
+                {
+                    return -1;
+                }
+                else
+                {
+                    residual = -hold[i];
+                    hold[i] = 0;
+                }
+            }
+        }
+        return residual;
     }
 
     private void RebalanceHold(int damage, UnitBase unit)
     {
-        //rebalance hold of building
-        //if team holds majority then building is converted
-        int d = damage;
-        for (int i = 0; i < hold.Count; i++)
+        if (HPCurrent > 0)
         {
-            if (hold[i].Key != unit.Team)
+            int residual = RemoveFromHold(damage, unit.Team);
+            if (residual >= 0)
             {
-                hold[i] = new KeyValuePair<int, int>(hold[i].Key, hold[i].Value - d);
-                if (hold[i].Value <= 0)
-                {
-                    d = 0;
-                    break;
-                }
-                else
-                {
-                    d = -hold[i].Value;
-                }
+                hold[unit.Team] -= residual;
+                ConvertedBy(unit);
             }
-        }
-        foreach (KeyValuePair<int, int> item in hold)
-        {
-            if (item.Value <= 0) { hold.Remove(item); }
-        }
-        if (d >= 0)
-        {
-            for (int i = 0; i < hold.Count; i++)
-            {
-                hold[i] = new KeyValuePair<int, int>(hold[i].Key, hold[i].Value - d);
-                if (hold[i].Value <= 0)
-                {
-                    d = 0;
-                    break;
-                }
-                else
-                {
-                    d = -hold[i].Value;
-                }
-            }
-            foreach (KeyValuePair<int, int> item in hold)
-            {
-                if (item.Value <= 0) { hold.Remove(item); }
-            }
-            ConvertedBy(unit);
-            //Race_ = unit.Race_;
-            Actioned = true;
-            TileManager.globalInstance.WipeTiles();
-            Animate("Capture");
         }
     }
 
     public void TakeCaptureDamage(int damage, Unit unit)
     {
-        int d = damage;
-        for (int i = 0; i < hold.Count; i++)
+        int residual;
+        if (HPCurrent > 0)
         {
-            if (hold[i].Key != unit.Team)
+            residual = RemoveFromHold(damage, unit.Team);
+            if (residual >= 0)
             {
-                hold[i] = new KeyValuePair<int, int>(hold[i].Key, hold[i].Value - d);
-                if (hold[i].Value <= 0)
+                //DamageTaken -= residual;// heals the building
+                ConvertedBy(unit);
+            }
+        }
+        else
+        {
+            residual = hold.Values.Sum() + damage - HP;
+            if (residual > 0)
+            {
+                residual = RemoveFromHold(residual, unit.Team);
+                if (residual >= 0)
                 {
-                    d = 0;
-                    break;
-                }
-                else
-                {
-                    d = -hold[i].Value;
+                    ConvertedBy(unit);
+                    DamageTaken = 0;
                 }
             }
         }
-        //capture the building
-        if (d >= 0)
-        {
-            ConvertedBy(unit);
-            //Race_ = unit.Race_;
-            Actioned = true;
-            TileManager.globalInstance.WipeTiles();
-            Animate("Capture");
-        }
-        foreach (KeyValuePair<int, int> item in hold)
-        {
-            if (item.Value <= 0) { hold.Remove(item); }
-        }
-        hold.Add(new KeyValuePair<int, int>(unit.Team, damage));
-        DamageTaken -= d;
+        hold[unit.Team] = hold[unit.Team] + damage > HP ? HP : hold[unit.Team] + damage;
     }
 
     public Unit SpawnUnit(TileObject tile, string script, int team_)
