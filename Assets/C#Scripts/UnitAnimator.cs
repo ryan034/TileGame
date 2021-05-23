@@ -101,7 +101,21 @@ public class UnitAnimator : MonoBehaviour
         {
             if (code.GetVariable("to") != "")
             {
-                UnitTransformManager.globalInstance.RotateTo(unit, stackItem.unitData[int.Parse(code.GetVariable("to"))].Tile.LocalPlace);
+                UnitBase u;
+                string indexCode = code.GetVariable("to");
+                switch (indexCode[0])
+                {
+                    case 'u':
+                        u = stackItem.unitData[int.Parse(indexCode.Substring(1))];
+                        break;
+                    case 'b':
+                        u = stackItem.buildingData[int.Parse(indexCode.Substring(1))];
+                        break;
+                    default:
+                        u = stackItem.unitBaseData[int.Parse(indexCode)];
+                        break;
+                }
+                UnitTransformManager.globalInstance.RotateTo(unit, u.Tile.LocalPlace);
             }
             if (code.GetVariable("animation") != "")
             {

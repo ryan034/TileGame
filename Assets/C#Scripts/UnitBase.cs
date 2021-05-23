@@ -124,6 +124,59 @@ public abstract class UnitBase : MonoBehaviour
         UnitTransformManager.globalInstance.SnapMove(this, localPlace);
     }
 
+    public virtual void ParseCode(CodeObject filter, StackItem stack)
+    {
+        switch (stack.code.Task)
+        {
+            case "Attack":
+                for (int i = 1; i < stack.unitBaseData.Count; i++)
+                {
+                    stack.unitBaseData[0].Attack(stack.unitBaseData[i]);
+                }
+                break;
+            case "CounterAttack":
+                /*
+                if (stack.code.GetVariable("from") == "") { CounterAttack(stack.unitBaseData[int.Parse(stack.code.GetVariable("to"))]); }
+                else { stack.unitBaseData[int.Parse(stack.code.GetVariable("from"))].CounterAttack(stack.unitBaseData[int.Parse(stack.code.GetVariable("to"))]); }
+                break;*/
+                UnitBase u;
+                string toCode = filter.GetVariable("to");
+                string fromCode = filter.GetVariable("from");
+                if (fromCode != null)
+                {
+                    switch (fromCode[0])
+                    {
+                        case 'u':
+                            //return u.CanCounterAttack(listUnit[int.Parse(toCode.Substring(1))]);
+                            u = stack.unitData[int.Parse(fromCode.Substring(1))];
+                            break;
+                        case 'b':
+                            u = stack.buildingData[int.Parse(fromCode.Substring(1))];
+                            //return u.CanCounterAttack(listBuilding[int.Parse(toCode.Substring(1))]);
+                            break;
+                        default:
+                            u = stack.unitBaseData[int.Parse(fromCode)];
+                            //return u.CanCounterAttack(list[int.Parse(toCode)]);
+                            break;
+                    }
+                }
+                else { u = this; }
+                switch (toCode[0])
+                {
+                    case 'u':
+                        u.CounterAttack(stack.unitData[int.Parse(toCode.Substring(1))]);
+                        break;
+                    case 'b':
+                        u.CounterAttack(stack.buildingData[int.Parse(toCode.Substring(1))]);
+                        break;
+                    default:
+                        u.CounterAttack(stack.unitBaseData[int.Parse(toCode)]);
+                        break;
+                }
+                break;
+        }
+    }
+    
     //code=> attack:flying or not:min range: max range:base damage:dicedamage:times:damagetype: animationstring
     public virtual void ExecuteChosenAbility(string s)
     {
@@ -165,8 +218,7 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    public virtual void StartOfTurn()
-    { }
+    public virtual void StartOfTurn(){ }
 
     protected virtual void DestroyThis() => TileManager.globalInstance.DestroyUnit(this);
 
@@ -230,22 +282,64 @@ public abstract class UnitBase : MonoBehaviour
         return b && TileManager.globalInstance.VisibleTo(this, targetunit) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit) && TileManager.globalInstance.HostileTo(this, targetunit);
     }
 
+    protected bool ParseControlFlowBool(CodeObject filter, List<UnitBase> list, List<Unit> listUnit = null, List<Building> listBuilding = null, List<int> listInt = null)
+    {
+        if (filter.Task == "CanCounterAttack")
+        {
+            //return CanCounterAttack(list[int.Parse(filter.GetVariable("to"))]);
+            UnitBase u;
+            string toCode = filter.GetVariable("to");
+            string fromCode = filter.GetVariable("from");
+            if (fromCode != null)
+            {
+                switch (fromCode[0])
+                {
+                    case 'u':
+                        //return u.CanCounterAttack(listUnit[int.Parse(toCode.Substring(1))]);
+                        u = listUnit[int.Parse(fromCode.Substring(1))];
+                        break;
+                    case 'b':
+                        u = listBuilding[int.Parse(fromCode.Substring(1))];
+                        //return u.CanCounterAttack(listBuilding[int.Parse(toCode.Substring(1))]);
+                        break;
+                    default:
+                        u = list[int.Parse(fromCode)];
+                        //return u.CanCounterAttack(list[int.Parse(toCode)]);
+                        break;
+                }
+            }
+            else { u = this; }
+            switch (toCode[0])
+            {
+                case 'u':
+                    return u.CanCounterAttack(listUnit[int.Parse(toCode.Substring(1))]);
+                case 'b':
+                    return u.CanCounterAttack(listBuilding[int.Parse(toCode.Substring(1))]);
+                default:
+                    return u.CanCounterAttack(list[int.Parse(toCode)]);
+            }
+        }
+        if (filter.GetVariable("scope") == "all") { return true; }
+        if (filter.Task == "OnAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this); }
+        //if (filter.Task == "OnBeforeAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this) /*CanCounterAttack(list[0])*/; }
+        return false;
+    }
 
     public bool HasTag(string tag) => (data.HasTag(tag) || buffs.Select(x => x.HasTag(tag)).Contains(true));
 
     public string GetConvertedForm(string race) => data.GetConvertedForm(race);
 
     public void RefreshSprite() => animator.RefreshSprite();
+
     public void RefreshBuildingSprite() => animator.RefreshBuildingSprite();
 
     public bool IsPlaying(string animation) => animator.IsPlaying(animation);
 
     public void Animate(string animation) => animator.Animate(animation);
 
-    public IEnumerator ParseAnimation(StackItem animation) { yield return animator.ParseAnimation(animation); }
+    public IEnumerator ParseAnimation(StackItem animation) { yield return StartCoroutine(animator.ParseAnimation(animation)); }
 
     //protected void ChangeModel(string model) => animator.ChangeModel(model);
-
     protected void ChangeForm(string form)
     {
         data = AssetManager.globalInstance.LoadUnitBaseData(form);
@@ -359,21 +453,12 @@ public abstract class UnitBase : MonoBehaviour
         return b;
     }
 
-    /*
-    public bool ParseBool(string event_, string trigger, List<UnitBase> list = null, List<int> listInt = null)
-    {
-        if (trigger == "") { return true; }
-        // if trigger  == validhostile target return validhostiletarget 
-        if (event_ == "OnAttack" && trigger == "this") { return (list[0] == this && CanCounterAttack(list[1])); }
-        return false;
-    }
-    */
     public void Parse(StackItem stack, CodeObject code = null)
     {
         if (code == null) { code = stack.code; }
         if (code.IsConditional)
         {
-            bool v = ParseCurrentBool(code, stack.unitData, stack.intData);
+            bool v = ParseControlFlowBool(code, stack.unitBaseData, stack.unitData, stack.buildingData, stack.intData);
             if (v)
             {
                 foreach (CodeObject c in code.GetCodeObjects("true"))
@@ -391,7 +476,7 @@ public abstract class UnitBase : MonoBehaviour
         }
         else
         {
-            ParseCurrent(code, stack);
+            ParseCode(code, stack);
             foreach (CodeObject c in code.GetCodeObjects("next"))
             {
                 Parse(stack, c);
@@ -399,17 +484,18 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    public bool ParseBool(CodeObject filter, List<UnitBase> list = null, List<int> listInt = null)
+    public bool ParseBool(CodeObject filter, List<UnitBase> list = null, List<Unit> listUnit = null, List<Building> listBuilding = null, List<int> listInt = null)
     {
         //throw new NotImplementedException();// general control flow
-        bool v = ParseCurrentBool(filter, list, listInt);
+        bool v = ParseControlFlowBool(filter, list, listUnit, listBuilding, listInt);
+        bool b;
         if (v)
         {
             foreach (CodeObject c in filter.GetCodeObjects("true"))
             {
                 //parse the code
-                bool b = false;
-                b = ParseBool(c, list, listInt) || b;
+                b = false;
+                b = ParseBool(c, list, listUnit, listBuilding, listInt) || b;
                 if (b) { return true; }
             }
         }
@@ -417,54 +503,11 @@ public abstract class UnitBase : MonoBehaviour
         {
             foreach (CodeObject c in filter.GetCodeObjects("false"))
             {
-                bool b = false;
-                b = ParseBool(c, list, listInt) || b;
+                b = false;
+                b = ParseBool(c, list, listUnit, listBuilding, listInt) || b;
                 if (b) { return true; }
             }
         }
-        return false;
-    }
-
-    public void ParseCurrent(CodeObject filter, StackItem stack)
-    {
-        if (stack.code.Task == "Attack")
-        {
-            for (int i = 1; i < stack.unitData.Count; i++)
-            {
-                stack.unitData[0].Attack(stack.unitData[i]);
-            }
-        }
-        if (stack.code.Task == "CounterAttack")
-        {
-            if (stack.code.GetVariable("from") == "")
-            {
-                CounterAttack(stack.unitData[int.Parse(stack.code.GetVariable("to"))]);
-            }
-            else
-            {
-                stack.unitData[int.Parse(stack.code.GetVariable("from"))].CounterAttack(stack.unitData[int.Parse(stack.code.GetVariable("to"))]);
-            }
-        }
-    }
-
-    protected bool ParseCurrentBool(CodeObject filter, List<UnitBase> list, List<int> listInt)
-    {
-
-        if (filter.Task == "CanCounterAttack")
-        {
-            if (filter.GetVariable("from") == "")
-            {
-                return CanCounterAttack(list[int.Parse(filter.GetVariable("to"))]);
-            }
-            else
-            {
-                return list[int.Parse(filter.GetVariable("from"))].CanCounterAttack(list[int.Parse(filter.GetVariable("to"))]);
-            }
-        }
-        if (filter.GetVariable("scope") == "all") { return true; }
-        // if trigger  == validhostile target return validhostiletarget 
-        if (filter.Task == "OnAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this); }
-        if (filter.Task == "OnBeforeAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this) /*CanCounterAttack(list[0])*/; }
-        return false;
+        return v;
     }
 }

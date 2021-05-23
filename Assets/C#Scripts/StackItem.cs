@@ -12,7 +12,9 @@ public class StackItem
     public readonly UnitBase owner;
 
     public List<int> intData = new List<int>();
-    public List<UnitBase> unitData = new List<UnitBase>();
+    public List<UnitBase> unitBaseData = new List<UnitBase>();
+    public List<Unit> unitData = new List<Unit>();
+    public List<Building> buildingData = new List<Building>();
     public List<Vector3Int> vectorData = new List<Vector3Int>();
     /*
     public IEnumerable<int> intData
@@ -37,14 +39,16 @@ public class StackItem
         }
     }*/
 
-    public StackItem(CodeObject code, string name, UnitBase owner, CodeObject animationCode, List<int> intData, List<UnitBase> unitData, List<Vector3Int> vectorData)
+    public StackItem(CodeObject code, string name, UnitBase owner, CodeObject animationCode, List<int> intData, List<UnitBase> unitBaseData, List<Unit> unitData, List<Building> buildingData, List<Vector3Int> vectorData)
     {
         this.code = code;
         this.name = name;
         this.owner = owner;
         this.animationCode = animationCode;
         if (intData == null) { this.intData = new List<int>(); } else { this.intData = intData; }
-        if (unitData == null) { this.unitData = new List<UnitBase>(); } else { this.unitData = unitData; }
+        if (unitBaseData == null) { this.unitBaseData = new List<UnitBase>(); } else { this.unitBaseData = unitBaseData; }
+        if (unitData == null) { this.unitData = new List<Unit>(); } else { this.unitData = unitData; }
+        if (buildingData == null) { this.buildingData = new List<Building>(); } else { this.buildingData = buildingData; }
         if (vectorData == null) { this.vectorData = new List<Vector3Int>(); } else { this.vectorData = vectorData; }
     }
 

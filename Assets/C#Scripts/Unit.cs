@@ -45,10 +45,20 @@ public class Unit : UnitBase
         Team = team;
     }
 
+    public override void ParseCode(CodeObject filter, StackItem stack)
+    {
+        switch (stack.code.Task)
+        {
+            case "Capture":
+                //code
+                stack.unitData[0].Capture(stack.buildingData[0]);
+                return;
+        }
+        base.ParseCode(filter, stack);
+    }
+
     protected override void AddToMenu(string s, List<string> menu)
     {
-        //parse code to see if there are valid targets
-        base.AddToMenu(s, menu);
         switch (GetCode(s).Task)
         {
             case "Capture":
@@ -56,23 +66,25 @@ public class Unit : UnitBase
                 {
                     menu.Add(s);
                 }
-                break;
+                return;
         }
+        //parse code to see if there are valid targets
+        base.AddToMenu(s, menu);
     }
 
     public override void ExecuteChosenAbility(string s)
     {
-        ////parse code and execute based on string s
-        base.ExecuteChosenAbility(s);
         switch (GetCode(s).Task)
         {
             case "Capture":
-                EventsManager.globalInstance.AddToStack(AbilityCode, abilityKey, this, AbilityAnimation, null, new List<UnitBase>() { this, Tile.Building });
+                EventsManager.globalInstance.AddToStack(AbilityCode, abilityKey, this, AbilityAnimation, null, null, new List<Unit>() { this} , new List<Building>() { Tile.Building } );
                 EventsManager.InvokeOnBeforeCapture(this, Tile.Building);
                 abilityKey = "";
                 TileManager.globalInstance.EndUnitTurn();
-                break;
+                return;
         }
+        ////parse code and execute based on string s
+        base.ExecuteChosenAbility(s);
     }
 
     public override void CommitTarget(Vector3Int target)
@@ -93,10 +105,10 @@ public class Unit : UnitBase
         }*/
     }
 
-    public void Capture()
+    public void Capture(Building building)
     {
         int damage = (int)Math.Round(HPPercentage * CaptureRate);
-        Tile.Building.TakeCaptureDamage(damage, this);
+        building.TakeCaptureDamage(damage, this);
     }
 
 }

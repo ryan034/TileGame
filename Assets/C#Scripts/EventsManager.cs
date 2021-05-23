@@ -97,18 +97,24 @@ public class EventsManager : MonoBehaviour
         //EventsManager.globalInstance.ResolveStack();
     }*/
 
-    public void AddToStack(CodeObject code, string name, UnitBase owner, CodeObject animation, List<int> intData = null, List<UnitBase> targetData = null, List<Vector3Int> vectorData = null)
+    public void AddToStack(CodeObject code, string name, UnitBase owner, CodeObject animation, List<int> intData = null, List<UnitBase> targetData = null, List<Unit> unitTargetData = null, List<Building> buildingTargetData = null, List<Vector3Int> vectorData = null)
     {
         int i = currentStack.Count;
-        currentStack.Add(new StackItem(code, name, owner, animation, intData, targetData, vectorData));
-        if (i == 0) { ResolveStack(); }
+        currentStack.Add(new StackItem(code, name, owner, animation, intData, targetData, unitTargetData, buildingTargetData, vectorData));
+        if (i == 0) { StartCoroutine(ResolveStack()); }
     }
 
     private IEnumerator ResolveStack()
     {
+        StackItem s;
         while (currentStack.Count > 0)
         {
-            yield return StartCoroutine(ResolveStack(currentStack[currentStack.Count - 1]));
+            //yield return StartCoroutine(ResolveStack(currentStack[currentStack.Count - 1]));
+            s = currentStack[currentStack.Count - 1];
+            yield return StartCoroutine(s.owner.ParseAnimation(s));
+            //yield return StartCoroutine(ResolveAnimation(stackItem.owner, stackItem.animationCode));
+            s.owner.Parse(s);
+            currentStack.Remove(s);
         }
     }
 
@@ -131,15 +137,15 @@ public class EventsManager : MonoBehaviour
         }
         yield break;
     }*/
-
+    /*
     private IEnumerator ResolveStack(StackItem stackItem)
     {
-        yield return stackItem.owner.ParseAnimation(stackItem);
+        yield return StartCoroutine(stackItem.owner.ParseAnimation(stackItem));
         //yield return StartCoroutine(ResolveAnimation(stackItem.owner, stackItem.animationCode));
         stackItem.owner.Parse(stackItem);
         currentStack.Remove(stackItem);
         //Pointer.globalInstance.HaltInput = true;
-    }
+    }*/
 
     private void Awake()
     {

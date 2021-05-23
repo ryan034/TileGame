@@ -138,20 +138,20 @@ public class Building : UnitBase
 
     public override void ExecuteChosenAbility(string s)
     {
-        ////parse code and execute based on string s
-        base.ExecuteChosenAbility(s);
         switch (AbilityCode.Task)
         {
             //need to add to stack instead
-            case "spawn":
+            case "Spawn":
                 //execute parsed code for selected abilities
                 Actioned = true;
                 Unit unit = SpawnUnit(Tile, AbilityCode.GetVariable("unitID"), Team);
                 EventsManager.globalInstance.AddToStack(AbilityCode, abilityKey, this, AbilityAnimation, null, new List<UnitBase>() { this, unit });
                 EventsManager.InvokeOnBeforeSpawn(this, unit);
                 abilityKey = "";
-                break;
+                return;
         }
+        ////parse code and execute based on string s
+        base.ExecuteChosenAbility(s);
     }
 
     public override void CommitTarget(Vector3Int target)
