@@ -308,14 +308,14 @@ public class TileManager : MonoBehaviour
         return tiles[v].unit != null && HostileTo(u, tiles[v].unit) && VisibleTo(u, tiles[v].unit) /*&& u.CanHit(tiles[v].building)*/;
     }
 
-    public bool HostileAttackableBuildingOnTile(UnitBase u, Vector3Int v, string s)
+    public bool HostileAttackableBuildingOnTile(UnitBase attacker, Vector3Int v, string attackType)
     {
-        return HostileVisibleBuildingOnTile(u, v) && u.CanHit(tiles[v].building, s);
+        return HostileVisibleBuildingOnTile(attacker, v) && attacker.CanHit(tiles[v].building, attackType);
     }
 
-    public bool HostileAttackableUnitOnTile(UnitBase u, Vector3Int v, string s)
+    public bool HostileAttackableUnitOnTile(UnitBase attacker, Vector3Int v, string attackType)
     {
-        return HostileVisibleUnitOnTile(u, v) && u.CanHit(tiles[v].unit, s);
+        return HostileVisibleUnitOnTile(attacker, v) && attacker.CanHit(tiles[v].unit, attackType );
     }
 
     /*

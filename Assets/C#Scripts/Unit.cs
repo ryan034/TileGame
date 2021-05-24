@@ -45,21 +45,21 @@ public class Unit : UnitBase
         Team = team;
     }
 
-    public override void ParseCode(CodeObject filter, StackItem stack)
+    public override void ParseCode(CodeObject code, StackItem data)
     {
-        switch (stack.code.Task)
+        switch (code.Task)
         {
             case "Capture":
                 //code
-                stack.unitData[0].Capture(stack.buildingData[0]);
+                data.unitData[0].Capture(data.buildingData[0]);
                 return;
         }
-        base.ParseCode(filter, stack);
+        base.ParseCode(code, data);
     }
 
     protected override void AddToMenu(string s, List<string> menu)
     {
-        switch (GetCode(s).Task)
+        switch (GetTargetCode(s).Task)
         {
             case "Capture":
                 if (TileManager.globalInstance.HostileVisibleBuildingOnTile(this, Tile.LocalPlace))
@@ -74,10 +74,11 @@ public class Unit : UnitBase
 
     public override void ExecuteChosenAbility(string s)
     {
-        switch (GetCode(s).Task)
+        abilityKey = s;
+        switch (AbilityLogicCode.Task)
         {
             case "Capture":
-                EventsManager.globalInstance.AddToStack(AbilityCode, abilityKey, this, AbilityAnimation, null, null, new List<Unit>() { this} , new List<Building>() { Tile.Building } );
+                EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, null, new List<Unit>() { this} , new List<Building>() { Tile.Building } );
                 EventsManager.InvokeOnBeforeCapture(this, Tile.Building);
                 abilityKey = "";
                 TileManager.globalInstance.EndUnitTurn();

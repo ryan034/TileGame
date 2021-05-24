@@ -33,6 +33,7 @@ public class UnitBaseScript : ScriptableObject
     public struct ActiveAbility
     {
         public string name;
+        public string target;
         public string code;
         public string animation;
     }

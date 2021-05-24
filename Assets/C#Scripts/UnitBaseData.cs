@@ -52,13 +52,15 @@ public class UnitBaseData
 
     private struct ActiveAbility
     {
+        public readonly CodeObject targetCode; //for targets and addtomenu
         public readonly CodeObject logicCode;
         public readonly CodeObject animationCode;
 
-        public ActiveAbility(CodeObject code, CodeObject animation)
+        public ActiveAbility(CodeObject targetCode, CodeObject logicCode, CodeObject animationCode)
         {
-            logicCode = code;
-            animationCode = animation;
+            this.targetCode = targetCode;
+            this.logicCode = logicCode;
+            this.animationCode = animationCode;
         }
     }
 
@@ -82,7 +84,7 @@ public class UnitBaseData
         buildingCover = unitScript.buildingCover; //normally 10
         foreach (UnitBaseScript.ActiveAbility item in unitScript.abilitiesCode)
         {
-            abilitiesCode[item.name] = new ActiveAbility(CodeObject.LoadCode(item.code), CodeObject.LoadCode(item.animation));
+            abilitiesCode[item.name] = new ActiveAbility(CodeObject.LoadCode(item.target), CodeObject.LoadCode(item.code), CodeObject.LoadCode(item.animation));
         }
         foreach (UnitBaseScript.BuildingConversion item in unitScript.buildingConversions)
         {
@@ -119,7 +121,7 @@ public class UnitBaseData
         buildingCover = unitXml.buildingCover; //normally 10
         foreach (UnitBaseXml.ActiveAbility item in unitXml.abilitiesCode)
         {
-            abilitiesCode[item.name] = new ActiveAbility(CodeObject.LoadCode(item.code), CodeObject.LoadCode(item.animation));
+            abilitiesCode[item.name] = new ActiveAbility(CodeObject.LoadCode(item.target), CodeObject.LoadCode(item.code), CodeObject.LoadCode(item.animation));
         }
         foreach (UnitBaseXml.BuildingConversion item in unitXml.buildingConversions)
         {
@@ -136,9 +138,14 @@ public class UnitBaseData
 
     public bool HasTag(string tag) => unitTags.Contains(tag);
 
-    public CodeObject GetCode(string s)
+    public CodeObject GetLogicCode(string s)
     {
         return abilitiesCode[s].logicCode;
+    }
+
+    public CodeObject GetTargetCode(string s)
+    {
+        return abilitiesCode[s].targetCode;
     }
 
     public CodeObject GetAnimation(string s)

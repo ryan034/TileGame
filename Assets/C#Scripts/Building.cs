@@ -136,16 +136,44 @@ public class Building : UnitBase
 
     }
 
+    public override void ParseCode(CodeObject code, StackItem data)
+    {
+        switch (code.Task)
+        {
+            case "Spawn":
+                //code
+                //spawn unit
+                return;
+        }
+        base.ParseCode(code, data);
+    }
+
+    protected override void AddToMenu(string s, List<string> menu)
+    {
+        switch (GetTargetCode(s).Task)
+        {
+            case "Spawn":
+                if (Tile.Unit == null)
+                {
+                    menu.Add(s);
+                }
+                return;
+        }
+        //parse code to see if there are valid targets
+        base.AddToMenu(s, menu);
+    }
+
     public override void ExecuteChosenAbility(string s)
     {
-        switch (AbilityCode.Task)
+        abilityKey = s;
+        switch (AbilityLogicCode.Task)
         {
             //need to add to stack instead
             case "Spawn":
                 //execute parsed code for selected abilities
                 Actioned = true;
-                Unit unit = SpawnUnit(Tile, AbilityCode.GetVariable("unitID"), Team);
-                EventsManager.globalInstance.AddToStack(AbilityCode, abilityKey, this, AbilityAnimation, null, new List<UnitBase>() { this, unit });
+                Unit unit = SpawnUnit(Tile, AbilityLogicCode.GetVariable("unitID"), Team);
+                EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, new List<UnitBase>() { this, unit });
                 EventsManager.InvokeOnBeforeSpawn(this, unit);
                 abilityKey = "";
                 return;

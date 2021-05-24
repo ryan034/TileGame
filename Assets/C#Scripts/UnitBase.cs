@@ -12,7 +12,8 @@ public abstract class UnitBase : MonoBehaviour
     protected InternalVariables internalVariables;
 
     //protected string[] AbilityVariables => GetCode(abilityKey).Split(' ');
-    protected CodeObject AbilityCode => GetCode(abilityKey);
+    protected CodeObject AbilityTargetCode => GetTargetCode(abilityKey);
+    protected CodeObject AbilityLogicCode => GetLogicCode(abilityKey);
     protected CodeObject AbilityAnimation => GetAnimation(abilityKey);
     protected string abilityKey;
     protected List<Vector3Int> targetList = new List<Vector3Int>();
@@ -80,7 +81,7 @@ public abstract class UnitBase : MonoBehaviour
     public int HPCurrent => HP - DamageTaken;
     public int MPCurrent => MP - manaUsed;
     public double HPPercentage => Math.Max((double)HPCurrent / HP, 0);
-    public int DamageType => int.Parse(AbilityCode.GetVariable("damageType"));
+    //public int DamageType => int.Parse(AbilityLogicCode.GetVariable("damageType"));
 
     public bool Actioned { get => internalVariables.actioned; set { internalVariables.actioned = value; RefreshSprite(); } } //alreadymoved and attacked
     public bool Invisible { get => internalVariables.invisible; set { internalVariables.invisible = value; RefreshSprite(); } }
@@ -124,14 +125,14 @@ public abstract class UnitBase : MonoBehaviour
         UnitTransformManager.globalInstance.SnapMove(this, localPlace);
     }
 
-    public virtual void ParseCode(CodeObject filter, StackItem stack)
+    public virtual void ParseCode(CodeObject code, StackItem data)
     {
-        switch (stack.code.Task)
+        switch (code.Task)
         {
             case "Attack":
-                for (int i = 1; i < stack.unitBaseData.Count; i++)
+                for (int i = 1; i < data.unitBaseData.Count; i++)
                 {
-                    stack.unitBaseData[0].Attack(stack.unitBaseData[i]);
+                    data.unitBaseData[0].Attack(data.unitBaseData[i], int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")));
                 }
                 break;
             case "CounterAttack":
@@ -140,22 +141,22 @@ public abstract class UnitBase : MonoBehaviour
                 else { stack.unitBaseData[int.Parse(stack.code.GetVariable("from"))].CounterAttack(stack.unitBaseData[int.Parse(stack.code.GetVariable("to"))]); }
                 break;*/
                 UnitBase u;
-                string toCode = filter.GetVariable("to");
-                string fromCode = filter.GetVariable("from");
+                string toCode = code.GetVariable("to");
+                string fromCode = code.GetVariable("from");
                 if (fromCode != null)
                 {
                     switch (fromCode[0])
                     {
                         case 'u':
                             //return u.CanCounterAttack(listUnit[int.Parse(toCode.Substring(1))]);
-                            u = stack.unitData[int.Parse(fromCode.Substring(1))];
+                            u = data.unitData[int.Parse(fromCode.Substring(1))];
                             break;
                         case 'b':
-                            u = stack.buildingData[int.Parse(fromCode.Substring(1))];
+                            u = data.buildingData[int.Parse(fromCode.Substring(1))];
                             //return u.CanCounterAttack(listBuilding[int.Parse(toCode.Substring(1))]);
                             break;
                         default:
-                            u = stack.unitBaseData[int.Parse(fromCode)];
+                            u = data.unitBaseData[int.Parse(fromCode)];
                             //return u.CanCounterAttack(list[int.Parse(toCode)]);
                             break;
                     }
@@ -164,31 +165,32 @@ public abstract class UnitBase : MonoBehaviour
                 switch (toCode[0])
                 {
                     case 'u':
-                        u.CounterAttack(stack.unitData[int.Parse(toCode.Substring(1))]);
+                        u.CounterAttack(data.unitData[int.Parse(toCode.Substring(1))]);
                         break;
                     case 'b':
-                        u.CounterAttack(stack.buildingData[int.Parse(toCode.Substring(1))]);
+                        u.CounterAttack(data.buildingData[int.Parse(toCode.Substring(1))]);
                         break;
                     default:
-                        u.CounterAttack(stack.unitBaseData[int.Parse(toCode)]);
+                        u.CounterAttack(data.unitBaseData[int.Parse(toCode)]);
                         break;
                 }
                 break;
         }
     }
-    
+
     //code=> attack:flying or not:min range: max range:base damage:dicedamage:times:damagetype: animationstring
     public virtual void ExecuteChosenAbility(string s)
     {
         ////parse code and execute based on string s
         //where stack may begin if the spell has no targets
-        switch (AbilityCode.Task)
+        abilityKey = s;
+        switch (AbilityLogicCode.Task)
         {
             case "Attack":
                 List<Vector3Int> targets = new List<Vector3Int>();
-                foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(AbilityCode.GetVariable("minRange")), int.Parse(AbilityCode.GetVariable("maxRange"))))
+                foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(AbilityLogicCode.GetVariable("minRange")), int.Parse(AbilityLogicCode.GetVariable("maxRange"))))
                 {
-                    if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(this, v, abilityKey) || TileManager.globalInstance.HostileAttackableUnitOnTile(this, v, abilityKey))) { targets.Add(v); }
+                    if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(this, v, AbilityTargetCode.GetVariable("canHit")) || TileManager.globalInstance.HostileAttackableUnitOnTile(this, v, AbilityTargetCode.GetVariable("canHit")))) { targets.Add(v); }
                 }
                 TileManager.globalInstance.SetUpTargetTiles(targets);
                 Pointer.globalInstance.GoToAttackingMode();
@@ -201,14 +203,14 @@ public abstract class UnitBase : MonoBehaviour
         //parse code
         //where stack may begin
         targetList.Add(target);
-        if (targetList.Count == int.Parse(AbilityCode.GetVariable("targets")))
+        if (targetList.Count == int.Parse(AbilityLogicCode.GetVariable("targets")))
         {
-            switch (AbilityCode.Task)
+            switch (AbilityLogicCode.Task)
             {
                 case "Attack":
                     List<UnitBase> l = new List<UnitBase>() { this };
                     foreach (Vector3Int v in targetList) { l.Add(TileManager.globalInstance.GetUnitOrBuilding(v)); }
-                    EventsManager.globalInstance.AddToStack(AbilityCode, abilityKey, this, AbilityAnimation, null, l);
+                    EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, l);
                     for (int i = 1; i < l.Count; i++) { EventsManager.InvokeOnBeforeAttack(this, l[i]); }
                     targetList.Clear();
                     abilityKey = "";
@@ -218,7 +220,7 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    public virtual void StartOfTurn(){ }
+    public virtual void StartOfTurn() { }
 
     protected virtual void DestroyThis() => TileManager.globalInstance.DestroyUnit(this);
 
@@ -235,14 +237,14 @@ public abstract class UnitBase : MonoBehaviour
     protected virtual void AddToMenu(string s, List<string> menu)
     {
         //parse code to see if there are valid targets
-        switch (GetCode(s).Task)
+        switch (GetTargetCode(s).Task)
         {
             case "Attack":
                 if (!Disarmed)
                 {
-                    foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(GetCode(s).GetVariable("minRange")), int.Parse(GetCode(s).GetVariable("maxRange"))))
+                    foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(GetTargetCode(s).GetVariable("minRange")), int.Parse(GetTargetCode(s).GetVariable("maxRange"))))
                     {
-                        if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(this, v, s) || TileManager.globalInstance.HostileAttackableUnitOnTile(this, v, s)))
+                        if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(this, v, s) || TileManager.globalInstance.HostileAttackableUnitOnTile(this, v, s)))//need to get minimum targets into account
                         {
                             menu.Add(s);
                             return;
@@ -261,70 +263,6 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    protected bool ValidateTargetForCounterAttack(UnitBase targetunit, string s)
-    {
-        //string[] ability = GetCode(s).Split(' ');
-        bool b = false;
-        CodeObject ability = GetCode(s);
-        switch (ability.GetVariable("canHit"))
-        {
-            case "same"://flying hits flying, land hits land
-                b = ((MovementType != 6 || MovementType != 7) && (targetunit.MovementType != 6 || targetunit.MovementType != 7)) || ((MovementType == 6 || MovementType == 7) && (targetunit.MovementType == 6 || targetunit.MovementType == 7));
-                break;
-            case "different"://flying hits land, land hits flying
-                b = ((MovementType != 6 || MovementType != 7) && (targetunit.MovementType == 6 || targetunit.MovementType == 7)) || ((MovementType == 6 || MovementType == 7) && (targetunit.MovementType != 6 || targetunit.MovementType != 7));
-                break;
-            case "all":
-                b = true;
-                break;
-        }
-        //return b && TileManager.globalInstance.CanSee(this, targetunit) && Team != targetunit.Team && !targetunit.Invisible && targetunit.HPCurrent > 0 && !targetunit.NotHostile && Distance(targetunit.Tile.LocalPlace, Tile.LocalPlace) >= int.Parse(ability[2]) && Distance(targetunit.Tile.LocalPlace, Tile.LocalPlace) <= int.Parse(ability[3]);
-        return b && TileManager.globalInstance.VisibleTo(this, targetunit) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit) && TileManager.globalInstance.HostileTo(this, targetunit);
-    }
-
-    protected bool ParseControlFlowBool(CodeObject filter, List<UnitBase> list, List<Unit> listUnit = null, List<Building> listBuilding = null, List<int> listInt = null)
-    {
-        if (filter.Task == "CanCounterAttack")
-        {
-            //return CanCounterAttack(list[int.Parse(filter.GetVariable("to"))]);
-            UnitBase u;
-            string toCode = filter.GetVariable("to");
-            string fromCode = filter.GetVariable("from");
-            if (fromCode != null)
-            {
-                switch (fromCode[0])
-                {
-                    case 'u':
-                        //return u.CanCounterAttack(listUnit[int.Parse(toCode.Substring(1))]);
-                        u = listUnit[int.Parse(fromCode.Substring(1))];
-                        break;
-                    case 'b':
-                        u = listBuilding[int.Parse(fromCode.Substring(1))];
-                        //return u.CanCounterAttack(listBuilding[int.Parse(toCode.Substring(1))]);
-                        break;
-                    default:
-                        u = list[int.Parse(fromCode)];
-                        //return u.CanCounterAttack(list[int.Parse(toCode)]);
-                        break;
-                }
-            }
-            else { u = this; }
-            switch (toCode[0])
-            {
-                case 'u':
-                    return u.CanCounterAttack(listUnit[int.Parse(toCode.Substring(1))]);
-                case 'b':
-                    return u.CanCounterAttack(listBuilding[int.Parse(toCode.Substring(1))]);
-                default:
-                    return u.CanCounterAttack(list[int.Parse(toCode)]);
-            }
-        }
-        if (filter.GetVariable("scope") == "all") { return true; }
-        if (filter.Task == "OnAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this); }
-        //if (filter.Task == "OnBeforeAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this) /*CanCounterAttack(list[0])*/; }
-        return false;
-    }
-
     public bool HasTag(string tag) => (data.HasTag(tag) || buffs.Select(x => x.HasTag(tag)).Contains(true));
 
     public string GetConvertedForm(string race) => data.GetConvertedForm(race);
@@ -339,17 +277,6 @@ public abstract class UnitBase : MonoBehaviour
 
     public IEnumerator ParseAnimation(StackItem animation) { yield return StartCoroutine(animator.ParseAnimation(animation)); }
 
-    //protected void ChangeModel(string model) => animator.ChangeModel(model);
-    protected void ChangeForm(string form)
-    {
-        data = AssetManager.globalInstance.LoadUnitBaseData(form);
-        animator.ChangeModel(form);
-    }
-
-    protected CodeObject GetCode(string s) => data.GetCode(s);
-
-    protected CodeObject GetAnimation(string s) => data.GetAnimation(s);
-
     public void SetUp(List<string> menu)
     {
         foreach (string s in Abilities)
@@ -358,58 +285,10 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    public void CounterAttack(UnitBase targetunit)
+    public void ClearTargets()
     {
-        foreach (string s in Abilities)
-        {
-            //string[] ability = GetCode(s).Split(' ');
-            CodeObject ability = GetCode(s);
-            if (ability.Task == "Attack" && ValidateTargetForCounterAttack(targetunit, s)/* todo move target validation to triggerpart of the stackchain*/)
-            {
-                //code=> attack:flying or not: siege or not:min range: max range:base damage:dicedamage:times:damagetype
-                int cover = targetunit.CoverBonus;
-                int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(int.Parse(ability.GetVariable("baseDamage")), int.Parse(ability.GetVariable("diceDamage")), int.Parse(ability.GetVariable("diceTimes")), cover));
-                targetunit.TakeDamage(this, int.Parse(ability.GetVariable("damageType")), totaldamage);
-                //UnitTransformManager.globalInstance.QueueAnimation(this, ability[8], targetunit.Tile.LocalPlace);
-                EventsManager.InvokeOnCounterAttack(this, targetunit);
-                return;
-            }
-        }
+        targetList.Clear();
     }
-
-    public bool CanCounterAttack(UnitBase targetunit)
-    {
-        foreach (string s in Abilities)
-        {
-            //string[] ability = GetCode(s).Split(' ');
-            if (GetCode(s).Task == "Attack" && ValidateTargetForCounterAttack(targetunit, s)/* todo move target validation to triggerpart of the stackchain*/)
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public void Attack(UnitBase target)
-    {
-        /*roll damage from current ability code*/ //(int)Math.Round((double)(currenthp / HP()) * Rolldamage(Damage(index), damagevariance[index]));
-        //UnitBase t = TileManager.globalInstance.GetUnitOrBuilding(target);
-        int cover = target.CoverBonus;
-        int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(int.Parse(AbilityCode.GetVariable("baseDamage")), int.Parse(AbilityCode.GetVariable("diceDamage")), int.Parse(AbilityCode.GetVariable("diceTimes")), cover));
-        //animator.Animate(targetAbility[8]);
-        //UnitTransformManager.globalInstance.QueueAnimation(this, targetAbility[8], target);
-        target.TakeDamage(this, DamageType, totaldamage);
-        //t.CounterAttack(this);
-        //t.GetAttackedAndCounter(this, DamageType, totaldamage);
-        EventsManager.InvokeOnAttack(this, target);
-    }
-
-    /*
-    public void AddBuff(Buff buff)
-    {
-        buffs.Add(buff);
-        //some buffs may not stack but rather in duration
-    }*/
 
     public float GetResistance(int damagetype)
     {
@@ -417,28 +296,11 @@ public abstract class UnitBase : MonoBehaviour
         return attackToArmour[damagetype, ArmourType];
     }
 
-    /*
-    public virtual void Setup(List<string> menu) { }
-    public virtual void Attack_v(Unitbase target) { }
-    public virtual void Getattacked_v(Unitbase unit, int damagetype, int damage) { }
-    public virtual void Dealtdamage_v(int damagetype, int damage) { }
-    public virtual void Takedamage_v(int damagetype, int damage) { }
-    public virtual void Destroy_v(Unitbase unit) {}
-    public virtual void Destroyed_v() {}
-    public virtual bool Validunittarget_v(Tileobject tile, int index) { return true; }
-    public virtual bool Validbuildingtarget_v(Tileobject tile, int index) { return true; }
-    */
-    /// 
-
-    public void ClearTargets()
-    {
-        targetList.Clear();
-    }
-
-    public bool CanHit(UnitBase unitbase, string s)
+    public bool CanHit(UnitBase unitbase, string attackType)
     {
         bool b = false;
-        switch (GetCode(s).GetVariable("canHit"))
+        //switch (AbilityTargetCode.GetVariable("canHit"))
+        switch (attackType)
         {
             case "same"://flying hits flying, land hits land
                 b = ((MovementType != 6 || MovementType != 7) && (unitbase.MovementType != 6 || unitbase.MovementType != 7)) || ((MovementType == 6 || MovementType == 7) && (unitbase.MovementType == 6 || unitbase.MovementType == 7));
@@ -510,4 +372,150 @@ public abstract class UnitBase : MonoBehaviour
         }
         return v;
     }
+
+    protected bool ParseControlFlowBool(CodeObject filter, List<UnitBase> list, List<Unit> listUnit = null, List<Building> listBuilding = null, List<int> listInt = null)
+    {
+        if (filter.Task == "CanCounterAttack")
+        {
+            //return CanCounterAttack(list[int.Parse(filter.GetVariable("to"))]);
+            UnitBase u;
+            string toCode = filter.GetVariable("to");
+            string fromCode = filter.GetVariable("from");
+            if (fromCode != null)
+            {
+                switch (fromCode[0])
+                {
+                    case 'u':
+                        //return u.CanCounterAttack(listUnit[int.Parse(toCode.Substring(1))]);
+                        u = listUnit[int.Parse(fromCode.Substring(1))];
+                        break;
+                    case 'b':
+                        u = listBuilding[int.Parse(fromCode.Substring(1))];
+                        //return u.CanCounterAttack(listBuilding[int.Parse(toCode.Substring(1))]);
+                        break;
+                    default:
+                        u = list[int.Parse(fromCode)];
+                        //return u.CanCounterAttack(list[int.Parse(toCode)]);
+                        break;
+                }
+            }
+            else { u = this; }
+            switch (toCode[0])
+            {
+                case 'u':
+                    return u.CanCounterAttack(listUnit[int.Parse(toCode.Substring(1))]);
+                case 'b':
+                    return u.CanCounterAttack(listBuilding[int.Parse(toCode.Substring(1))]);
+                default:
+                    return u.CanCounterAttack(list[int.Parse(toCode)]);
+            }
+        }
+        if (filter.GetVariable("scope") == "all") { return true; }
+        if (filter.Task == "OnAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this); }
+        //if (filter.Task == "OnBeforeAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this) /*CanCounterAttack(list[0])*/; }
+        return false;
+    }
+
+    //protected void ChangeModel(string model) => animator.ChangeModel(model);
+    protected void ChangeForm(string form)
+    {
+        data = AssetManager.globalInstance.LoadUnitBaseData(form);
+        animator.ChangeModel(form);
+    }
+
+    protected CodeObject GetLogicCode(string s) => data.GetLogicCode(s);
+
+    protected CodeObject GetTargetCode(string s) => data.GetTargetCode(s);
+
+    protected CodeObject GetAnimation(string s) => data.GetAnimation(s);
+
+    protected bool ValidateTargetForCounterAttack(UnitBase targetunit, string s)
+    {
+        //string[] ability = GetCode(s).Split(' ');
+        bool b = false;
+        CodeObject ability = GetTargetCode(s);
+        switch (ability.GetVariable("canHit"))
+        {
+            case "same"://flying hits flying, land hits land
+                b = ((MovementType != 6 || MovementType != 7) && (targetunit.MovementType != 6 || targetunit.MovementType != 7)) || ((MovementType == 6 || MovementType == 7) && (targetunit.MovementType == 6 || targetunit.MovementType == 7));
+                break;
+            case "different"://flying hits land, land hits flying
+                b = ((MovementType != 6 || MovementType != 7) && (targetunit.MovementType == 6 || targetunit.MovementType == 7)) || ((MovementType == 6 || MovementType == 7) && (targetunit.MovementType != 6 || targetunit.MovementType != 7));
+                break;
+            case "all":
+                b = true;
+                break;
+        }
+        //return b && TileManager.globalInstance.CanSee(this, targetunit) && Team != targetunit.Team && !targetunit.Invisible && targetunit.HPCurrent > 0 && !targetunit.NotHostile && Distance(targetunit.Tile.LocalPlace, Tile.LocalPlace) >= int.Parse(ability[2]) && Distance(targetunit.Tile.LocalPlace, Tile.LocalPlace) <= int.Parse(ability[3]);
+        return b && TileManager.globalInstance.VisibleTo(this, targetunit) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit) && TileManager.globalInstance.HostileTo(this, targetunit);
+    }
+
+    protected void Attack(UnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType)
+    {
+        /*roll damage from current ability code*/ //(int)Math.Round((double)(currenthp / HP()) * Rolldamage(Damage(index), damagevariance[index]));
+        //UnitBase t = TileManager.globalInstance.GetUnitOrBuilding(target);
+        int cover = target.CoverBonus;
+        int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(baseDamage, diceDamage, diceTimes, cover));
+        //animator.Animate(targetAbility[8]);
+        //UnitTransformManager.globalInstance.QueueAnimation(this, targetAbility[8], target);
+        target.TakeDamage(this, damageType, totaldamage);
+        //t.CounterAttack(this);
+        //t.GetAttackedAndCounter(this, DamageType, totaldamage);
+        EventsManager.InvokeOnAttack(this, target);
+    }
+
+    protected bool CanCounterAttack(UnitBase targetunit)
+    {
+        foreach (string s in Abilities)
+        {
+            //string[] ability = GetCode(s).Split(' ');
+            if (GetTargetCode(s).Task == "Attack" && ValidateTargetForCounterAttack(targetunit, s)/* todo move target validation to triggerpart of the stackchain*/)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected void CounterAttack(UnitBase targetunit)
+    {
+        foreach (string s in Abilities)
+        {
+            //string[] ability = GetCode(s).Split(' ');
+            CodeObject ability = GetTargetCode(s);
+            if (ability.Task == "Attack" && ValidateTargetForCounterAttack(targetunit, s)/* todo move target validation to triggerpart of the stackchain*/)
+            {
+                //code=> attack:flying or not: siege or not:min range: max range:base damage:dicedamage:times:damagetype
+                /*
+                int cover = targetunit.CoverBonus;
+                int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(int.Parse(ability.GetVariable("baseDamage")), int.Parse(ability.GetVariable("diceDamage")), int.Parse(ability.GetVariable("diceTimes")), cover));
+                targetunit.TakeDamage(this, int.Parse(ability.GetVariable("damageType")), totaldamage);
+                //UnitTransformManager.globalInstance.QueueAnimation(this, ability[8], targetunit.Tile.LocalPlace);
+                EventsManager.InvokeOnCounterAttack(this, targetunit);
+                return;
+                */
+                //change this to just parse whatever the ability logc maybe
+            }
+        }
+    }
+
+    /*
+    public void AddBuff(Buff buff)
+    {
+        buffs.Add(buff);
+        //some buffs may not stack but rather in duration
+    }*/
+
+    /*
+    public virtual void Setup(List<string> menu) { }
+    public virtual void Attack_v(Unitbase target) { }
+    public virtual void Getattacked_v(Unitbase unit, int damagetype, int damage) { }
+    public virtual void Dealtdamage_v(int damagetype, int damage) { }
+    public virtual void Takedamage_v(int damagetype, int damage) { }
+    public virtual void Destroy_v(Unitbase unit) {}
+    public virtual void Destroyed_v() {}
+    public virtual bool Validunittarget_v(Tileobject tile, int index) { return true; }
+    public virtual bool Validbuildingtarget_v(Tileobject tile, int index) { return true; }
+    */
+    /// 
 }
