@@ -11,7 +11,7 @@ public class Unit : UnitBase
     //public bool moved;
     //public bool invisible;
     public int MovementTotal => data.movementTotal + buffs.Sum(x => x.movementTotal);
-    public int CaptureRate => data.captureRate + buffs.Sum(x => x.captureRate);
+    public int CaptureRateBonus => /*data.captureRate +*/ buffs.Sum(x => x.captureRate);
     public bool Infiltrator => data.infiltrator;
     public bool Rooted => buffs.Select(x => x.rooted).Contains(true);
     //protected override TileObject Tile => TileManager.globalInstance.GetTile(this);
@@ -51,7 +51,7 @@ public class Unit : UnitBase
         {
             case "Capture":
                 //code
-                data.unitData[0].Capture(data.buildingData[0]);
+                data.unitData[0].Capture(data.buildingData[0], int.Parse(code.GetVariable("captureRate")));
                 return;
         }
         base.ParseCode(code, data);
@@ -78,7 +78,7 @@ public class Unit : UnitBase
         switch (AbilityLogicCode.Task)
         {
             case "Capture":
-                EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, null, new List<Unit>() { this} , new List<Building>() { Tile.Building } );
+                EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, null, new List<Unit>() { this }, new List<Building>() { Tile.Building });
                 EventsManager.InvokeOnBeforeCapture(this, Tile.Building);
                 abilityKey = "";
                 TileManager.globalInstance.EndUnitTurn();
@@ -106,9 +106,9 @@ public class Unit : UnitBase
         }*/
     }
 
-    public void Capture(Building building)
+    public void Capture(Building building, int captureDamage)
     {
-        int damage = (int)Math.Round(HPPercentage * CaptureRate);
+        int damage = (int)Math.Round(HPPercentage * (captureDamage + CaptureRateBonus));
         building.TakeCaptureDamage(damage, this);
     }
 

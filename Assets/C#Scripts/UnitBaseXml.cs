@@ -24,7 +24,7 @@ public class UnitBaseXml
 
     public bool infiltrator;
     public int movementTotal;//total movement pts
-    public int captureRate;//normally 10
+    //public int captureRate;//normally 10
 
     public bool neutral;
     public int buildingCover;//total movement pts // for armour bonuses

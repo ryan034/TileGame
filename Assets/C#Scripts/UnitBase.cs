@@ -184,11 +184,11 @@ public abstract class UnitBase : MonoBehaviour
         ////parse code and execute based on string s
         //where stack may begin if the spell has no targets
         abilityKey = s;
-        switch (AbilityLogicCode.Task)
+        switch (AbilityTargetCode.Task)
         {
             case "Attack":
                 List<Vector3Int> targets = new List<Vector3Int>();
-                foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(AbilityLogicCode.GetVariable("minRange")), int.Parse(AbilityLogicCode.GetVariable("maxRange"))))
+                foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(AbilityTargetCode.GetVariable("minRange")), int.Parse(AbilityTargetCode.GetVariable("maxRange"))))
                 {
                     if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(this, v, AbilityTargetCode.GetVariable("canHit")) || TileManager.globalInstance.HostileAttackableUnitOnTile(this, v, AbilityTargetCode.GetVariable("canHit")))) { targets.Add(v); }
                 }
@@ -203,7 +203,7 @@ public abstract class UnitBase : MonoBehaviour
         //parse code
         //where stack may begin
         targetList.Add(target);
-        if (targetList.Count == int.Parse(AbilityLogicCode.GetVariable("targets")))
+        if (targetList.Count == int.Parse(AbilityTargetCode.GetVariable("targets")))
         {
             switch (AbilityLogicCode.Task)
             {

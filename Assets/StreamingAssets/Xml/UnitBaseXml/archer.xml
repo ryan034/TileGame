@@ -7,14 +7,19 @@
   <abilitiesCode>
     <ActiveAbility>
       <name>Bow</name>
-      <code>
+      <target>
         <![CDATA[<CodeObject>
           <task>Attack</task>
           <minRange>2</minRange>
           <maxRange>4</maxRange>
-          <damageType>1</damageType>
           <targets>1</targets>
           <canHit>all</canHit>
+        </CodeObject>]]>
+      </target>
+      <code>
+        <![CDATA[<CodeObject>
+          <task>Attack</task>
+          <damageType>1</damageType>
           <baseDamage>10</baseDamage>
           <diceDamage>6</diceDamage>
           <diceTimes>3</diceTimes>
@@ -31,9 +36,15 @@
     </ActiveAbility>
     <ActiveAbility>
       <name>Capture</name>
+      <target>
+        <![CDATA[<CodeObject>
+          <task>Capture</task>
+        </CodeObject>]]>
+      </target>
       <code>
         <![CDATA[<CodeObject>
           <task>Capture</task>
+          <captureRate>10</captureRate>
         </CodeObject>]]>
       </code>
       <animation>

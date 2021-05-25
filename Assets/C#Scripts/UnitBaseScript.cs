@@ -28,7 +28,7 @@ public class UnitBaseScript : ScriptableObject
 
     public bool infiltrator;
     public int movementTotal;//total movement pts
-    public int captureRate;//normally 10
+    //public int captureRate;//normally 10
 
     public struct ActiveAbility
     {
