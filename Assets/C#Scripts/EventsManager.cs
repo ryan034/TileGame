@@ -8,8 +8,9 @@ public class EventsManager : MonoBehaviour
 {
     public static EventsManager globalInstance;
 
+    public static event Action<UnitBase, UnitBase> OnMainAttack;
     public static event Action<UnitBase, UnitBase> OnAttack;
-    public static event Action<UnitBase, UnitBase> OnCounterAttack;
+    public static event Action<UnitBase, UnitBase> OnBeforeMainAttack;
     public static event Action<UnitBase, UnitBase> OnBeforeAttack;
     public static event Action<UnitBase, UnitBase> OnBeforeCapture;
     public static event Action<UnitBase, UnitBase> OnBeforeSpawn;
@@ -56,14 +57,19 @@ public class EventsManager : MonoBehaviour
     */
 
     //}
-    public static void InvokeOnCounterAttack(UnitBase attacker, UnitBase defender)
-    {
-        OnCounterAttack?.Invoke(attacker, defender);
-    }
-
     public static void InvokeOnAttack(UnitBase attacker, UnitBase defender)
     {
         OnAttack?.Invoke(attacker, defender);
+    }
+
+    public static void InvokeOnMainAttack(UnitBase attacker, UnitBase defender)
+    {
+        OnMainAttack?.Invoke(attacker, defender);
+    }
+
+    public static void InvokeOnBeforeMainAttack(UnitBase attacker, UnitBase defender)
+    {
+        OnBeforeMainAttack?.Invoke(attacker, defender);
     }
 
     public static void InvokeOnBeforeAttack(UnitBase attacker, UnitBase defender)
@@ -101,8 +107,18 @@ public class EventsManager : MonoBehaviour
     {
         int i = currentStack.Count;
         currentStack.Add(new StackItem(code, name, owner, animation, intData, targetData, unitTargetData, buildingTargetData, vectorData));
+        //todo: parse code logic and invoke all events here instead of at the source
         if (i == 0) { StartCoroutine(ResolveStack()); }
     }
+
+    /*
+    public IEnumerator QuickResolve(CodeObject code, string name, UnitBase owner, CodeObject animation, List<int> intData = null, List<UnitBase> targetData = null, List<Unit> unitTargetData = null, List<Building> buildingTargetData = null, List<Vector3Int> vectorData = null)
+    {
+        //todo: parse code logic and invoke all events here instead of at the source
+        StackItem s = new StackItem(code, name, owner, animation, intData, targetData, unitTargetData, buildingTargetData, vectorData);
+        yield return StartCoroutine(s.owner.ParseAnimation(s));
+        s.owner.Parse(s);
+    }*/
 
     private IEnumerator ResolveStack()
     {
@@ -117,37 +133,36 @@ public class EventsManager : MonoBehaviour
             currentStack.Remove(s);
         }
     }
-
-    /*
-    private IEnumerator ResolveAnimation(UnitBase unit, CodeObject s)
-    {
-        //todo need to parse animation code object into animation coroutine
-        while (unit.IsPlaying(s))
+        /*
+        private IEnumerator ResolveAnimation(UnitBase unit, CodeObject s)
         {
-            yield return null;
+            //todo need to parse animation code object into animation coroutine
+            while (unit.IsPlaying(s))
+            {
+                yield return null;
+            }
+            yield break;
         }
-        yield break;
-    }
 
-    private IEnumerator WaitForAnimation(UnitBase unit, string s)
-    {
-        while (unit.IsPlaying(s))
+        private IEnumerator WaitForAnimation(UnitBase unit, string s)
         {
-            yield return null;
-        }
-        yield break;
-    }*/
-    /*
-    private IEnumerator ResolveStack(StackItem stackItem)
-    {
-        yield return StartCoroutine(stackItem.owner.ParseAnimation(stackItem));
-        //yield return StartCoroutine(ResolveAnimation(stackItem.owner, stackItem.animationCode));
-        stackItem.owner.Parse(stackItem);
-        currentStack.Remove(stackItem);
-        //Pointer.globalInstance.HaltInput = true;
-    }*/
+            while (unit.IsPlaying(s))
+            {
+                yield return null;
+            }
+            yield break;
+        }*/
+        /*
+        private IEnumerator ResolveStack(StackItem stackItem)
+        {
+            yield return StartCoroutine(stackItem.owner.ParseAnimation(stackItem));
+            //yield return StartCoroutine(ResolveAnimation(stackItem.owner, stackItem.animationCode));
+            stackItem.owner.Parse(stackItem);
+            currentStack.Remove(stackItem);
+            //Pointer.globalInstance.HaltInput = true;
+        }*/
 
-    private void Awake()
+        private void Awake()
     {
         if (globalInstance == null)
         {

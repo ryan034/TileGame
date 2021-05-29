@@ -148,7 +148,7 @@ public class UnitBaseData
         return abilitiesCode[s].targetCode;
     }
 
-    public CodeObject GetAnimation(string s)
+    public CodeObject GetAnimationCode(string s)
     {
         return abilitiesCode[s].animationCode;
     }

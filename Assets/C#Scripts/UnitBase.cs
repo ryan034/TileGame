@@ -14,7 +14,7 @@ public abstract class UnitBase : MonoBehaviour
     //protected string[] AbilityVariables => GetCode(abilityKey).Split(' ');
     protected CodeObject AbilityTargetCode => GetTargetCode(abilityKey);
     protected CodeObject AbilityLogicCode => GetLogicCode(abilityKey);
-    protected CodeObject AbilityAnimation => GetAnimation(abilityKey);
+    protected CodeObject AbilityAnimation => GetAnimationCode(abilityKey);
     protected string abilityKey;
     protected List<Vector3Int> targetList = new List<Vector3Int>();
     protected List<Buff> buffs = new List<Buff>();
@@ -202,8 +202,16 @@ public abstract class UnitBase : MonoBehaviour
     {
         //parse code
         //where stack may begin
-        targetList.Add(target);
-        if (targetList.Count == int.Parse(AbilityTargetCode.GetVariable("targets")))
+        //if targets have to be unique from eachother
+        if (AbilityTargetCode.GetVariable("Unique") == "true")
+        {
+            if (!targetList.Contains(target)) { targetList.Add(target); }
+        }
+        else
+        {
+            targetList.Add(target);
+        }
+        if (AbilityTargetCode.Task == "Attack" && targetList.Count == int.Parse(AbilityTargetCode.GetVariable("targets")))
         {
             switch (AbilityLogicCode.Task)
             {
@@ -211,7 +219,7 @@ public abstract class UnitBase : MonoBehaviour
                     List<UnitBase> l = new List<UnitBase>() { this };
                     foreach (Vector3Int v in targetList) { l.Add(TileManager.globalInstance.GetUnitOrBuilding(v)); }
                     EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, l);
-                    for (int i = 1; i < l.Count; i++) { EventsManager.InvokeOnBeforeAttack(this, l[i]); }
+                    for (int i = 1; i < l.Count; i++) { EventsManager.InvokeOnBeforeMainAttack(this, l[i]); }
                     targetList.Clear();
                     abilityKey = "";
                     TileManager.globalInstance.EndUnitTurn();
@@ -237,6 +245,8 @@ public abstract class UnitBase : MonoBehaviour
     protected virtual void AddToMenu(string s, List<string> menu)
     {
         //parse code to see if there are valid targets
+        //todo: incorporate min targets
+        List<Vector3Int> potentialTargets = new List<Vector3Int>();
         switch (GetTargetCode(s).Task)
         {
             case "Attack":
@@ -244,7 +254,7 @@ public abstract class UnitBase : MonoBehaviour
                 {
                     foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(GetTargetCode(s).GetVariable("minRange")), int.Parse(GetTargetCode(s).GetVariable("maxRange"))))
                     {
-                        if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(this, v, s) || TileManager.globalInstance.HostileAttackableUnitOnTile(this, v, s)))//need to get minimum targets into account
+                        if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(this, v, s) || TileManager.globalInstance.HostileAttackableUnitOnTile(this, v, s)))
                         {
                             menu.Add(s);
                             return;
@@ -427,7 +437,7 @@ public abstract class UnitBase : MonoBehaviour
 
     protected CodeObject GetTargetCode(string s) => data.GetTargetCode(s);
 
-    protected CodeObject GetAnimation(string s) => data.GetAnimation(s);
+    protected CodeObject GetAnimationCode(string s) => data.GetAnimationCode(s);
 
     protected bool ValidateTargetForCounterAttack(UnitBase targetunit, string s)
     {
@@ -495,6 +505,17 @@ public abstract class UnitBase : MonoBehaviour
                 return;
                 */
                 //change this to just parse whatever the ability logc maybe
+                switch (GetLogicCode(s).Task)
+                {
+                    case "Attack":
+                        List<UnitBase> l = new List<UnitBase>() { TileManager.globalInstance.GetUnitOrBuilding(targetunit.Tile.LocalPlace) };
+                        //EventsManager.globalInstance.AddToStack(GetLogicCode(s), "Counter-attack", this, GetAnimationCode(s), null, l, null, null, null);
+                        //for (int i = 1; i < l.Count; i++) { EventsManager.InvokeOnBeforeAttack(this, l[i]); }
+                        //need a way to parse this animation and code
+                        break;
+                }
+                //Parse(new StackItem(), ability);
+                return;
             }
         }
     }

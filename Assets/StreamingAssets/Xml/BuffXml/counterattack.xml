@@ -6,7 +6,7 @@
       <event_>OnAttack</event_>
       <trigger>
         <![CDATA[<CodeObject>
-          <task>OnAttack</task>
+          <task>OnMainAttack</task>
           <scope>self</scope>
           <side>defender</side>
           <true>

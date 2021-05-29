@@ -82,9 +82,9 @@ public bool enemy;//if the buff was placed by ally or enemy
     {
         switch (s)
         {
-            case "OnAttack":
+            case "OnMainAttack":
                 //execute parsed code for selected abilities
-                EventsManager.OnAttack += OnAttack;
+                EventsManager.OnMainAttack += OnAttack;
                 break;
             case "OnDestroy":
                 EventsManager.OnDestroy += OnDestroy;
@@ -98,9 +98,9 @@ public bool enemy;//if the buff was placed by ally or enemy
 
     private void OnAttack(UnitBase attacker, UnitBase defender)
     {
-        if (code.ContainsKey("OnAttack") && owner.ParseBool(code["OnAttack"].filterCode, new List<UnitBase>() { attacker, defender }))
+        if (code.ContainsKey("OnMainAttack") && owner.ParseBool(code["OnMainAttack"].filterCode, new List<UnitBase>() { attacker, defender }))
         {
-            EventsManager.globalInstance.AddToStack(code["OnAttack"].logicCode, name, owner, code["OnAttack"].animationCode, null, new List<UnitBase>() { attacker, defender });
+            EventsManager.globalInstance.AddToStack(code["OnMainAttack"].logicCode, name, owner, code["OnMainAttack"].animationCode, null, new List<UnitBase>() { attacker, defender });
             //this is where counterattack would be triggered
         }
     }
