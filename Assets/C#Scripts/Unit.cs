@@ -45,16 +45,16 @@ public class Unit : UnitBase
         Team = team;
     }
 
-    public override void ParseCode(CodeObject code, StackItem data)
+    public override void ParseCode(CodeObject code, StackItem data, bool before)
     {
         switch (code.Task)
         {
             case "Capture":
                 //code
-                data.unitData[0].Capture(data.buildingData[0], int.Parse(code.GetVariable("captureRate")));
+                data.unitData[0].Capture(before, data.buildingData[0], int.Parse(code.GetVariable("captureRate")));
                 return;
         }
-        base.ParseCode(code, data);
+        base.ParseCode( code, data, before);
     }
 
     protected override void AddToMenu(string s, List<string> menu)
@@ -79,7 +79,6 @@ public class Unit : UnitBase
         {
             case "Capture":
                 EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, null, new List<Unit>() { this }, new List<Building>() { Tile.Building });
-                EventsManager.InvokeOnBeforeCapture(this, Tile.Building);
                 abilityKey = "";
                 TileManager.globalInstance.EndUnitTurn();
                 return;
@@ -106,10 +105,18 @@ public class Unit : UnitBase
         }*/
     }
 
-    public void Capture(Building building, int captureDamage)
+    public void Capture(bool before, Building building, int captureDamage)
     {
-        int damage = (int)Math.Round(HPPercentage * (captureDamage + CaptureRateBonus));
-        building.TakeCaptureDamage(damage, this);
+        if (before)
+        {
+            EventsManager.InvokeOnBeforeCapture(this, Tile.Building);
+        }
+        else
+        {
+            int damage = (int)Math.Round(HPPercentage * (captureDamage + CaptureRateBonus));
+            building.TakeCaptureDamage(damage, this);
+            EventsManager.InvokeOnCapture(this, Tile.Building);
+        }
     }
 
 }

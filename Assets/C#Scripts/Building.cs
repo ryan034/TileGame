@@ -136,16 +136,17 @@ public class Building : UnitBase
 
     }
 
-    public override void ParseCode(CodeObject code, StackItem data)
+    public override void ParseCode(CodeObject code, StackItem data, bool before)
     {
         switch (code.Task)
         {
             case "Spawn":
                 //code
                 //spawn unit
+                SpawnUnit(before, Tile, code.GetVariable("unitID"), Team);
                 return;
         }
-        base.ParseCode(code, data);
+        base.ParseCode(code, data, before);
     }
 
     protected override void AddToMenu(string s, List<string> menu)
@@ -171,10 +172,9 @@ public class Building : UnitBase
             //need to add to stack instead
             case "Spawn":
                 //execute parsed code for selected abilities
-                Actioned = true;
-                Unit unit = SpawnUnit(Tile, AbilityLogicCode.GetVariable("unitID"), Team);
-                EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, new List<UnitBase>() { this, unit });
-                EventsManager.InvokeOnBeforeSpawn(this, unit);
+                //EventsManager.InvokeOnSpawn(this, unit);
+                EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, new List<UnitBase>() { this });
+                //EventsManager.InvokeOnBeforeSpawn(this, unit);
                 abilityKey = "";
                 return;
         }
@@ -294,8 +294,16 @@ public class Building : UnitBase
         hold[unit.Team] = hold[unit.Team] + damage > HP ? HP : hold[unit.Team] + damage;
     }
 
-    public Unit SpawnUnit(TileObject tile, string script, int team_)
+    public Unit SpawnUnit(bool before, TileObject tile, string script, int team_)
     {
-        return TileManager.globalInstance.SpawnUnit(Tile.LocalPlace, script, team_);
+        if (before) { EventsManager.InvokeOnBeforeSpawn(this); return null; }
+        else
+        {
+            Actioned = true;
+            //Unit unit = SpawnUnit(Tile, AbilityLogicCode.GetVariable("unitID"), Team);
+            Unit unit = TileManager.globalInstance.SpawnUnit(Tile.LocalPlace, script, team_);
+            EventsManager.InvokeOnSpawn(this, unit);
+            return unit;
+        }
     }
 }

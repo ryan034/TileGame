@@ -125,14 +125,14 @@ public abstract class UnitBase : MonoBehaviour
         UnitTransformManager.globalInstance.SnapMove(this, localPlace);
     }
 
-    public virtual void ParseCode(CodeObject code, StackItem data)
+    public virtual void ParseCode(CodeObject code, StackItem data, bool before)
     {
         switch (code.Task)
         {
             case "Attack":
                 for (int i = 1; i < data.unitBaseData.Count; i++)
                 {
-                    data.unitBaseData[0].Attack(data.unitBaseData[i], int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")));
+                    data.unitBaseData[0].Attack(before, data.unitBaseData[i], int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")));
                 }
                 break;
             case "CounterAttack":
@@ -165,13 +165,13 @@ public abstract class UnitBase : MonoBehaviour
                 switch (toCode[0])
                 {
                     case 'u':
-                        u.CounterAttack(data.unitData[int.Parse(toCode.Substring(1))]);
+                        u.CounterAttack(before, data.unitData[int.Parse(toCode.Substring(1))]);
                         break;
                     case 'b':
-                        u.CounterAttack(data.buildingData[int.Parse(toCode.Substring(1))]);
+                        u.CounterAttack(before, data.buildingData[int.Parse(toCode.Substring(1))]);
                         break;
                     default:
-                        u.CounterAttack(data.unitBaseData[int.Parse(toCode)]);
+                        u.CounterAttack(before, data.unitBaseData[int.Parse(toCode)]);
                         break;
                 }
                 break;
@@ -213,13 +213,17 @@ public abstract class UnitBase : MonoBehaviour
         }
         if (AbilityTargetCode.Task == "Attack" && targetList.Count == int.Parse(AbilityTargetCode.GetVariable("targets")))
         {
+            //todo: should really just have a simple parse target code
+            //target code should have two things, what are the target requirements, and how are the targets used by logic code, there should be no logic code parsing here
             switch (AbilityLogicCode.Task)
             {
                 case "Attack":
                     List<UnitBase> l = new List<UnitBase>() { this };
                     foreach (Vector3Int v in targetList) { l.Add(TileManager.globalInstance.GetUnitOrBuilding(v)); }
                     EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, l);
-                    for (int i = 1; i < l.Count; i++) { EventsManager.InvokeOnBeforeMainAttack(this, l[i]); }
+                    //for (int i = 1; i < l.Count; i++) { EventsManager.InvokeOnBeforeMainAttack(this, l[i]); } 
+                    //changed this to trigger once instead of every time
+                    EventsManager.InvokeOnBeforeMainAttack(this, l);
                     targetList.Clear();
                     abilityKey = "";
                     TileManager.globalInstance.EndUnitTurn();
@@ -325,7 +329,7 @@ public abstract class UnitBase : MonoBehaviour
         return b;
     }
 
-    public void Parse(StackItem stack, CodeObject code = null)
+    public void Parse(StackItem stack, CodeObject code = null, bool before = false)
     {
         if (code == null) { code = stack.code; }
         if (code.IsConditional)
@@ -335,23 +339,23 @@ public abstract class UnitBase : MonoBehaviour
             {
                 foreach (CodeObject c in code.GetCodeObjects("true"))
                 {
-                    Parse(stack, c);
+                    Parse(stack, c, before);
                 }
             }
             else
             {
                 foreach (CodeObject c in code.GetCodeObjects("false"))
                 {
-                    Parse(stack, c);
+                    Parse(stack, c, before);
                 }
             }
         }
         else
         {
-            ParseCode(code, stack);
+            ParseCode(code, stack, before);
             foreach (CodeObject c in code.GetCodeObjects("next"))
             {
-                Parse(stack, c);
+                Parse(stack, c, before);
             }
         }
     }
@@ -460,18 +464,22 @@ public abstract class UnitBase : MonoBehaviour
         return b && TileManager.globalInstance.VisibleTo(this, targetunit) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit) && TileManager.globalInstance.HostileTo(this, targetunit);
     }
 
-    protected void Attack(UnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType)
+    protected void Attack(bool before, UnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType)
     {
-        /*roll damage from current ability code*/ //(int)Math.Round((double)(currenthp / HP()) * Rolldamage(Damage(index), damagevariance[index]));
-        //UnitBase t = TileManager.globalInstance.GetUnitOrBuilding(target);
-        int cover = target.CoverBonus;
-        int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(baseDamage, diceDamage, diceTimes, cover));
-        //animator.Animate(targetAbility[8]);
-        //UnitTransformManager.globalInstance.QueueAnimation(this, targetAbility[8], target);
-        target.TakeDamage(this, damageType, totaldamage);
-        //t.CounterAttack(this);
-        //t.GetAttackedAndCounter(this, DamageType, totaldamage);
-        EventsManager.InvokeOnAttack(this, target);
+        if (before) { EventsManager.InvokeOnBeforeAttack(this, target); }
+        else
+        {
+            /*roll damage from current ability code*/ //(int)Math.Round((double)(currenthp / HP()) * Rolldamage(Damage(index), damagevariance[index]));
+                                                      //UnitBase t = TileManager.globalInstance.GetUnitOrBuilding(target);
+            int cover = target.CoverBonus;
+            int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(baseDamage, diceDamage, diceTimes, cover));
+            //animator.Animate(targetAbility[8]);
+            //UnitTransformManager.globalInstance.QueueAnimation(this, targetAbility[8], target);
+            target.TakeDamage(this, damageType, totaldamage);
+            //t.CounterAttack(this);
+            //t.GetAttackedAndCounter(this, DamageType, totaldamage);
+            EventsManager.InvokeOnAttack(this, target);
+        }
     }
 
     protected bool CanCounterAttack(UnitBase targetunit)
@@ -487,7 +495,7 @@ public abstract class UnitBase : MonoBehaviour
         return false;
     }
 
-    protected void CounterAttack(UnitBase targetunit)
+    protected void CounterAttack(bool before, UnitBase targetunit)
     {
         foreach (string s in Abilities)
         {
@@ -504,17 +512,9 @@ public abstract class UnitBase : MonoBehaviour
                 EventsManager.InvokeOnCounterAttack(this, targetunit);
                 return;
                 */
-                //change this to just parse whatever the ability logc maybe
-                switch (GetLogicCode(s).Task)
-                {
-                    case "Attack":
-                        List<UnitBase> l = new List<UnitBase>() { TileManager.globalInstance.GetUnitOrBuilding(targetunit.Tile.LocalPlace) };
-                        //EventsManager.globalInstance.AddToStack(GetLogicCode(s), "Counter-attack", this, GetAnimationCode(s), null, l, null, null, null);
-                        //for (int i = 1; i < l.Count; i++) { EventsManager.InvokeOnBeforeAttack(this, l[i]); }
-                        //need a way to parse this animation and code
-                        break;
-                }
-                //Parse(new StackItem(), ability);
+
+                //change this to just parse whatever the logic code may be with the targetunit as the single target
+                //Parse(GetLogicCode(s), null, before);
                 return;
             }
         }

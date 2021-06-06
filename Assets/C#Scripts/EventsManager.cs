@@ -8,14 +8,20 @@ public class EventsManager : MonoBehaviour
 {
     public static EventsManager globalInstance;
 
-    public static event Action<UnitBase, UnitBase> OnMainAttack;
+    public static event Action<UnitBase, List<UnitBase>> OnMainAttack;
+    public static event Action<UnitBase, List<UnitBase>> OnBeforeMainAttack;
+
     public static event Action<UnitBase, UnitBase> OnAttack;
-    public static event Action<UnitBase, UnitBase> OnBeforeMainAttack;
     public static event Action<UnitBase, UnitBase> OnBeforeAttack;
+
+    public static event Action<UnitBase, UnitBase> OnCapture;
     public static event Action<UnitBase, UnitBase> OnBeforeCapture;
-    public static event Action<UnitBase, UnitBase> OnBeforeSpawn;
+
     public static event Action<UnitBase, UnitBase> OnSpawn;
+    public static event Action<UnitBase> OnBeforeSpawn;
+
     public static event Action<UnitBase, UnitBase> OnDestroy;
+
     public static event Action<UnitBase> OnDeath;
 
     private List<StackItem> currentStack = new List<StackItem>();
@@ -62,19 +68,24 @@ public class EventsManager : MonoBehaviour
         OnAttack?.Invoke(attacker, defender);
     }
 
-    public static void InvokeOnMainAttack(UnitBase attacker, UnitBase defender)
+    public static void InvokeOnBeforeAttack(UnitBase attacker, UnitBase defender)
+    {
+        OnBeforeAttack?.Invoke(attacker, defender);
+    }
+
+    public static void InvokeOnMainAttack(UnitBase attacker, List<UnitBase> defender)
     {
         OnMainAttack?.Invoke(attacker, defender);
     }
 
-    public static void InvokeOnBeforeMainAttack(UnitBase attacker, UnitBase defender)
+    public static void InvokeOnBeforeMainAttack(UnitBase attacker, List<UnitBase> defender)
     {
         OnBeforeMainAttack?.Invoke(attacker, defender);
     }
 
-    public static void InvokeOnBeforeAttack(UnitBase attacker, UnitBase defender)
+    public static void InvokeOnCapture(Unit unit, Building building)
     {
-        OnBeforeAttack?.Invoke(attacker, defender);
+        OnCapture?.Invoke(unit, building);
     }
 
     public static void InvokeOnBeforeCapture(Unit unit, Building building)
@@ -82,14 +93,14 @@ public class EventsManager : MonoBehaviour
         OnBeforeCapture?.Invoke(unit, building);
     }
 
-    public static void InvokeOnBeforeSpawn(Building building, Unit unit)
+    public static void InvokeOnSpawn(UnitBase spawner, Unit unit)
     {
-        OnBeforeSpawn?.Invoke(unit, building);
+        OnSpawn?.Invoke(spawner, unit);
     }
 
-    public static void InvokeOnSpawn(Building building, Unit unit)
+    public static void InvokeOnBeforeSpawn(UnitBase spawner)
     {
-        OnSpawn?.Invoke(unit, building);
+        OnBeforeSpawn?.Invoke(spawner);
     }
 
     /*
@@ -106,8 +117,10 @@ public class EventsManager : MonoBehaviour
     public void AddToStack(CodeObject code, string name, UnitBase owner, CodeObject animation, List<int> intData = null, List<UnitBase> targetData = null, List<Unit> unitTargetData = null, List<Building> buildingTargetData = null, List<Vector3Int> vectorData = null)
     {
         int i = currentStack.Count;
-        currentStack.Add(new StackItem(code, name, owner, animation, intData, targetData, unitTargetData, buildingTargetData, vectorData));
+        StackItem s = new StackItem(code, name, owner, animation, intData, targetData, unitTargetData, buildingTargetData, vectorData);
+        currentStack.Add(s);
         //todo: parse code logic and invoke all events here instead of at the source
+        s.owner.Parse(s, null, true);
         if (i == 0) { StartCoroutine(ResolveStack()); }
     }
 
@@ -133,36 +146,36 @@ public class EventsManager : MonoBehaviour
             currentStack.Remove(s);
         }
     }
-        /*
-        private IEnumerator ResolveAnimation(UnitBase unit, CodeObject s)
+    /*
+    private IEnumerator ResolveAnimation(UnitBase unit, CodeObject s)
+    {
+        //todo need to parse animation code object into animation coroutine
+        while (unit.IsPlaying(s))
         {
-            //todo need to parse animation code object into animation coroutine
-            while (unit.IsPlaying(s))
-            {
-                yield return null;
-            }
-            yield break;
+            yield return null;
         }
+        yield break;
+    }
 
-        private IEnumerator WaitForAnimation(UnitBase unit, string s)
+    private IEnumerator WaitForAnimation(UnitBase unit, string s)
+    {
+        while (unit.IsPlaying(s))
         {
-            while (unit.IsPlaying(s))
-            {
-                yield return null;
-            }
-            yield break;
-        }*/
-        /*
-        private IEnumerator ResolveStack(StackItem stackItem)
-        {
-            yield return StartCoroutine(stackItem.owner.ParseAnimation(stackItem));
-            //yield return StartCoroutine(ResolveAnimation(stackItem.owner, stackItem.animationCode));
-            stackItem.owner.Parse(stackItem);
-            currentStack.Remove(stackItem);
-            //Pointer.globalInstance.HaltInput = true;
-        }*/
+            yield return null;
+        }
+        yield break;
+    }*/
+    /*
+    private IEnumerator ResolveStack(StackItem stackItem)
+    {
+        yield return StartCoroutine(stackItem.owner.ParseAnimation(stackItem));
+        //yield return StartCoroutine(ResolveAnimation(stackItem.owner, stackItem.animationCode));
+        stackItem.owner.Parse(stackItem);
+        currentStack.Remove(stackItem);
+        //Pointer.globalInstance.HaltInput = true;
+    }*/
 
-        private void Awake()
+    private void Awake()
     {
         if (globalInstance == null)
         {
