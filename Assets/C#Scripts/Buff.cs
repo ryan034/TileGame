@@ -84,7 +84,7 @@ public bool enemy;//if the buff was placed by ally or enemy
         {
             case "OnMainAttack":
                 //execute parsed code for selected abilities
-                EventsManager.OnMainAttack += OnAttack;
+                EventsManager.OnMainAttack += OnMainAttack;
                 break;
             case "OnDestroy":
                 EventsManager.OnDestroy += OnDestroy;
@@ -96,11 +96,12 @@ public bool enemy;//if the buff was placed by ally or enemy
     }
 
 
-    private void OnAttack(UnitBase attacker, UnitBase defender)
+    private void OnMainAttack(UnitBase attacker, List<UnitBase> defender)
     {
-        if (code.ContainsKey("OnMainAttack") && owner.ParseBool(code["OnMainAttack"].filterCode, new List<UnitBase>() { attacker, defender }))
+        defender.Insert(0, attacker);
+        if (code.ContainsKey("OnMainAttack") && owner.ParseBool(code["OnMainAttack"].filterCode, defender ))
         {
-            EventsManager.globalInstance.AddToStack(code["OnMainAttack"].logicCode, name, owner, code["OnMainAttack"].animationCode, null, new List<UnitBase>() { attacker, defender });
+            EventsManager.globalInstance.AddToStack(code["OnMainAttack"].logicCode, name, owner, code["OnMainAttack"].animationCode, null, defender);
             //this is where counterattack would be triggered
         }
     }
@@ -124,7 +125,7 @@ public bool enemy;//if the buff was placed by ally or enemy
 
     private void OnSpawn(Building spawner, Unit spawned)
     {
-        if (code.ContainsKey("OnSpawn") && owner.ParseBool(code["OnSpawn"].filterCode, new List<UnitBase>() { spawner, spawned }))
+        if (code.ContainsKey("OnSpawn") && owner.ParseBool(code["OnSpawn"].filterCode, null,  new List<Unit>() { spawned }, new List<Building>() { spawner }, null))
         {
             EventsManager.globalInstance.AddToStack(code["OnSpawn"].logicCode, name, owner, code["OnSpawn"].animationCode, null, new List<UnitBase>() { spawner, spawned });
         }

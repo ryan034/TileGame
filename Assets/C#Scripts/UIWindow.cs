@@ -43,33 +43,11 @@ public class UIWindow : MonoBehaviour
             }
         }
     }
-    /*
-    void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            Back();
-        }
-        if (Input.GetKeyDown(KeyCode.UpArrow) && index > 0)
-        {
-            index = index - 1;
-            RefreshText();
-        }
-        if (Input.GetKeyDown(KeyCode.DownArrow) && index < menu.Count - 1)
-        {
-            index = index + 1;
-            RefreshText();
-        }
-        if (Input.GetKeyDown(KeyCode.A))
-        {
-            Execute();
-        }
-    }*/
 
     public void Execute()
     {
         TileManager.globalInstance.Execute(menu[index]);
-        //gameObject.SetActive(false);
+        gameObject.SetActive(false);
     }
 
     public void SpawnMenu()
@@ -114,6 +92,4 @@ public class UIWindow : MonoBehaviour
         Tilemanager.globalinstance.SetUpMovementTiles();
     }
     */
-
-    //globalinstance.gameObject.SetActive(false);
 }

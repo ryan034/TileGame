@@ -1,11 +1,11 @@
 ﻿using static Globals;
 using UnityEngine;
 
-public class CameraController : MonoBehaviour
+public class CameraView : MonoBehaviour
 {
-    public static CameraController globalInstance;
-    Vector3 offset;
-
+    //public static CameraController globalInstance;
+    //Vector3 offset;
+    /*
     void Awake()
     {
         if (globalInstance == null)
@@ -16,7 +16,7 @@ public class CameraController : MonoBehaviour
         {
             Destroy(gameObject);
         }
-    }
+    }*/
 
     void Start()
     {
@@ -31,21 +31,7 @@ public class CameraController : MonoBehaviour
             //Move your cube GameObject to the point where you clicked
             Vector3 move = intersect - new Vector3(0, 0, 0);
             transform.position -= move;
-            offset = transform.position;
+            //offset = transform.position;
         }
     }
-
-    //public void UpdateCamera(Vector3 pos)
-    //{
-        //transform.position = pos + offset;
-        /*
-        if(Tilemanager.globalinstance != null)
-        {
-            Tilemanager.globalinstance.Refreshperspective(key);
-        }
-        else
-        {
-            Mapcanvas.globalinstance.Refreshperspective(key);
-        }*/
-    //}
 }

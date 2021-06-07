@@ -51,10 +51,11 @@ public class Unit : UnitBase
         {
             case "Capture":
                 //code
-                data.unitData[0].Capture(before, data.buildingData[0], int.Parse(code.GetVariable("captureRate")));
+                int index = code.GetVariable("to") == null ? 0 : int.Parse(code.GetVariable("to"));
+                data.unitData[0].Capture(before, data.buildingData[index], int.Parse(code.GetVariable("captureRate")));
                 return;
         }
-        base.ParseCode( code, data, before);
+        base.ParseCode(code, data, before);
     }
 
     protected override void AddToMenu(string s, List<string> menu)
@@ -75,7 +76,7 @@ public class Unit : UnitBase
     public override void ExecuteChosenAbility(string s)
     {
         abilityKey = s;
-        switch (AbilityLogicCode.Task)
+        switch (AbilityTargetCode.Task)
         {
             case "Capture":
                 EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, null, new List<Unit>() { this }, new List<Building>() { Tile.Building });

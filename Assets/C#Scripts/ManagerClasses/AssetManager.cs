@@ -27,9 +27,6 @@ public class AssetManager : MonoBehaviour
         {
             if (!unitBaseCache.ContainsKey(asset))
             {
-                //GameObject rootGameObject = new GameObject { name = asset };
-                //rootGameObject.AddComponent<Unit>();
-                //rootGameObject.AddComponent<UnitAnimator>();
                 if (File.Exists(unitModAssetPath + asset + '/' + asset))
                 {
                     AssetBundle myLoadedAssetBundle = AssetBundle.LoadFromFile(unitModAssetPath + asset + '/' + asset);
@@ -75,9 +72,6 @@ public class AssetManager : MonoBehaviour
         {
             if (!unitBaseCache.ContainsKey(asset))
             {
-                //GameObject rootGameObject = new GameObject();
-                //rootGameObject.AddComponent<Building>();
-                //rootGameObject.AddComponent<UnitAnimator>();
                 if (File.Exists(buildingModAssetPath + asset + '/' + asset))
                 {
                     AssetBundle myLoadedAssetBundle = AssetBundle.LoadFromFile(buildingModAssetPath + asset + '/' + asset);

@@ -65,6 +65,13 @@ public class Pointer : MonoBehaviour
         }
     }
 
+    private void UpdatePosition(Vector3 v)
+    {
+        //Debug.Log(v);
+        transform.position = v + new Vector3(0, 0, -0.5f);
+        //CameraController.globalInstance.UpdateCamera(transform.position);
+        //UpdatePosition(tiles[CurrentLocation].tile.transform.position);
+    }
 
     private void TriggerDirection(Vector3Int v)
     {
@@ -74,7 +81,7 @@ public class Pointer : MonoBehaviour
                 UIWindow.globalInstance.TriggerDirection(v);
                 break;
             default:
-                TileManager.globalInstance.UpdateSelectedTile(v);
+                UpdatePosition(TileManager.globalInstance.UpdateSelectedTile(v));
                 break;
         }
     }
@@ -82,12 +89,10 @@ public class Pointer : MonoBehaviour
 
     private void TriggerForward()
     {
-        Debug.Log(mode + "forward");
         switch (mode)
         {
             case Mode.window:
                 UIWindow.globalInstance.Execute();
-                UIWindow.globalInstance.gameObject.SetActive(false);
                 break;
             case Mode.open:
                 TileManager.globalInstance.SetHeldUnit();
@@ -106,19 +111,18 @@ public class Pointer : MonoBehaviour
 
     private void TriggerBack()
     {
-        Debug.Log(mode+"back");
         switch (mode)
         {
             case Mode.window:
-                TileManager.globalInstance.RetractMoveFromWindow();
+                UpdatePosition(TileManager.globalInstance.RetractMoveFromWindow());
                 UIWindow.globalInstance.gameObject.SetActive(false);
                 break;
             case Mode.moving:
-                TileManager.globalInstance.RetractMove();
+                UpdatePosition(TileManager.globalInstance.RetractMove());
                 mode = Mode.open;
                 break;
             case Mode.attacking:
-                TileManager.globalInstance.RetractTarget();
+                UpdatePosition(TileManager.globalInstance.RetractTarget());
                 //TileManager.globalInstance.SetHeldUnit();
                 UIWindow.globalInstance.SpawnMenu();
                 break;
@@ -127,15 +131,8 @@ public class Pointer : MonoBehaviour
 
     public void Setup()
     {
-        TileManager.globalInstance.UpdateSelectedTile(new Vector3Int(0, 0, 0));
+        UpdatePosition(TileManager.globalInstance.UpdateSelectedTile(new Vector3Int(0, 0, 0)));
         //transform.rotation = globalRotation;
-    }
-
-    public void UpdatePosition(Vector3 v)
-    {
-        //Debug.Log(v);
-        transform.position = v + new Vector3(0,0,-0.5f);
-        //CameraController.globalInstance.UpdateCamera(transform.position);
     }
 
     public void GoToWindowMode()

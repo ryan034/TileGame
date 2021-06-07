@@ -234,7 +234,9 @@ public class Building : UnitBase
     private int RemoveFromHold(int damage, int team)
     {
         int residual = damage;
-        foreach (int i in hold.Keys)
+        List<int> sortedList = new List<int>(hold.Keys);
+        sortedList.OrderByDescending(o => hold[o]).ToList();
+        foreach (int i in sortedList)
         {
             if (i != team)
             {

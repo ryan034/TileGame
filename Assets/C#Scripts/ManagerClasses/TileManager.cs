@@ -19,7 +19,7 @@ public class TileManager : MonoBehaviour
     private Dictionary<int, Player> players = new Dictionary<int, Player>();
     private Dictionary<Vector3Int, Tile> tiles = new Dictionary<Vector3Int, Tile>();
     private Dictionary<UnitBase, Vector3Int> unitBases = new Dictionary<UnitBase, Vector3Int>();
-    private Vector3Int CurrentLocation { get { return currentLocation; } set { currentLocation = value; Pointer.globalInstance.UpdatePosition(tiles[CurrentLocation].tile.transform.position); } }
+    private Vector3Int CurrentLocation { get; set; /*Pointer.globalInstance.UpdatePosition(tiles[CurrentLocation].tile.transform.position);*/ }
     private Tile SelectedTile => tiles[CurrentLocation];
     private bool FriendlyBuildingSelected => SelectedTile.building != null && !SelectedTile.building.Actioned && SelectedTile.building.Team == TeamTurn;
     private Tile HeldUnitTile => tiles[unitBases[heldUnit]];
@@ -232,14 +232,14 @@ public class TileManager : MonoBehaviour
             players[i] = new Player();
         }
     }
-    public void UpdateSelectedTile(Vector3Int vector3Int)
+    public Vector3 UpdateSelectedTile(Vector3Int vector3Int)
     {
         if (tiles.ContainsKey(vector3Int + CurrentLocation))
         {
             CurrentLocation = vector3Int + CurrentLocation;
             //Pointer.globalInstance.UpdatePosition(SelectedTileGlobalPosition);
-            Debug.Log(CurrentLocation);
         }
+        return tiles[CurrentLocation].tile.transform.position;
     }
 
     public IEnumerable<Vector3Int> AddTargetTiles(int min, int max)
@@ -315,7 +315,7 @@ public class TileManager : MonoBehaviour
 
     public bool HostileAttackableUnitOnTile(UnitBase attacker, Vector3Int v, string attackType)
     {
-        return HostileVisibleUnitOnTile(attacker, v) && attacker.CanHit(tiles[v].unit, attackType );
+        return HostileVisibleUnitOnTile(attacker, v) && attacker.CanHit(tiles[v].unit, attackType);
     }
 
     /*
@@ -410,15 +410,16 @@ public class TileManager : MonoBehaviour
         }
     }
 
-    public void RetractMove()
+    public Vector3 RetractMove()
     {
         CurrentLocation = heldLocation;
         //Pointer.globalInstance.UpdatePosition(SelectedTileGlobalPosition);
         WipeTiles();
         heldUnit = null;
+        return tiles[CurrentLocation].tile.transform.position;
     }
 
-    public void RetractMoveFromWindow()
+    public Vector3 RetractMoveFromWindow()
     {
         if (heldUnit != null)
         {
@@ -434,7 +435,7 @@ public class TileManager : MonoBehaviour
                 SetUpMovementTiles();
                 Pointer.globalInstance.GoToMovingMode();
 
-                //Pointer.globalInstance.UpdatePosition(SelectedTileGlobalPosition);
+                //Pointer.globalInstance.UpdatePosition(SelectedTileGlobalPosition);   
             }
             else
             {
@@ -447,15 +448,17 @@ public class TileManager : MonoBehaviour
             Pointer.globalInstance.GoToOpenMode();
             //heldUnit = null;
         }
+        return tiles[CurrentLocation].tile.transform.position;
     }
 
-    public void RetractTarget()
+    public Vector3 RetractTarget()
     {
         //currentLocation = heldLocation;
         CurrentLocation = unitBases[heldUnit];
         //Pointer.globalInstance.UpdatePosition(SelectedTileGlobalPosition);
         WipeTiles();
         heldUnit.ClearTargets();
+        return tiles[CurrentLocation].tile.transform.position;
     }
 
     public void CommitMove()
@@ -463,7 +466,6 @@ public class TileManager : MonoBehaviour
         if (SelectedTile.tile.IsExplored && NoPercievedUnitOnTile(CurrentLocation))//and unit not invisible)
                                                                                    // (heldunit.infiltrator || selectedtile.building == null || (selectedtile.building.team == heldunit.team && selectedtile.building.currenthp > 0 && !selectedtile.building.neutral))
         {
-            Debug.Log("move");
             List<Vector3Int> path = GetPath(SelectedTile);
             //heldunit.tile.unit = null;
             //heldunit.tile = path[path.Count - 1];
@@ -531,13 +533,13 @@ public class TileManager : MonoBehaviour
         foreach (Vector3Int t in targetList) { tiles[t].tile.IsTarget = true; }
     }
 
-    public UnitBase GetUnitOrBuilding(Vector3Int v)
+    public UnitBase GetHostileAttackableUnitOrBuilding(UnitBase attacker, Vector3Int v, string attackType)
     {
-        if (tiles[v].unit != null)
+        if (HostileAttackableUnitOnTile(attacker, v, attackType))
         {
             return tiles[v].unit;
         }
-        else if (tiles[v].building != null)
+        else if (HostileAttackableBuildingOnTile(attacker, v, attackType))
         {
             return tiles[v].building;
         }

@@ -186,6 +186,7 @@ public abstract class UnitBase : MonoBehaviour
         abilityKey = s;
         switch (AbilityTargetCode.Task)
         {
+            //tasks can be spells, attacks or abilities. attacks are always (multi) target by default (ie cannot target ground)
             case "Attack":
                 List<Vector3Int> targets = new List<Vector3Int>();
                 foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(AbilityTargetCode.GetVariable("minRange")), int.Parse(AbilityTargetCode.GetVariable("maxRange"))))
@@ -203,33 +204,35 @@ public abstract class UnitBase : MonoBehaviour
         //parse code
         //where stack may begin
         //if targets have to be unique from eachother
-        if (AbilityTargetCode.GetVariable("Unique") == "true")
+        if (AbilityTargetCode.GetVariable("unique") == "true")
         {
-            if (!targetList.Contains(target)) { targetList.Add(target); }
+            if (!targetList.Contains(target))
+            {
+                targetList.Add(target);
+            }
         }
         else
         {
             targetList.Add(target);
         }
-        if (AbilityTargetCode.Task == "Attack" && targetList.Count == int.Parse(AbilityTargetCode.GetVariable("targets")))
+        //need to implement min/max targets
+        if (/*AbilityTargetCode.Task == "Attack" &&*/ targetList.Count == int.Parse(AbilityTargetCode.GetVariable("targets")))
         {
-            //todo: should really just have a simple parse target code
+            //todo: should really just have a simple parse target code, attack is an exception
             //target code should have two things, what are the target requirements, and how are the targets used by logic code, there should be no logic code parsing here
-            switch (AbilityLogicCode.Task)
+            switch (AbilityTargetCode.Task)
             {
                 case "Attack":
                     List<UnitBase> l = new List<UnitBase>() { this };
-                    foreach (Vector3Int v in targetList) { l.Add(TileManager.globalInstance.GetUnitOrBuilding(v)); }
+                    foreach (Vector3Int v in targetList) { l.Add(TileManager.globalInstance.GetHostileAttackableUnitOrBuilding(this, v, AbilityTargetCode.GetVariable("canHit"))); }
                     EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, l);
-                    //for (int i = 1; i < l.Count; i++) { EventsManager.InvokeOnBeforeMainAttack(this, l[i]); } 
-                    //changed this to trigger once instead of every time
                     EventsManager.InvokeOnBeforeMainAttack(this, l);
-                    targetList.Clear();
-                    abilityKey = "";
                     TileManager.globalInstance.EndUnitTurn();
                     break;
             }
         }
+        targetList.Clear();
+        abilityKey = "";
     }
 
     public virtual void StartOfTurn() { }
@@ -313,7 +316,6 @@ public abstract class UnitBase : MonoBehaviour
     public bool CanHit(UnitBase unitbase, string attackType)
     {
         bool b = false;
-        //switch (AbilityTargetCode.GetVariable("canHit"))
         switch (attackType)
         {
             case "same"://flying hits flying, land hits land
@@ -445,23 +447,8 @@ public abstract class UnitBase : MonoBehaviour
 
     protected bool ValidateTargetForCounterAttack(UnitBase targetunit, string s)
     {
-        //string[] ability = GetCode(s).Split(' ');
-        bool b = false;
         CodeObject ability = GetTargetCode(s);
-        switch (ability.GetVariable("canHit"))
-        {
-            case "same"://flying hits flying, land hits land
-                b = ((MovementType != 6 || MovementType != 7) && (targetunit.MovementType != 6 || targetunit.MovementType != 7)) || ((MovementType == 6 || MovementType == 7) && (targetunit.MovementType == 6 || targetunit.MovementType == 7));
-                break;
-            case "different"://flying hits land, land hits flying
-                b = ((MovementType != 6 || MovementType != 7) && (targetunit.MovementType == 6 || targetunit.MovementType == 7)) || ((MovementType == 6 || MovementType == 7) && (targetunit.MovementType != 6 || targetunit.MovementType != 7));
-                break;
-            case "all":
-                b = true;
-                break;
-        }
-        //return b && TileManager.globalInstance.CanSee(this, targetunit) && Team != targetunit.Team && !targetunit.Invisible && targetunit.HPCurrent > 0 && !targetunit.NotHostile && Distance(targetunit.Tile.LocalPlace, Tile.LocalPlace) >= int.Parse(ability[2]) && Distance(targetunit.Tile.LocalPlace, Tile.LocalPlace) <= int.Parse(ability[3]);
-        return b && TileManager.globalInstance.VisibleTo(this, targetunit) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit) && TileManager.globalInstance.HostileTo(this, targetunit);
+        return CanHit(targetunit, ability.GetVariable("canHit")) && TileManager.globalInstance.VisibleTo(this, targetunit) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit) && TileManager.globalInstance.HostileTo(this, targetunit);
     }
 
     protected void Attack(bool before, UnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType)
@@ -486,7 +473,6 @@ public abstract class UnitBase : MonoBehaviour
     {
         foreach (string s in Abilities)
         {
-            //string[] ability = GetCode(s).Split(' ');
             if (GetTargetCode(s).Task == "Attack" && ValidateTargetForCounterAttack(targetunit, s)/* todo move target validation to triggerpart of the stackchain*/)
             {
                 return true;
@@ -512,9 +498,8 @@ public abstract class UnitBase : MonoBehaviour
                 EventsManager.InvokeOnCounterAttack(this, targetunit);
                 return;
                 */
-
                 //change this to just parse whatever the logic code may be with the targetunit as the single target
-                //Parse(GetLogicCode(s), null, before);
+                Parse(new StackItem(GetLogicCode(s), s, this, GetAnimationCode(s), null, new List<UnitBase>() { targetunit }, null, null, null), null, before);
                 return;
             }
         }
