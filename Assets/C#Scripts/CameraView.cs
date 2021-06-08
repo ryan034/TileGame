@@ -3,24 +3,10 @@ using UnityEngine;
 
 public class CameraView : MonoBehaviour
 {
-    //public static CameraController globalInstance;
-    //Vector3 offset;
-    /*
-    void Awake()
-    {
-        if (globalInstance == null)
-        {
-            globalInstance = this;
-        }
-        else if (globalInstance != this)
-        {
-            Destroy(gameObject);
-        }
-    }*/
 
-    void Start()
+    private void Start()
     {
-        Camera.main.fieldOfView =25;
+        Camera.main.fieldOfView = 25;
         transform.rotation = globalRotation;
         Plane mapPlane = new Plane(new Vector3(0, 1, 0), new Vector3(0, 0, 0));
         Ray ray = new Ray(transform.position, transform.forward);

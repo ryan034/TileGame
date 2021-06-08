@@ -73,24 +73,6 @@ public class Unit : UnitBase
         base.ExecuteChosenAbility(s);
     }
 
-    public override void CommitTarget(Vector3Int target)
-    {
-        //parse code
-        base.CommitTarget(target);
-        /*
-        targetList.Add(target);
-        switch (targetAbility[1])
-        {
-            case "attack":
-                //execute parsed code for selected abilities
-                Attack(target);
-                targetList.Clear();
-                targetAbility = null;
-                Tilemanager.globalinstance.EndUnitTurn();
-                break;
-        }*/
-    }
-
     public void Capture(bool before, Building building, int captureDamage)
     {
         if (before)

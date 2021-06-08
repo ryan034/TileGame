@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static GlobalData;
 
 public class Building : UnitBase
 {
@@ -57,18 +56,9 @@ public class Building : UnitBase
     {
         get
         {
-            if (Neutral)
-            {
-                return TileManager.globalInstance.TeamTurn;
-            }
-            else if (Race == "Unaligned")
-            {
-                return -1;
-            }
-            else
-            {
-                return base.Team;
-            }
+            if (Neutral) { return TileManager.globalInstance.TeamTurn; }
+            else if (Race == "Unaligned") { return -1; }
+            else { return base.Team; }
         }
         set
         {
@@ -167,24 +157,6 @@ public class Building : UnitBase
         }
         ////parse code and execute based on string s
         base.ExecuteChosenAbility(s);
-    }
-
-    public override void CommitTarget(Vector3Int target)
-    {
-        //parse code
-        base.CommitTarget(target);
-        /*
-        targetList.Add(target);
-        switch (targetAbility[1])
-        {
-            case "attack":
-                //execute parsed code for selected abilities
-                Attack(target);
-                targetList.Clear();
-                targetAbility = null;
-                Tilemanager.globalinstance.EndUnitTurn();
-                break;
-        }*/
     }
 
     public override void StartOfTurn()
