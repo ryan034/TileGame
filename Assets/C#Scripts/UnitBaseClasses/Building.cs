@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static Globals;
+using static GlobalData;
 
 public class Building : UnitBase
 {
@@ -134,19 +134,6 @@ public class Building : UnitBase
         //if team holds all then building is converted
         RebalanceHold(damage, unit);
 
-    }
-
-    public override void ParseCode(CodeObject code, StackItem data, bool before)
-    {
-        switch (code.Task)
-        {
-            case "Spawn":
-                //code
-                //spawn unit
-                SpawnUnit(before, Tile, code.GetVariable("unitID"), Team);
-                return;
-        }
-        base.ParseCode(code, data, before);
     }
 
     protected override void AddToMenu(string s, List<string> menu)

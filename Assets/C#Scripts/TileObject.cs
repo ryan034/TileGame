@@ -1,13 +1,10 @@
-﻿using static Globals;
+﻿using static GlobalFunctions;
 using UnityEngine;
 using System.Collections.Generic;
 using System;
 
 public class TileObject : MonoBehaviour
 {
-
-    //public Unit unit;
-    //public Building building;
     /*
     public lists of buffs from auras
     */
@@ -33,10 +30,6 @@ public class TileObject : MonoBehaviour
     private bool canSee;
 
     //public bool elevated;
-
-    //public Tileasset background;
-    //public Tileasset foreground;
-
     private void RefreshSprite()
     {
         //gameObject.GetComponent<Renderer>().material.color = new Color(255, 255, 255);
@@ -83,19 +76,4 @@ public class TileObject : MonoBehaviour
         //gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load("MapSprites/"+ sprite) as Sprite;
     }
 
-    /*
-internal void Refreshperspective(Vector3Int key)
-
-{
-   Vector3Int offset = Offset_to_cube(localplace) - Offset_to_cube(key);
-   if (background != null)
-   {
-       background.Refreshperspective(offset);
-   }
-
-   if (foreground != null)
-   {
-       foreground.Refreshperspective(offset);
-   }
-}*/
 }

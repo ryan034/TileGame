@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using static Globals;
+using static GlobalFunctions;
+using static GlobalData;
 
 public class UnitTransformManager : MonoBehaviour
 {

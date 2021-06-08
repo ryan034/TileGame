@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static Globals;
+using static GlobalData;
 
 public class Unit : UnitBase
 {
-
     //public bool infiltrator;// can occupy non allied buildings or not
     //public bool moved;
     //public bool invisible;
@@ -37,25 +36,11 @@ public class Unit : UnitBase
         }
     }
 
-
     public override void Load(Vector3Int localPlace, UnitBaseData data, int team)
     {
         TileManager.globalInstance.AddUnit(this, localPlace);
         base.Load(localPlace, data, team);
         Team = team;
-    }
-
-    public override void ParseCode(CodeObject code, StackItem data, bool before)
-    {
-        switch (code.Task)
-        {
-            case "Capture":
-                //code
-                int index = code.GetVariable("to") == null ? 0 : int.Parse(code.GetVariable("to"));
-                data.unitData[0].Capture(before, data.buildingData[index], int.Parse(code.GetVariable("captureRate")));
-                return;
-        }
-        base.ParseCode(code, data, before);
     }
 
     protected override void AddToMenu(string s, List<string> menu)
@@ -119,5 +104,4 @@ public class Unit : UnitBase
             EventsManager.InvokeOnCapture(this, Tile.Building);
         }
     }
-
 }

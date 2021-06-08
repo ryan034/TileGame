@@ -1,4 +1,4 @@
-﻿using static Globals;
+﻿using static GlobalData;
 using UnityEngine;
 
 public class CameraView : MonoBehaviour

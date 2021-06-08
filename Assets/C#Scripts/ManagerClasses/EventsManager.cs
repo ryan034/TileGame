@@ -1,4 +1,4 @@
-﻿using static Globals;
+﻿using static GlobalParser;
 using UnityEngine;
 using System;
 using System.Collections.Generic;
@@ -120,7 +120,7 @@ public class EventsManager : MonoBehaviour
         StackItem s = new StackItem(code, name, owner, animation, intData, targetData, unitTargetData, buildingTargetData, vectorData);
         currentStack.Add(s);
         //todo: parse code logic and invoke all events here instead of at the source
-        s.owner.Parse(s, null, true);
+        Parse(s, null, true);
         if (i == 0) { StartCoroutine(ResolveStack()); }
     }
 
@@ -142,7 +142,7 @@ public class EventsManager : MonoBehaviour
             s = currentStack[currentStack.Count - 1];
             yield return StartCoroutine(s.owner.ParseAnimation(s));
             //yield return StartCoroutine(ResolveAnimation(stackItem.owner, stackItem.animationCode));
-            s.owner.Parse(s);
+            Parse(s);
             currentStack.Remove(s);
         }
     }

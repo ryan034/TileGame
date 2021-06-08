@@ -1,7 +1,7 @@
 using System.Xml.Serialization;
 using System.IO;
 using System.Collections.Generic;
-using static Globals;
+using static GlobalData;
 
 
 [XmlRoot("UnitBaseXml")]

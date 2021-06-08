@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using static Globals;
+using static GlobalData;
 
 public class AssetManager : MonoBehaviour
 {

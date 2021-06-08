@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static Globals;
-using System.IO;
+using static GlobalFunctions;
+using static GlobalData;
 
 public class TileManager : MonoBehaviour
 {

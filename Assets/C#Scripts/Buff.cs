@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
-using static Globals;
+using static GlobalParser;
 using System;
 
 public class Buff
@@ -99,7 +99,7 @@ public bool enemy;//if the buff was placed by ally or enemy
     private void OnMainAttack(UnitBase attacker, List<UnitBase> defender)
     {
         defender.Insert(0, attacker);
-        if (code.ContainsKey("OnMainAttack") && owner.ParseBool(code["OnMainAttack"].filterCode, defender ))
+        if (code.ContainsKey("OnMainAttack") && Parse(code["OnMainAttack"].filterCode, owner, defender))
         {
             EventsManager.globalInstance.AddToStack(code["OnMainAttack"].logicCode, name, owner, code["OnMainAttack"].animationCode, null, defender);
             //this is where counterattack would be triggered
@@ -108,7 +108,7 @@ public bool enemy;//if the buff was placed by ally or enemy
 
     private void OnDestroy(UnitBase destroyer, UnitBase destroyee)
     {
-        if (code.ContainsKey("OnDestroy") && owner.ParseBool(code["OnDestroy"].filterCode, new List<UnitBase>() { destroyer, destroyee }))
+        if (code.ContainsKey("OnDestroy") && Parse(code["OnDestroy"].filterCode, owner, new List<UnitBase>() { destroyer, destroyee }))
         {
             EventsManager.globalInstance.AddToStack(code["OnDestroy"].logicCode, name, owner, code["OnDestroy"].animationCode, null, new List<UnitBase>() { destroyer, destroyee });
         }
@@ -116,7 +116,7 @@ public bool enemy;//if the buff was placed by ally or enemy
 
     private void OnDeath(UnitBase dead)
     {
-        if (code.ContainsKey("OnDeath") && owner.ParseBool(code["OnDeath"].filterCode, new List<UnitBase>() { dead }))
+        if (code.ContainsKey("OnDeath") && Parse(code["OnDeath"].filterCode, owner, new List<UnitBase>() { dead }))
         {
             //extract animation code from s and set it to animation
             EventsManager.globalInstance.AddToStack(code["OnDeath"].logicCode, name, owner, code["OnDeath"].animationCode, null, new List<UnitBase>() { dead });
@@ -125,7 +125,7 @@ public bool enemy;//if the buff was placed by ally or enemy
 
     private void OnSpawn(Building spawner, Unit spawned)
     {
-        if (code.ContainsKey("OnSpawn") && owner.ParseBool(code["OnSpawn"].filterCode, null,  new List<Unit>() { spawned }, new List<Building>() { spawner }, null))
+        if (code.ContainsKey("OnSpawn") && Parse(code["OnSpawn"].filterCode, owner, null,  new List<Unit>() { spawned }, new List<Building>() { spawner }, null))
         {
             EventsManager.globalInstance.AddToStack(code["OnSpawn"].logicCode, name, owner, code["OnSpawn"].animationCode, null, new List<UnitBase>() { spawner, spawned });
         }

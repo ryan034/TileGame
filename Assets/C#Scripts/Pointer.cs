@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using static Globals;
+using static GlobalData;
 
 public class Pointer : MonoBehaviour
 {

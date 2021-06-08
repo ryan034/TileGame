@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static Globals;
+using static GlobalData;
+using static GlobalFunctions;
+using static GlobalParser;
 using System.Collections;
 
 public abstract class UnitBase : MonoBehaviour
@@ -124,7 +126,7 @@ public abstract class UnitBase : MonoBehaviour
         }
         UnitTransformManager.globalInstance.SnapMove(this, localPlace);
     }
-
+    /*
     public virtual void ParseCode(CodeObject code, StackItem data, bool before)
     {
         switch (code.Task)
@@ -136,10 +138,6 @@ public abstract class UnitBase : MonoBehaviour
                 }
                 break;
             case "CounterAttack":
-                /*
-                if (stack.code.GetVariable("from") == "") { CounterAttack(stack.unitBaseData[int.Parse(stack.code.GetVariable("to"))]); }
-                else { stack.unitBaseData[int.Parse(stack.code.GetVariable("from"))].CounterAttack(stack.unitBaseData[int.Parse(stack.code.GetVariable("to"))]); }
-                break;*/
                 UnitBase u;
                 string toCode = code.GetVariable("to");
                 string fromCode = code.GetVariable("from");
@@ -176,7 +174,7 @@ public abstract class UnitBase : MonoBehaviour
                 }
                 break;
         }
-    }
+    }*/
 
     //code=> attack:flying or not:min range: max range:base damage:dicedamage:times:damagetype: animationstring
     public virtual void ExecuteChosenAbility(string s)
@@ -330,7 +328,7 @@ public abstract class UnitBase : MonoBehaviour
         }
         return b;
     }
-
+    /*
     public void Parse(StackItem stack, CodeObject code = null, bool before = false)
     {
         if (code == null) { code = stack.code; }
@@ -428,10 +426,10 @@ public abstract class UnitBase : MonoBehaviour
         }
         if (filter.GetVariable("scope") == "all") { return true; }
         if (filter.Task == "OnAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this); }
-        //if (filter.Task == "OnBeforeAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this) /*CanCounterAttack(list[0])*/; }
+        //if (filter.Task == "OnBeforeAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this); }
         return false;
     }
-
+*/
     //protected void ChangeModel(string model) => animator.ChangeModel(model);
     protected void ChangeForm(string form)
     {
@@ -451,7 +449,7 @@ public abstract class UnitBase : MonoBehaviour
         return CanHit(targetunit, ability.GetVariable("canHit")) && TileManager.globalInstance.VisibleTo(this, targetunit) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit) && TileManager.globalInstance.HostileTo(this, targetunit);
     }
 
-    protected void Attack(bool before, UnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType)
+    public void Attack(bool before, UnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType)
     {
         if (before) { EventsManager.InvokeOnBeforeAttack(this, target); }
         else
@@ -469,7 +467,7 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    protected bool CanCounterAttack(UnitBase targetunit)
+    public bool CanCounterAttack(UnitBase targetunit)
     {
         foreach (string s in Abilities)
         {
@@ -481,7 +479,7 @@ public abstract class UnitBase : MonoBehaviour
         return false;
     }
 
-    protected void CounterAttack(bool before, UnitBase targetunit)
+    public void CounterAttack(bool before, UnitBase targetunit)
     {
         foreach (string s in Abilities)
         {

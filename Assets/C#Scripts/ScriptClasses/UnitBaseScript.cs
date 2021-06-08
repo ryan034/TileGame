@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System;
 using System.Collections.Generic;
-using static Globals;
+using static GlobalData;
 
 [CreateAssetMenu(fileName = "UnitBaseScript", menuName = "UnitBaseScript")]
 

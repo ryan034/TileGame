@@ -2,7 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using UnityEngine;
-using static Globals;
+using static GlobalData;
 
 [XmlRoot("BuffXml")]
 public class BuffXml
