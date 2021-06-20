@@ -17,7 +17,7 @@
   <armour>1</armour>
   <infiltrator>false</infiltrator>
   <movementTotal>0</movementTotal>
-  <captureRate>0</captureRate>
+  <captureDamage>0</captureDamage>
   <neutral>false</neutral>
   <buildingCover>1</buildingCover>
   <buildingConversions>

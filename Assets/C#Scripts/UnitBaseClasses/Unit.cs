@@ -10,7 +10,7 @@ public class Unit : UnitBase
     //public bool moved;
     //public bool invisible;
     public int MovementTotal => data.movementTotal + buffs.Sum(x => x.movementTotal);
-    public int CaptureRateBonus => /*data.captureRate +*/ buffs.Sum(x => x.captureRate);
+    public int CaptureDamage => buffs.Sum(x => x.captureDamage);
     public bool Infiltrator => data.infiltrator;
     public bool Rooted => buffs.Select(x => x.rooted).Contains(true);
     //protected override TileObject Tile => TileManager.globalInstance.GetTile(this);
@@ -58,6 +58,7 @@ public class Unit : UnitBase
         base.AddToMenu(s, menu);
     }
 
+    /*
     public override void ExecuteChosenAbility(string s)
     {
         abilityKey = s;
@@ -71,9 +72,9 @@ public class Unit : UnitBase
         }
         ////parse code and execute based on string s
         base.ExecuteChosenAbility(s);
-    }
+    }*/
 
-    public void Capture(bool before, Building building, int captureDamage)
+    public void Capture(bool before, Building building, int cDamage)
     {
         if (before)
         {
@@ -81,7 +82,7 @@ public class Unit : UnitBase
         }
         else
         {
-            int damage = (int)Math.Round(HPPercentage * (captureDamage + CaptureRateBonus));
+            int damage = (int)Math.Round(HPPercentage * (cDamage + CaptureDamage));
             building.TakeCaptureDamage(damage, this);
             EventsManager.InvokeOnCapture(this, Tile.Building);
         }

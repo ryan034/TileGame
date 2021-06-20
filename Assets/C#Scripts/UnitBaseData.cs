@@ -14,8 +14,7 @@ public class UnitBaseData
     public readonly int armour;
 
     public readonly bool infiltrator;
-    public readonly int movementTotal;//total movement pts
-    //public readonly int captureRate;//normally 10
+    public readonly int movementTotal;//total movement
     public readonly bool neutral;
     public readonly int buildingCover;
 
@@ -74,7 +73,6 @@ public class UnitBaseData
         armour = unitScript.armour;
         infiltrator = unitScript.infiltrator;
         movementTotal = unitScript.movementTotal; //total movement pts
-        //captureRate = unitScript.captureRate; //normally 10
         infiltrator = unitScript.infiltrator;
         neutral = unitScript.neutral; //total movement pts
         buildingCover = unitScript.buildingCover; //normally 10
@@ -111,7 +109,6 @@ public class UnitBaseData
         armour = unitXml.armour;
         infiltrator = unitXml.infiltrator;
         movementTotal = unitXml.movementTotal; //total movement pts
-        //captureRate = unitXml.captureRate; //normally 10
         infiltrator = unitXml.infiltrator;
         neutral = unitXml.neutral; //total movement pts
         buildingCover = unitXml.buildingCover; //normally 10
@@ -176,6 +173,5 @@ armour = unitXml.armour;
 
 infiltrator = unitXml.infiltrator; 
 movementTotal = unitXml.movementTotal; //total movement pts
-captureRate = unitXml.captureRate; //normally 10
 }*/
 }

@@ -29,7 +29,7 @@ public class Buff
 
     public readonly int buildingCover;
     public readonly int movementTotal;
-    public readonly int captureRate;
+    public readonly int captureDamage;
 
     public bool HasTag(string tag) => unitTags.Contains(tag);
 
@@ -123,11 +123,11 @@ public bool enemy;//if the buff was placed by ally or enemy
         }
     }
 
-    private void OnSpawn(Building spawner, Unit spawned)
+    private void OnSpawnUnit(Building spawner, Unit spawned)
     {
-        if (code.ContainsKey("OnSpawn") && Parse(code["OnSpawn"].filterCode, owner, null,  new List<Unit>() { spawned }, new List<Building>() { spawner }, null))
+        if (code.ContainsKey("OnSpawnUnit") && Parse(code["OnSpawnUnit"].filterCode, owner, null,  new List<Unit>() { spawned }, new List<Building>() { spawner }, null))
         {
-            EventsManager.globalInstance.AddToStack(code["OnSpawn"].logicCode, name, owner, code["OnSpawn"].animationCode, null, new List<UnitBase>() { spawner, spawned });
+            EventsManager.globalInstance.AddToStack(code["OnSpawnUnit"].logicCode, name, owner, code["OnSpawnUnit"].animationCode, null, new List<UnitBase>() { spawner, spawned });
         }
     }
 
@@ -169,7 +169,7 @@ public bool enemy;//if the buff was placed by ally or enemy
         nightVision = loaded.nightVision;
         buildingCover = loaded.buildingCover;
         movementTotal = loaded.movementTotal;
-        captureRate = loaded.captureRate;
+        captureDamage = loaded.captureDamage;
         foreach (BuffScript.EventCodeBlock b in loaded.code)
         {
             code[b.event_] = new EventCodeBlock(b.trigger, b.code, b.animation);
@@ -194,7 +194,7 @@ public bool enemy;//if the buff was placed by ally or enemy
         nightVision = loaded.nightVision;
         buildingCover = loaded.buildingCover;
         movementTotal = loaded.movementTotal;
-        captureRate = loaded.captureRate;
+        captureDamage = loaded.captureDamage;
 
         foreach (BuffXml.EventCodeBlock b in loaded.code)
         {

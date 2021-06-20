@@ -52,6 +52,6 @@
   <dayVision>0</dayVision>
   <nightVision>0</nightVision>
   <movementTotal>0</movementTotal>
-  <captureRate>0</captureRate>
+  <captureDamage>0</captureDamage>
   <buildingCover>0</buildingCover>
 </BuffXml>

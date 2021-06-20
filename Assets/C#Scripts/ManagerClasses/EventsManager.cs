@@ -11,14 +11,14 @@ public class EventsManager : MonoBehaviour
     public static event Action<UnitBase, List<UnitBase>> OnMainAttack;
     public static event Action<UnitBase, List<UnitBase>> OnBeforeMainAttack;
 
-    public static event Action<UnitBase, UnitBase> OnAttack;
-    public static event Action<UnitBase, UnitBase> OnBeforeAttack;
+    public static event Action<UnitBase, List<UnitBase>> OnAttack;
+    public static event Action<UnitBase, List<UnitBase>> OnBeforeAttack;
 
     public static event Action<UnitBase, UnitBase> OnCapture;
     public static event Action<UnitBase, UnitBase> OnBeforeCapture;
 
-    public static event Action<UnitBase, UnitBase> OnSpawn;
-    public static event Action<UnitBase> OnBeforeSpawn;
+    public static event Action<UnitBase, List<Unit>> OnSpawnUnit;
+    public static event Action<UnitBase> OnBeforeSpawnUnit;
 
     public static event Action<UnitBase, UnitBase> OnDestroy;
 
@@ -63,12 +63,12 @@ public class EventsManager : MonoBehaviour
     */
 
     //}
-    public static void InvokeOnAttack(UnitBase attacker, UnitBase defender)
+    public static void InvokeOnAttack(UnitBase attacker, List<UnitBase> defender)
     {
         OnAttack?.Invoke(attacker, defender);
     }
 
-    public static void InvokeOnBeforeAttack(UnitBase attacker, UnitBase defender)
+    public static void InvokeOnBeforeAttack(UnitBase attacker, List<UnitBase> defender)
     {
         OnBeforeAttack?.Invoke(attacker, defender);
     }
@@ -93,14 +93,14 @@ public class EventsManager : MonoBehaviour
         OnBeforeCapture?.Invoke(unit, building);
     }
 
-    public static void InvokeOnSpawn(UnitBase spawner, Unit unit)
+    public static void InvokeOnSpawnUnit(UnitBase spawner, List<Unit> unit)
     {
-        OnSpawn?.Invoke(spawner, unit);
+        OnSpawnUnit?.Invoke(spawner, unit);
     }
 
-    public static void InvokeOnBeforeSpawn(UnitBase spawner)
+    public static void InvokeOnBeforeSpawnUnit(UnitBase spawner)
     {
-        OnBeforeSpawn?.Invoke(spawner);
+        OnBeforeSpawnUnit?.Invoke(spawner);
     }
 
     /*

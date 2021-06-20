@@ -44,7 +44,7 @@
       <code>
         <![CDATA[<CodeObject>
           <task>Capture</task>
-          <captureRate>10</captureRate>
+          <captureDamage>10</captureDamage>
         </CodeObject>]]>
       </code>
       <animation>
@@ -69,7 +69,7 @@
   <armour>1</armour>
   <infiltrator>true</infiltrator>
   <movementTotal>10</movementTotal>
-  <captureRate>10</captureRate>
+  <captureDamage>10</captureDamage>
   <neutral>false</neutral>
   <buildingCover>0</buildingCover>
 </UnitBaseXml>

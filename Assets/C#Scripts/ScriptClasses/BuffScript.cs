@@ -23,7 +23,7 @@ public class BuffScript : ScriptableObject
 
     public int buildingCover;
     public int movementTotal;
-    public int captureRate;
+    public int captureDamage;
 
     public struct EventCodeBlock
     {

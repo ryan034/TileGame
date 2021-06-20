@@ -106,13 +106,13 @@ public static class GlobalParser
     {
         switch (code.Task)
         {
-            case "Attack":
-                for (int i = 1; i < data.unitBaseData.Count; i++)
-                {
-                    data.unitBaseData[0].Attack(before, data.unitBaseData[i], int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")));
-                }
+            case "Attack":// only refers to main attack
+                //UnitBase fromUnit = code.GetVariable("from") == "" ? data.owner : data.unitBaseData[int.Parse(code.GetVariable("from"))];
+                //int toStart = code.GetVariable("toStart") == "" ? 0 : int.Parse(code.GetVariable("toStart"));
+                //int toNumber = code.GetVariable("toNumber") == "" ? data.unitBaseData.Count : int.Parse(code.GetVariable("toNumber"));
+                data.owner.Attack(before, data.unitBaseData, int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")));
                 break;
-            case "CounterAttack":
+            case "CounterAttack": //refers to any attack thats not main attack
                 /*
                 if (stack.code.GetVariable("from") == "") { CounterAttack(stack.unitBaseData[int.Parse(stack.code.GetVariable("to"))]); }
                 else { stack.unitBaseData[int.Parse(stack.code.GetVariable("from"))].CounterAttack(stack.unitBaseData[int.Parse(stack.code.GetVariable("to"))]); }
@@ -148,35 +148,92 @@ public static class GlobalParser
                         break;
                 }
                 break;
+            case "Capture":
+                int to = code.GetVariable("to") == "" ? 0 : int.Parse(code.GetVariable("to"));
+                int from = code.GetVariable("from") == "" ? 0 : int.Parse(code.GetVariable("from"));
+                data.unitData[from].Capture(before, data.buildingData[to], int.Parse(code.GetVariable("captureDamage")));
+                return;
+            case "SpawnUnit":
+                from = code.GetVariable("from") == "" ? 0 : int.Parse(code.GetVariable("from"));
+                data.unitBaseData[from].SpawnUnit(before, data.vectorData, code.GetVariable("unitID"), data.unitBaseData[0].Team);
+                return;
         }
     }
 
-    /*
-public override void ParseCode(CodeObject code, StackItem data, bool before)
-{
-    switch (code.Task)
+    public static void CommitTarget(string abilityKey, CodeObject abilityTargetCode, CodeObject abilityLogicCode, CodeObject abilityAnimation, UnitBase owner)
     {
-        case "Spawn":
-            //code
-            //spawn unit
-            SpawnUnit(before, Tile, code.GetVariable("unitID"), Team);
-            return;
+        /*
+        //parse code
+        //where stack may begin
+        //if targets have to be unique from eachother
+        if (AbilityTargetCode.GetVariable("unique") == "true")
+        {
+            if (!targetList.Contains(target))
+            {
+                targetList.Add(target);
+            }
+        }
+        else
+        {
+            targetList.Add(target);
+        }
+        //need to implement min/max targets
+        if (targetList.Count == int.Parse(AbilityTargetCode.GetVariable("targets")))
+        {
+            //todo: should really just have a simple parse target code, attack is an exception
+            //target code should have two things, what are the target requirements, and how are the targets used by logic code, there should be no logic code parsing here
+            switch (AbilityTargetCode.Task)
+            {
+                case "Attack":
+                    List<UnitBase> l = new List<UnitBase>() { this };
+                    foreach (Vector3Int v in targetList) { l.Add(TileManager.globalInstance.GetHostileAttackableUnitOrBuilding(this, v, AbilityTargetCode.GetVariable("canHit"))); }
+                    EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, l);
+                    EventsManager.InvokeOnBeforeMainAttack(this, l);
+                    TileManager.globalInstance.EndUnitTurn();
+                    break;
+            }
+        }*/
     }
-    base.ParseCode(code, data, before);
-}*/
 
-    /*
-public override void ParseCode(CodeObject code, StackItem data, bool before)
-{
-    switch (code.Task)
+    public static void ExecuteChosenAbility(string abilityKey, CodeObject abilityTargetCode, CodeObject abilityLogicCode, CodeObject abilityAnimation, UnitBase owner)
     {
-        case "Capture":
-            //code
-            int index = code.GetVariable("to") == "" ? 0 : int.Parse(code.GetVariable("to"));
-            data.unitData[0].Capture(before, data.buildingData[index], int.Parse(code.GetVariable("captureRate")));
-            return;
+        switch (abilityTargetCode.Task)
+        {
+            //tasks can be spells, attacks or abilities. attacks are always (multi) target by default (ie cannot target ground)
+            case "Attack":
+                List<Vector3Int> targets = new List<Vector3Int>();
+                foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
+                {
+                    if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(owner, v, abilityTargetCode.GetVariable("canHit")) || TileManager.globalInstance.HostileAttackableUnitOnTile(owner, v, abilityTargetCode.GetVariable("canHit")))) { targets.Add(v); }
+                }
+                TileManager.globalInstance.SetUpTargetTiles(targets);
+                Pointer.globalInstance.GoToAttackingMode();
+                return;
+            //need to rework onsite for spawn and capture
+            case "OnSite":
+                List<UnitBase> uBList = new List<UnitBase>();
+                if (abilityTargetCode.GetVariable("unitBaseData") == "this")
+                {
+                    uBList.Add(owner);
+                }
+                List<Unit> uList = new List<Unit>();
+                if (abilityTargetCode.GetVariable("unitData") == "this")
+                {
+                    uList.Add(owner.Tile.Unit);
+                }
+                List<Building> bList = new List<Building>();
+                if (abilityTargetCode.GetVariable("buildingData") == "this")
+                {
+                    bList.Add(owner.Tile.Building);
+                }
+                List<int> iList = new List<int>();
+                List<Vector3Int> vList = new List<Vector3Int>();
+                if (abilityTargetCode.GetVariable("vectorData") == "this")
+                {
+                    vList.Add(owner.Tile.LocalPlace);
+                }
+                EventsManager.globalInstance.AddToStack(abilityLogicCode, abilityKey, owner, abilityAnimation, iList, uBList, uList, bList, vList);
+                return;
+        }
     }
-    base.ParseCode(code, data, before);
-}
-*/
 }

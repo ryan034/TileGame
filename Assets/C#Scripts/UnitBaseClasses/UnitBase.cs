@@ -16,7 +16,7 @@ public abstract class UnitBase : MonoBehaviour
     //protected string[] AbilityVariables => GetCode(abilityKey).Split(' ');
     protected CodeObject AbilityTargetCode => GetTargetCode(abilityKey);
     protected CodeObject AbilityLogicCode => GetLogicCode(abilityKey);
-    protected CodeObject AbilityAnimation => GetAnimationCode(abilityKey);
+    protected CodeObject AbilityAnimationCode => GetAnimationCode(abilityKey);
     protected string abilityKey;
     protected List<Vector3Int> targetList = new List<Vector3Int>();
     protected List<Buff> buffs = new List<Buff>();
@@ -126,26 +126,6 @@ public abstract class UnitBase : MonoBehaviour
         }
         UnitTransformManager.globalInstance.SnapMove(this, localPlace);
     }
-    
-    public virtual void ExecuteChosenAbility(string s)
-    {
-        ////parse code and execute based on string s
-        //where stack may begin if the spell has no targets
-        abilityKey = s;
-        switch (AbilityTargetCode.Task)
-        {
-            //tasks can be spells, attacks or abilities. attacks are always (multi) target by default (ie cannot target ground)
-            case "Attack":
-                List<Vector3Int> targets = new List<Vector3Int>();
-                foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(AbilityTargetCode.GetVariable("minRange")), int.Parse(AbilityTargetCode.GetVariable("maxRange"))))
-                {
-                    if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(this, v, AbilityTargetCode.GetVariable("canHit")) || TileManager.globalInstance.HostileAttackableUnitOnTile(this, v, AbilityTargetCode.GetVariable("canHit")))) { targets.Add(v); }
-                }
-                TileManager.globalInstance.SetUpTargetTiles(targets);
-                Pointer.globalInstance.GoToAttackingMode();
-                break;
-        }
-    }
 
     public virtual void StartOfTurn() { }
 
@@ -225,11 +205,14 @@ public abstract class UnitBase : MonoBehaviour
         return attackToArmour[damagetype, ArmourType];
     }
 
+    public void ExecuteChosenAbility(string s) { abilityKey = s; GlobalParser.ExecuteChosenAbility(s, AbilityTargetCode, AbilityLogicCode, AbilityAnimationCode, this); }
+
     public void CommitTarget(Vector3Int target)
     {
         //parse code
         //where stack may begin
         //if targets have to be unique from eachother
+        /*
         if (AbilityTargetCode.GetVariable("unique") == "true")
         {
             if (!targetList.Contains(target))
@@ -242,7 +225,7 @@ public abstract class UnitBase : MonoBehaviour
             targetList.Add(target);
         }
         //need to implement min/max targets
-        if (/*AbilityTargetCode.Task == "Attack" &&*/ targetList.Count == int.Parse(AbilityTargetCode.GetVariable("targets")))
+        if ( targetList.Count == int.Parse(AbilityTargetCode.GetVariable("targets")))
         {
             //todo: should really just have a simple parse target code, attack is an exception
             //target code should have two things, what are the target requirements, and how are the targets used by logic code, there should be no logic code parsing here
@@ -258,24 +241,42 @@ public abstract class UnitBase : MonoBehaviour
             }
         }
         targetList.Clear();
-        abilityKey = "";
+        abilityKey = "";*/
+        foreach (string item in AbilityTargetCode.GetListVariables("targets"))
+        {
+            switch (item)
+            {
+                case "b":
+                    //add building as target
+                    break;
+                case "u":
+                    // add unit
+                    break;
+                case "v":
+                    // add vector3int
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
-    public void Attack(bool before, UnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType)
+    public void Attack(bool before, List<UnitBase> target, int baseDamage, int diceDamage, int diceTimes, int damageType)
     {
         if (before) { EventsManager.InvokeOnBeforeAttack(this, target); }
         else
         {
-            /*roll damage from current ability code*/ //(int)Math.Round((double)(currenthp / HP()) * Rolldamage(Damage(index), damagevariance[index]));
-                                                      //UnitBase t = TileManager.globalInstance.GetUnitOrBuilding(target);
-            int cover = target.CoverBonus;
-            int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(baseDamage, diceDamage, diceTimes, cover));
-            //animator.Animate(targetAbility[8]);
-            //UnitTransformManager.globalInstance.QueueAnimation(this, targetAbility[8], target);
-            target.TakeDamage(this, damageType, totaldamage);
-            //t.CounterAttack(this);
-            //t.GetAttackedAndCounter(this, DamageType, totaldamage);
-            EventsManager.InvokeOnAttack(this, target);
+            foreach (UnitBase t in target)
+            {
+                int cover = t.CoverBonus;
+                int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(baseDamage, diceDamage, diceTimes, cover));
+                //animator.Animate(targetAbility[8]);
+                //UnitTransformManager.globalInstance.QueueAnimation(this, targetAbility[8], target);
+                t.TakeDamage(this, damageType, totaldamage);
+                //t.CounterAttack(this);
+                //t.GetAttackedAndCounter(this, DamageType, totaldamage);
+                EventsManager.InvokeOnAttack(this, target);
+            }
         }
     }
 
@@ -327,11 +328,48 @@ public abstract class UnitBase : MonoBehaviour
                 return;
                 */
                 //change this to just parse whatever the logic code may be with the targetunit as the single target
-                Parse(new StackItem(GetLogicCode(s), s, this, GetAnimationCode(s), null, new List<UnitBase>() { targetunit }, null, null, null), null, before);
+                Parse(new StackItem(GetLogicCode(s), s, this, GetAnimationCode(s), null, new List<UnitBase>() { this, targetunit }, null, null, null), null, before);
                 return;
             }
         }
     }
+
+    public List<Unit> SpawnUnit(bool before, List<Vector3Int> tile, string script, int team_)
+    {
+        if (before) { EventsManager.InvokeOnBeforeSpawnUnit(this); return null; }
+        else
+        {
+            Actioned = true;
+            //Unit unit = SpawnUnit(Tile, AbilityLogicCode.GetVariable("unitID"), Team);
+            List<Unit> units = new List<Unit>();
+            foreach (Vector3Int t in tile)
+            {
+                Unit unit = TileManager.globalInstance.SpawnUnit(t, script, team_);
+                units.Add(unit);
+            }
+            EventsManager.InvokeOnSpawnUnit(this, units);
+            return units;
+        }
+    }
+
+    /*
+    ////parse code and execute based on string s
+    //where stack may begin if the spell has no targets
+    abilityKey = s;
+    switch (AbilityTargetCode.Task)
+    {
+        //tasks can be spells, attacks or abilities. attacks are always (multi) target by default (ie cannot target ground)
+        case "Attack":
+            List<Vector3Int> targets = new List<Vector3Int>();
+            foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(AbilityTargetCode.GetVariable("minRange")), int.Parse(AbilityTargetCode.GetVariable("maxRange"))))
+            {
+                if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(this, v, AbilityTargetCode.GetVariable("canHit")) || TileManager.globalInstance.HostileAttackableUnitOnTile(this, v, AbilityTargetCode.GetVariable("canHit")))) { targets.Add(v); }
+            }
+            TileManager.globalInstance.SetUpTargetTiles(targets);
+            Pointer.globalInstance.GoToAttackingMode();
+            break;
+    }
+    */
 
     protected void ChangeForm(string form)
     {

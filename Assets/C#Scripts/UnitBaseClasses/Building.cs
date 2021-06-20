@@ -141,6 +141,7 @@ public class Building : UnitBase
         base.AddToMenu(s, menu);
     }
 
+    /*
     public override void ExecuteChosenAbility(string s)
     {
         abilityKey = s;
@@ -157,7 +158,7 @@ public class Building : UnitBase
         }
         ////parse code and execute based on string s
         base.ExecuteChosenAbility(s);
-    }
+    }*/
 
     public override void StartOfTurn()
     {
@@ -255,16 +256,4 @@ public class Building : UnitBase
         hold[unit.Team] = hold[unit.Team] + damage > HP ? HP : hold[unit.Team] + damage;
     }
 
-    public Unit SpawnUnit(bool before, TileObject tile, string script, int team_)
-    {
-        if (before) { EventsManager.InvokeOnBeforeSpawn(this); return null; }
-        else
-        {
-            Actioned = true;
-            //Unit unit = SpawnUnit(Tile, AbilityLogicCode.GetVariable("unitID"), Team);
-            Unit unit = TileManager.globalInstance.SpawnUnit(Tile.LocalPlace, script, team_);
-            EventsManager.InvokeOnSpawn(this, unit);
-            return unit;
-        }
-    }
 }
