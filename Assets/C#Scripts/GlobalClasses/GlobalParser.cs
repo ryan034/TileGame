@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -160,42 +159,126 @@ public static class GlobalParser
         }
     }
 
-    public static void CommitTarget(string abilityKey, CodeObject abilityTargetCode, CodeObject abilityLogicCode, CodeObject abilityAnimation, UnitBase owner)
+    public static void AddToMenu(string s, UnitBase owner, CodeObject abilityTargetCode, List<string> menu)
     {
-        /*
-        //parse code
-        //where stack may begin
-        //if targets have to be unique from eachother
-        if (AbilityTargetCode.GetVariable("unique") == "true")
+        switch (abilityTargetCode.Task)
         {
-            if (!targetList.Contains(target))
+            case "Attack":
+                if (!owner.Disarmed)
+                {
+                    foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
+                    {
+                        if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(owner, v, s) || TileManager.globalInstance.HostileAttackableUnitOnTile(owner, v, s)))
+                        {
+                            menu.Add(s);
+                            return;
+                        }
+                    }
+                }
+                //explore to see if theres enemies
+                break;
+            case "Spell":
+                //explore to see if theres targets
+                if (!owner.Silenced)
+                {
+                    bool b = false;
+                    //scan for targets by reading targets variable, if targets exist then add to menu
+                    foreach (string target in abilityTargetCode.GetListVariables("targets"))
+                    {
+                        switch (target)
+                        {
+                            case "hostileVisibleBuildingOnTile":
+                                foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
+                                {
+                                    if (TileManager.globalInstance.HostileVisibleBuildingOnTile(owner, v))
+                                    {
+                                        b = true;
+                                        break;
+                                    }
+                                }
+                                break;
+                            case "hostileVisibleUnitOnTile":
+                                foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
+                                {
+                                    if (TileManager.globalInstance.HostileVisibleUnitOnTile(owner, v))
+                                    {
+                                        b = true;
+                                        break;
+                                    }
+                                }
+                                break;
+                        }
+                        if (!b) { return; };
+                    }
+                    menu.Add(s);
+                }
+                break;
+            /*
+        case "Capture":
+            if (TileManager.globalInstance.HostileVisibleBuildingOnTile(owner, owner.Tile.LocalPlace))
             {
-                targetList.Add(target);
+                menu.Add(s);
+            }
+            return;
+        case "Spawn":
+            if (owner.Tile.Unit == null)
+            {
+                menu.Add(s);
+            }
+            return;*/
+            case "OnSite":
+                //scan for targets by reading targets variable, if targets exist then add to menu
+                foreach (string target in abilityTargetCode.GetListVariables("targets"))
+                {
+                    switch (target)
+                    {
+                        case "hostileVisibleBuildingOnThisTile":
+                            if (!TileManager.globalInstance.HostileVisibleBuildingOnTile(owner, owner.Tile.LocalPlace)) { return; }
+                            break;
+                    }
+                }
+                menu.Add(s);
+                break;
+        }
+    }
+
+    public static bool CommitTarget(string abilityKey, CodeObject abilityTargetCode, UnitBase owner, Vector3Int target, List<Building> buildingList, List<Unit> unitList, List<UnitBase> unitBaseList, List<Vector3Int> vectorList, List<int> intList)
+    {
+        if (abilityTargetCode.Task == "Attack")
+        {
+            unitBaseList.Add(TileManager.globalInstance.GetHostileAttackableUnitOrBuilding(owner, target, abilityTargetCode.GetVariable("canHit")));
+            if (owner.TargetCount == int.Parse(abilityTargetCode.GetVariable("targets")))
+            {
+                return true;
             }
         }
         else
         {
-            targetList.Add(target);
-        }
-        //need to implement min/max targets
-        if (targetList.Count == int.Parse(AbilityTargetCode.GetVariable("targets")))
-        {
-            //todo: should really just have a simple parse target code, attack is an exception
-            //target code should have two things, what are the target requirements, and how are the targets used by logic code, there should be no logic code parsing here
-            switch (AbilityTargetCode.Task)
+            string item = abilityTargetCode.GetListVariables("targets")[owner.TargetCount];
+            switch (item)
             {
-                case "Attack":
-                    List<UnitBase> l = new List<UnitBase>() { this };
-                    foreach (Vector3Int v in targetList) { l.Add(TileManager.globalInstance.GetHostileAttackableUnitOrBuilding(this, v, AbilityTargetCode.GetVariable("canHit"))); }
-                    EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, l);
-                    EventsManager.InvokeOnBeforeMainAttack(this, l);
-                    TileManager.globalInstance.EndUnitTurn();
+                case "hostileVisibleBuildingOnTile":
+                    //add building as target
+                    if (TileManager.globalInstance.HostileVisibleBuildingOnTile(owner, target)) { buildingList.Add(TileManager.globalInstance.GetBuilding(target)); }
+                    break;
+                case "hostileVisibleUnitOnTile":
+                    // add unit
+                    if (TileManager.globalInstance.HostileVisibleUnitOnTile(owner, target)) { unitList.Add(TileManager.globalInstance.GetUnit(target)); }
+                    break;
+                case "v":
+                    // add vector3int
+                    vectorList.Add(target);
                     break;
             }
-        }*/
+            if (owner.TargetCount == abilityTargetCode.GetListVariables("targets").Count)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
-    public static void ExecuteChosenAbility(string abilityKey, CodeObject abilityTargetCode, CodeObject abilityLogicCode, CodeObject abilityAnimation, UnitBase owner)
+    public static void ChooseMenuAbility(string abilityKey, CodeObject abilityTargetCode, CodeObject abilityLogicCode, CodeObject abilityAnimation, UnitBase owner)
     {
         switch (abilityTargetCode.Task)
         {
@@ -212,25 +295,22 @@ public static class GlobalParser
             //need to rework onsite for spawn and capture
             case "OnSite":
                 List<UnitBase> uBList = new List<UnitBase>();
-                if (abilityTargetCode.GetVariable("unitBaseData") == "this")
-                {
-                    uBList.Add(owner);
-                }
                 List<Unit> uList = new List<Unit>();
-                if (abilityTargetCode.GetVariable("unitData") == "this")
-                {
-                    uList.Add(owner.Tile.Unit);
-                }
                 List<Building> bList = new List<Building>();
-                if (abilityTargetCode.GetVariable("buildingData") == "this")
-                {
-                    bList.Add(owner.Tile.Building);
-                }
                 List<int> iList = new List<int>();
                 List<Vector3Int> vList = new List<Vector3Int>();
-                if (abilityTargetCode.GetVariable("vectorData") == "this")
+                foreach (string s in abilityTargetCode.GetListVariables("targets"))
                 {
-                    vList.Add(owner.Tile.LocalPlace);
+                    switch (s)
+                    {
+                        case "hostileVisibleBuildingOnThisTile":
+                            bList.Add(owner.Tile.Building);
+                            //if (TileManager.globalInstance.HostileVisibleBuildingOnTile(owner, owner.Tile.LocalPlace)) { bList.Add(owner.Tile.Building); }
+                            break;
+                        case "thisUnit":
+                            uList.Add(owner.Tile.Unit);
+                            break;
+                    }
                 }
                 EventsManager.globalInstance.AddToStack(abilityLogicCode, abilityKey, owner, abilityAnimation, iList, uBList, uList, bList, vList);
                 return;

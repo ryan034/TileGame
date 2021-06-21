@@ -401,11 +401,11 @@ public class TileManager : MonoBehaviour
             //execute based on if a unit is selected or building
             if (heldUnit != null)
             {
-                heldUnit.ExecuteChosenAbility(s);
+                heldUnit.ChooseMenuAbility(s);
             }
             else if (FriendlyBuildingSelected)
             {
-                SelectedTile.building.ExecuteChosenAbility(s);
+                SelectedTile.building.ChooseMenuAbility(s);
             }
         }
     }

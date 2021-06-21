@@ -43,21 +43,6 @@ public class Unit : UnitBase
         Team = team;
     }
 
-    protected override void AddToMenu(string s, List<string> menu)
-    {
-        switch (GetTargetCode(s).Task)
-        {
-            case "Capture":
-                if (TileManager.globalInstance.HostileVisibleBuildingOnTile(this, Tile.LocalPlace))
-                {
-                    menu.Add(s);
-                }
-                return;
-        }
-        //parse code to see if there are valid targets
-        base.AddToMenu(s, menu);
-    }
-
     /*
     public override void ExecuteChosenAbility(string s)
     {

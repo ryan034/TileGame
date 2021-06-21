@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using static GlobalData;
 using static GlobalFunctions;
 using static GlobalParser;
-using System.Collections;
 
 public abstract class UnitBase : MonoBehaviour
 {
@@ -18,7 +18,14 @@ public abstract class UnitBase : MonoBehaviour
     protected CodeObject AbilityLogicCode => GetLogicCode(abilityKey);
     protected CodeObject AbilityAnimationCode => GetAnimationCode(abilityKey);
     protected string abilityKey;
-    protected List<Vector3Int> targetList = new List<Vector3Int>();
+    //protected List<Vector3Int> targetList = new List<Vector3Int>();
+    protected List<Unit> unitList = new List<Unit>();
+    protected List<Building> buildingList = new List<Building>();
+    protected List<Vector3Int> vectorList = new List<Vector3Int>();
+    protected List<int> intList = new List<int>();
+    protected List<UnitBase> unitBaseList = new List<UnitBase>();
+    public int TargetCount => unitList.Count + buildingList.Count + vectorList.Count + intList.Count + unitBaseList.Count;
+    //protected int targetIndex;
     protected List<Buff> buffs = new List<Buff>();
 
     protected virtual int DamageTaken
@@ -141,37 +148,6 @@ public abstract class UnitBase : MonoBehaviour
         }*/
     }
 
-    protected virtual void AddToMenu(string s, List<string> menu)
-    {
-        //parse code to see if there are valid targets
-        //todo: incorporate min targets
-        List<Vector3Int> potentialTargets = new List<Vector3Int>();
-        switch (GetTargetCode(s).Task)
-        {
-            case "Attack":
-                if (!Disarmed)
-                {
-                    foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(GetTargetCode(s).GetVariable("minRange")), int.Parse(GetTargetCode(s).GetVariable("maxRange"))))
-                    {
-                        if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(this, v, s) || TileManager.globalInstance.HostileAttackableUnitOnTile(this, v, s)))
-                        {
-                            menu.Add(s);
-                            return;
-                        }
-                    }
-                }
-                //explore to see if theres enemies
-                break;
-            case "Spell":
-                //explore to see if theres targets
-                if (/*TileManager.globalInstance.AnyTargets(targetAbility[1], targetAbility[2],int.Parse(targetAbility[3]), int.Parse(targetAbility[4]))*/ !Silenced)
-                {
-                    menu.Add(s);
-                }
-                break;
-        }
-    }
-
     public bool HasTag(string tag) => (data.HasTag(tag) || buffs.Select(x => x.HasTag(tag)).Contains(true));
 
     public string GetConvertedForm(string race) => data.GetConvertedForm(race);
@@ -190,13 +166,17 @@ public abstract class UnitBase : MonoBehaviour
     {
         foreach (string s in Abilities)
         {
-            AddToMenu(s, menu);
+            AddToMenu(s, this, GetTargetCode(s), menu);
         }
     }
 
     public void ClearTargets()
     {
-        targetList.Clear();
+        unitList.Clear();
+        buildingList.Clear();
+        vectorList.Clear();
+        intList.Clear();
+        unitBaseList.Clear();
     }
 
     public float GetResistance(int damagetype)
@@ -205,13 +185,15 @@ public abstract class UnitBase : MonoBehaviour
         return attackToArmour[damagetype, ArmourType];
     }
 
-    public void ExecuteChosenAbility(string s) { abilityKey = s; GlobalParser.ExecuteChosenAbility(s, AbilityTargetCode, AbilityLogicCode, AbilityAnimationCode, this); }
+    public void ChooseMenuAbility(string s) { abilityKey = s; GlobalParser.ChooseMenuAbility(s, AbilityTargetCode, AbilityLogicCode, AbilityAnimationCode, this); }
 
     public void CommitTarget(Vector3Int target)
     {
-        //parse code
-        //where stack may begin
-        //if targets have to be unique from eachother
+        if (GlobalParser.CommitTarget(abilityKey, AbilityTargetCode, this, target, buildingList, unitList, unitBaseList, vectorList, intList))
+        {
+            EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimationCode, intList, unitBaseList, unitList, buildingList, vectorList);
+            ClearTargets();
+        }
         /*
         if (AbilityTargetCode.GetVariable("unique") == "true")
         {
@@ -242,23 +224,6 @@ public abstract class UnitBase : MonoBehaviour
         }
         targetList.Clear();
         abilityKey = "";*/
-        foreach (string item in AbilityTargetCode.GetListVariables("targets"))
-        {
-            switch (item)
-            {
-                case "b":
-                    //add building as target
-                    break;
-                case "u":
-                    // add unit
-                    break;
-                case "v":
-                    // add vector3int
-                    break;
-                default:
-                    break;
-            }
-        }
     }
 
     public void Attack(bool before, List<UnitBase> target, int baseDamage, int diceDamage, int diceTimes, int damageType)
@@ -351,25 +316,6 @@ public abstract class UnitBase : MonoBehaviour
             return units;
         }
     }
-
-    /*
-    ////parse code and execute based on string s
-    //where stack may begin if the spell has no targets
-    abilityKey = s;
-    switch (AbilityTargetCode.Task)
-    {
-        //tasks can be spells, attacks or abilities. attacks are always (multi) target by default (ie cannot target ground)
-        case "Attack":
-            List<Vector3Int> targets = new List<Vector3Int>();
-            foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(AbilityTargetCode.GetVariable("minRange")), int.Parse(AbilityTargetCode.GetVariable("maxRange"))))
-            {
-                if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(this, v, AbilityTargetCode.GetVariable("canHit")) || TileManager.globalInstance.HostileAttackableUnitOnTile(this, v, AbilityTargetCode.GetVariable("canHit")))) { targets.Add(v); }
-            }
-            TileManager.globalInstance.SetUpTargetTiles(targets);
-            Pointer.globalInstance.GoToAttackingMode();
-            break;
-    }
-    */
 
     protected void ChangeForm(string form)
     {

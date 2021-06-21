@@ -38,7 +38,11 @@
       <name>Capture</name>
       <target>
         <![CDATA[<CodeObject>
-          <task>Capture</task>
+          <task>OnSite</task>
+          <targets>
+            <target>hostileVisibleBuildingOnThisTile</target>
+            <target>thisUnit</target>
+          </targets>
         </CodeObject>]]>
       </target>
       <code>

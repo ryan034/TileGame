@@ -64,15 +64,13 @@ public class CodeObject
 
     public string GetVariable(string s) { if (variablesSingle.ContainsKey(s)) { return variablesSingle[s]; } else { return ""; } }
 
-    public IEnumerable<string> GetListVariables(string s)
+    public List<string> GetListVariables(string s)
     {
         if (variablesList.ContainsKey(s))
         {
-            foreach (string str in variablesList[s])
-            {
-                yield return str;
-            }
+            return variablesList[s];
         }
+        return null;
     }
 
     public IEnumerable<CodeObject> GetCodeObjects(string s)

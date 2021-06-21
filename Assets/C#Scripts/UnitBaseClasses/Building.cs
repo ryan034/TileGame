@@ -126,21 +126,6 @@ public class Building : UnitBase
 
     }
 
-    protected override void AddToMenu(string s, List<string> menu)
-    {
-        switch (GetTargetCode(s).Task)
-        {
-            case "Spawn":
-                if (Tile.Unit == null)
-                {
-                    menu.Add(s);
-                }
-                return;
-        }
-        //parse code to see if there are valid targets
-        base.AddToMenu(s, menu);
-    }
-
     /*
     public override void ExecuteChosenAbility(string s)
     {
