@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using UnityEngine;
 
 public class CodeObject
 {
@@ -27,8 +26,9 @@ public class CodeObject
             // if it's part of a collection then add the collection items to a temp variable 
             if (i.HasElements)
             {
-                if (i.Elements().Count() > 1 && i.Elements().All(e => e.Name.LocalName == i.Elements().First().Name.LocalName) || i.Name.LocalName == Pluralize(i.Elements().First().Name.LocalName))
+                if (/*i.Elements().Count() > 1 && i.Elements().All(e => e.Name.LocalName == i.Elements().First().Name.LocalName) || */i.Name.LocalName == (i.Elements().First().Name.LocalName) + "s")
                 {
+                    result.variablesList[i.Name.LocalName] = new List<string>();
                     i.Elements().ToList().ForEach(x => { result.variablesList[i.Name.LocalName].Add(x.Value); });
                 }
                 else result.functionsList.Add(new KeyValuePair<string, CodeObject>(i.Name.LocalName, LoadCode(null, i))); //if it's not a collection, but it has child elements then it's either a complex property or a simple property create a property with the current child elements name and process its properties
@@ -56,7 +56,7 @@ public class CodeObject
         {
             foreach (KeyValuePair<string, CodeObject> s in functionsList)
             {
-                if(s.Key== "true" || s.Key == "false") { return true; }
+                if (s.Key == "true" || s.Key == "false") { return true; }
             }
             return false;
         }
@@ -80,12 +80,12 @@ public class CodeObject
             if (f.Key == s) { yield return f.Value; }
         }
     }
-
+    /*
     private static string Pluralize(string localName)
     {
         return localName + "s";
     }
-    /*
+
     private dynamic GetAnonymousType(string xml, XElement element = null)
     {
         // either set the element directly or parse XML from the xml parameter.

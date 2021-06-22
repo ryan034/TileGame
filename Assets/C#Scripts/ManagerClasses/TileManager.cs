@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static GlobalFunctions;
 using static GlobalData;
+using static GlobalFunctions;
 
 public class TileManager : MonoBehaviour
 {
@@ -93,21 +92,18 @@ public class TileManager : MonoBehaviour
     }
 
     /*
-    public bool CanCapture
-    {
-        get
-        {
-            Vector3Int v = unitbases[heldUnit];
-            return tiles[v].building != null && tiles[v].building.Team != heldUnit.Team && !tiles[v].building.Invisible && !tiles[v].building.NotHostile;
-        }
-    }*/
-
     private bool NoBlockingBuildingOnTile(Vector3Int v, Unit unit)
     {
         return tiles[v].building == null || ((tiles[v].building.Team == unit.Team || unit.Infiltrator) && !tiles[v].building.Neutral);
-    }
+    }*/
 
-    private bool NoPercievedUnitOnTile(Vector3Int n)
+    private Building BlockingBuildingOnTile(Vector3Int v, Unit unit)
+    {
+        if (tiles[v].building == null || ((tiles[v].building.Team == unit.Team || unit.Infiltrator) && !tiles[v].building.Neutral)) { return null; }
+        return tiles[v].building;
+    }
+    /*
+    private bool NoPercievedUnitOnTile(Vector3Int n, int team)
     {
         if (tiles[n].unit == null)
         {
@@ -115,8 +111,18 @@ public class TileManager : MonoBehaviour
         }
         else
         {
-            return (tiles[n].unit.Invisible && tiles[n].unit.Team == TeamTurn) || !tiles[n].tile.CanSee;
+            return (tiles[n].unit.Invisible && tiles[n].unit.Team != team) || !tiles[n].tile.CanSee;
         }
+    }
+    */
+
+    private Unit PercievedUnitOnTile(Vector3Int n, int team)
+    {
+        if (!tiles[n].tile.CanSee || tiles[n].unit == null || (tiles[n].unit.Invisible && tiles[n].unit.Team != team))
+        {
+            return null;
+        }
+        return tiles[n].unit;
     }
 
     private void AddNeighbors(Tile key, Unit unit, List<Tile> list_)
@@ -126,8 +132,8 @@ public class TileManager : MonoBehaviour
         {
             if (tiles.ContainsKey(n))
             {
-                if (!tiles[n].tile.IsExplored && (NoPercievedUnitOnTile(n) || (tiles[n].unit != null && tiles[n].unit.Team == unit.Team))
-                    && NoBlockingBuildingOnTile(n, unit))
+                if (!tiles[n].tile.IsExplored && (PercievedUnitOnTile(n, TeamTurn) == null || (tiles[n].unit != null && tiles[n].unit.Team == unit.Team))
+                    && BlockingBuildingOnTile(n, unit) == null)
                 {
                     list_.Add(tiles[n]);
                 }
@@ -225,6 +231,18 @@ public class TileManager : MonoBehaviour
         }
     }
 
+    private Building HostileAttackableBuildingOnTile(UnitBase attacker, Vector3Int v, string attackType)
+    {
+        if (HostileVisibleBuildingOnTile(attacker, v) != null && attacker.CanHit(tiles[v].building, attackType)) { return tiles[v].building; };
+        return null;
+    }
+
+    private Unit HostileAttackableUnitOnTile(UnitBase attacker, Vector3Int v, string attackType)
+    {
+        if (HostileVisibleUnitOnTile(attacker, v) != null && attacker.CanHit(tiles[v].unit, attackType)) { return tiles[v].unit; };
+        return null;
+    }
+
     public void Load(int teams)
     {
         for (int i = 0; i < teams; i++)
@@ -258,64 +276,56 @@ public class TileManager : MonoBehaviour
         return Distance(unitBases[targetUnit], unitBases[u]) >= min && Distance(unitBases[targetUnit], unitBases[u]) <= max;
     }
 
-    public bool VisibleTo(UnitBase unitLooking, UnitBase targetUnit)
+    public bool VisibleAndHostileTo(UnitBase unitLooking, UnitBase targetUnit)
     {
-        if (unitLooking.Team == targetUnit.Team) { return true; }
-        TileObject tileOfLooker = GetTile(unitLooking);
-        TileObject tileOfTarget = GetTile(targetUnit);
-        int vision;
-        int terrain = tileOfLooker.TerrainType;
-        int targetTerrain = tileOfTarget.TerrainType;
-        if (IsDay) { vision = unitLooking.DayVision; }
-        else { vision = unitLooking.NightVision; }
-        if (terrain == 6 || (unitLooking.MovementType != 6 || unitLooking.MovementType != 7)) { vision += 3; }
-        if (terrain == 4 || terrain == 8) { vision = 1; }
-        if (Distance(tileOfLooker.LocalPlace, tileOfTarget.LocalPlace) > vision) { return false; }
-        if (unitLooking.MovementType != 6 || unitLooking.MovementType != 7)//ground unit
+        if (unitLooking.Team != targetUnit.Team && !targetUnit.Charming)
         {
-            if (terrain == 5 || terrain == 9/*highgrass sees highgrass ravines see ravines*/)
+            //need to reformat this to include sight of other team members
+            TileObject tileOfLooker = GetTile(unitLooking);
+            TileObject tileOfTarget = GetTile(targetUnit);
+            if (unitLooking.Team == TeamTurn) { return !targetUnit.Invisible && tileOfTarget.CanSee; };
+            int vision;
+            int terrain = tileOfLooker.TerrainType;
+            int targetTerrain = tileOfTarget.TerrainType;
+            if (IsDay) { vision = unitLooking.DayVision; } else { vision = unitLooking.NightVision; }
+            if (terrain == 6 || (unitLooking.MovementType != 6 || unitLooking.MovementType != 7)) { vision += 3; }
+            if (terrain == 4 || terrain == 8) { vision = 1; }
+            if (Distance(tileOfLooker.LocalPlace, tileOfTarget.LocalPlace) > vision) { return false; }
+            if (unitLooking.MovementType != 6 || unitLooking.MovementType != 7)//ground unit
             {
-                if (targetTerrain == terrain && targetTerrain != 6 /*&& tiles[v].elevated == unit.tile.elevated*/) { return !targetUnit.Invisible; }
-            }
-            else if (terrain == 4 || terrain == 8/*woods/coves see neighbors that are not highgrass or ravines or mountains*/)
-            {
-                if (targetTerrain != 5 && targetTerrain != 9 && targetTerrain != 6 /*&& tiles[v].elevated == unit.tile.elevated*/) { return !targetUnit.Invisible; }
-            }
-            else
-            {
-                if (targetTerrain != 5 && targetTerrain != 9 && targetTerrain != 6 && targetTerrain != 4 && targetTerrain != 8)
+                if (terrain == 5 || terrain == 9/*highgrass sees highgrass ravines see ravines*/)
                 {
-                    return !targetUnit.Invisible;
+                    if (targetTerrain == terrain && targetTerrain != 6 /*&& tiles[v].elevated == unit.tile.elevated*/) { return !targetUnit.Invisible; }
+                }
+                else if (terrain == 4 || terrain == 8/*woods/coves see neighbors that are not highgrass or ravines or mountains*/)
+                {
+                    if (targetTerrain != 5 && targetTerrain != 9 && targetTerrain != 6 /*&& tiles[v].elevated == unit.tile.elevated*/) { return !targetUnit.Invisible; }
+                }
+                else
+                {
+                    if (targetTerrain != 5 && targetTerrain != 9 && targetTerrain != 6 && targetTerrain != 4 && targetTerrain != 8) { return !targetUnit.Invisible; }
                 }
             }
+            else { if (terrain != 4 || terrain != 9 || terrain != 8) { return !targetUnit.Invisible; } }
         }
-        else { if (terrain != 4 || terrain != 9 || terrain != 8) { return !targetUnit.Invisible; } }
         return false;
     }
-
+    /*
     public bool HostileTo(UnitBase unit, UnitBase target)
     {
         return unit.Team != target.Team && !target.Charming;
     }
-
-    public bool HostileVisibleBuildingOnTile(UnitBase u, Vector3Int v)
+    */
+    public Building HostileVisibleBuildingOnTile(UnitBase u, Vector3Int v)
     {
-        return tiles[v].building != null && HostileTo(u, tiles[v].building) && VisibleTo(u, tiles[v].building) /*&& u.CanHit(tiles[v].building)*/;
+        if (tiles[v].building != null && VisibleAndHostileTo(u, tiles[v].building)) { return tiles[v].building; }/*&& u.CanHit(tiles[v].building)*/;
+        return null;
     }
 
-    public bool HostileVisibleUnitOnTile(UnitBase u, Vector3Int v)
+    public Unit HostileVisibleUnitOnTile(UnitBase u, Vector3Int v)
     {
-        return tiles[v].unit != null && HostileTo(u, tiles[v].unit) && VisibleTo(u, tiles[v].unit) /*&& u.CanHit(tiles[v].building)*/;
-    }
-
-    public bool HostileAttackableBuildingOnTile(UnitBase attacker, Vector3Int v, string attackType)
-    {
-        return HostileVisibleBuildingOnTile(attacker, v) && attacker.CanHit(tiles[v].building, attackType);
-    }
-
-    public bool HostileAttackableUnitOnTile(UnitBase attacker, Vector3Int v, string attackType)
-    {
-        return HostileVisibleUnitOnTile(attacker, v) && attacker.CanHit(tiles[v].unit, attackType);
+        if (tiles[v].unit != null && VisibleAndHostileTo(u, tiles[v].unit)) { return tiles[v].unit; } /*&& u.CanHit(tiles[v].building)*/;
+        return null;
     }
 
     /*
@@ -333,14 +343,14 @@ public class TileManager : MonoBehaviour
     {
         if (tiles.ContainsKey(v))
         { return tiles[v].unit; }
-        else { return null; }
+        return null;
     }
 
     public Building GetBuilding(Vector3Int v)
     {
         if (tiles.ContainsKey(v))
         { return tiles[v].building; }
-        else { return null; }
+        return null;
     }
 
     public void GetMenuOptions(List<string> menu)
@@ -463,8 +473,8 @@ public class TileManager : MonoBehaviour
 
     public void CommitMove()
     {
-        if (SelectedTile.tile.IsExplored && NoPercievedUnitOnTile(CurrentLocation))//and unit not invisible)
-                                                                                   // (heldunit.infiltrator || selectedtile.building == null || (selectedtile.building.team == heldunit.team && selectedtile.building.currenthp > 0 && !selectedtile.building.neutral))
+        if (SelectedTile.tile.IsExplored && PercievedUnitOnTile(CurrentLocation, TeamTurn) == null)//and unit not invisible)
+                                                                                                   // (heldunit.infiltrator || selectedtile.building == null || (selectedtile.building.team == heldunit.team && selectedtile.building.currenthp > 0 && !selectedtile.building.neutral))
         {
             List<Vector3Int> path = GetPath(SelectedTile);
             //heldunit.tile.unit = null;
@@ -533,7 +543,7 @@ public class TileManager : MonoBehaviour
         foreach (Vector3Int t in targetList) { tiles[t].tile.IsTarget = true; }
     }
 
-    public UnitBase GetHostileAttackableUnitOrBuilding(UnitBase attacker, Vector3Int v, string attackType)
+    public UnitBase HostileAttackableUnitOrBuildingOnTile(UnitBase attacker, Vector3Int v, string attackType)
     {
         if (HostileAttackableUnitOnTile(attacker, v, attackType))
         {

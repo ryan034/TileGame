@@ -267,7 +267,7 @@ public abstract class UnitBase : MonoBehaviour
     {
         foreach (string s in Abilities)
         {
-            if (GetTargetCode(s).Task == "Attack" && ValidateTargetForCounterAttack(targetunit, s)/* todo move target validation to triggerpart of the stackchain*/)
+            if (GetTargetCode(s).Task == "Attack" && ValidateTargetForAttack(targetunit, s)/* todo move target validation to triggerpart of the stackchain*/)
             {
                 return true;
             }
@@ -281,7 +281,7 @@ public abstract class UnitBase : MonoBehaviour
         {
             //string[] ability = GetCode(s).Split(' ');
             CodeObject ability = GetTargetCode(s);
-            if (ability.Task == "Attack" && ValidateTargetForCounterAttack(targetunit, s)/* todo move target validation to triggerpart of the stackchain*/)
+            if (ability.Task == "Attack" && ValidateTargetForAttack(targetunit, s)/* todo move target validation to triggerpart of the stackchain*/)
             {
                 //code=> attack:flying or not: siege or not:min range: max range:base damage:dicedamage:times:damagetype
                 /*
@@ -329,10 +329,10 @@ public abstract class UnitBase : MonoBehaviour
 
     protected CodeObject GetAnimationCode(string s) => data.GetAnimationCode(s);
 
-    protected bool ValidateTargetForCounterAttack(UnitBase targetunit, string s)
+    protected bool ValidateTargetForAttack(UnitBase targetunit, string s)
     {
         CodeObject ability = GetTargetCode(s);
-        return CanHit(targetunit, ability.GetVariable("canHit")) && TileManager.globalInstance.VisibleTo(this, targetunit) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit) && TileManager.globalInstance.HostileTo(this, targetunit);
+        return CanHit(targetunit, ability.GetVariable("canHit")) && TileManager.globalInstance.VisibleAndHostileTo(this, targetunit) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit);
     }
 
     /*

@@ -168,7 +168,7 @@ public static class GlobalParser
                 {
                     foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
                     {
-                        if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(owner, v, s) || TileManager.globalInstance.HostileAttackableUnitOnTile(owner, v, s)))
+                        if (TileManager.globalInstance.HostileAttackableUnitOrBuildingOnTile(owner, v, abilityTargetCode.GetVariable("canHit")) != null)
                         {
                             menu.Add(s);
                             return;
@@ -246,7 +246,7 @@ public static class GlobalParser
     {
         if (abilityTargetCode.Task == "Attack")
         {
-            unitBaseList.Add(TileManager.globalInstance.GetHostileAttackableUnitOrBuilding(owner, target, abilityTargetCode.GetVariable("canHit")));
+            unitBaseList.Add(TileManager.globalInstance.HostileAttackableUnitOrBuildingOnTile(owner, target, abilityTargetCode.GetVariable("canHit")));
             if (owner.TargetCount == int.Parse(abilityTargetCode.GetVariable("targets")))
             {
                 return true;
@@ -287,7 +287,8 @@ public static class GlobalParser
                 List<Vector3Int> targets = new List<Vector3Int>();
                 foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
                 {
-                    if ((TileManager.globalInstance.HostileAttackableBuildingOnTile(owner, v, abilityTargetCode.GetVariable("canHit")) || TileManager.globalInstance.HostileAttackableUnitOnTile(owner, v, abilityTargetCode.GetVariable("canHit")))) { targets.Add(v); }
+                    if (TileManager.globalInstance.HostileAttackableUnitOrBuildingOnTile(owner, v, abilityTargetCode.GetVariable("canHit")) != null)
+                    { targets.Add(v); }
                 }
                 TileManager.globalInstance.SetUpTargetTiles(targets);
                 Pointer.globalInstance.GoToAttackingMode();
