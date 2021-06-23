@@ -332,7 +332,9 @@ public abstract class UnitBase : MonoBehaviour
     protected bool ValidateTargetForAttack(UnitBase targetunit, string s)
     {
         CodeObject ability = GetTargetCode(s);
-        return CanHit(targetunit, ability.GetVariable("canHit")) && TileManager.globalInstance.VisibleAndHostileTo(this, targetunit) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit);
+        //return CanHit(targetunit, ability.GetVariable("canHit")) && TileManager.globalInstance.VisibleAndHostileTo(Team, targetunit) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit);
+        return TileManager.globalInstance.AttackableAndHostileTo(this, targetunit, ability.GetVariable("canHit")) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit);
+
     }
 
     /*

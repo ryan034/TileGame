@@ -194,7 +194,7 @@ public class TileManager : MonoBehaviour
 
     private void ApplySight(UnitBase unit)
     {
-        TileObject tileOf = GetTile(unit);
+        TileObject tileOf = unit.Tile;
         tileOf.CanSee = true;
         int vision;
         int terrain = tileOf.TerrainType;
@@ -209,37 +209,39 @@ public class TileManager : MonoBehaviour
             {
                 if (unit.MovementType != 6 || unit.MovementType != 7)//ground unit
                 {
-                    if (terrain == 5 || terrain == 9/*highgrass sees highgrass ravines see ravines*/)
+                    if ((terrain == 5 || terrain == 9)/*highgrass sees highgrass ravines see ravines*/&& tiles[v].tile.TerrainType == terrain && tiles[v].tile.TerrainType != 6 /*&& tiles[v].elevated == unit.tile.elevated*/)
                     {
-                        if (tiles[v].tile.TerrainType == terrain && tiles[v].tile.TerrainType != 6 /*&& tiles[v].elevated == unit.tile.elevated*/) { tiles[v].tile.CanSee = true; }
+                        tiles[v].tile.CanSee = true;
                     }
-                    else if (terrain == 4 || terrain == 8/*woods/coves see neighbors that are not highgrass or ravines or mountains*/)
+                    else if ((terrain == 4 || terrain == 8)/*woods/coves see neighbors that are not highgrass or ravines or mountains*/&& tiles[v].tile.TerrainType != 5 && tiles[v].tile.TerrainType != 9 && tiles[v].tile.TerrainType != 6 /*&& tiles[v].elevated == unit.tile.elevated*/)
                     {
-                        if (tiles[v].tile.TerrainType != 5 && tiles[v].tile.TerrainType != 9 && tiles[v].tile.TerrainType != 6 /*&& tiles[v].elevated == unit.tile.elevated*/) { tiles[v].tile.CanSee = true; }
+                        tiles[v].tile.CanSee = true;
                         //else if (tiles[v].tile.terraintype != 4 && tiles[v].tile.terraintype != 9/* && !tiles[v].elevated && unit.tile.elevated*/) { tiles[v].tile.cansee = true; }
                     }
-                    else
+                    else if (tiles[v].tile.TerrainType != 5 && tiles[v].tile.TerrainType != 9 && tiles[v].tile.TerrainType != 6 && tiles[v].tile.TerrainType != 4 && tiles[v].tile.TerrainType != 8)
                     {
-                        if (tiles[v].tile.TerrainType != 5 && tiles[v].tile.TerrainType != 9 && tiles[v].tile.TerrainType != 6 && tiles[v].tile.TerrainType != 4 && tiles[v].tile.TerrainType != 8)
-                        {
-                            tiles[v].tile.CanSee = true;
-                        }
+                        tiles[v].tile.CanSee = true;
                     }
                 }
-                else { if (terrain != 4 || terrain != 9 || terrain != 8) { tiles[v].tile.CanSee = true; } }
+                else if (terrain != 4 || terrain != 9 || terrain != 8)
+                {
+                    tiles[v].tile.CanSee = true;
+                }
             }
         }
     }
 
     private Building HostileAttackableBuildingOnTile(UnitBase attacker, Vector3Int v, string attackType)
     {
-        if (HostileVisibleBuildingOnTile(attacker, v) != null && attacker.CanHit(tiles[v].building, attackType)) { return tiles[v].building; };
+        //if (HostileVisibleBuildingOnTile(attacker.Team, v) != null && attacker.CanHit(tiles[v].building, attackType)) { return tiles[v].building; };
+        if (tiles[v].building != null && AttackableAndHostileTo(attacker, tiles[v].building, attackType)) { return tiles[v].building; };
         return null;
     }
 
     private Unit HostileAttackableUnitOnTile(UnitBase attacker, Vector3Int v, string attackType)
     {
-        if (HostileVisibleUnitOnTile(attacker, v) != null && attacker.CanHit(tiles[v].unit, attackType)) { return tiles[v].unit; };
+        //if (HostileVisibleUnitOnTile(attacker.Team, v) != null && attacker.CanHit(tiles[v].unit, attackType)) { return tiles[v].unit; };
+        if (tiles[v].unit != null && AttackableAndHostileTo(attacker, tiles[v].unit, attackType)) { return tiles[v].unit; };
         return null;
     }
 
@@ -276,55 +278,86 @@ public class TileManager : MonoBehaviour
         return Distance(unitBases[targetUnit], unitBases[u]) >= min && Distance(unitBases[targetUnit], unitBases[u]) <= max;
     }
 
-    public bool VisibleAndHostileTo(UnitBase unitLooking, UnitBase targetUnit)
+    public bool VisibleAndHostileTo(int team, UnitBase targetUnit)
     {
-        if (unitLooking.Team != targetUnit.Team && !targetUnit.Charming)
+        if (team != targetUnit.Team && !targetUnit.Charming)
         {
-            //need to reformat this to include sight of other team members
-            TileObject tileOfLooker = GetTile(unitLooking);
-            TileObject tileOfTarget = GetTile(targetUnit);
-            if (unitLooking.Team == TeamTurn) { return !targetUnit.Invisible && tileOfTarget.CanSee; };
-            int vision;
-            int terrain = tileOfLooker.TerrainType;
+            TileObject tileOfTarget = targetUnit.Tile;
             int targetTerrain = tileOfTarget.TerrainType;
-            if (IsDay) { vision = unitLooking.DayVision; } else { vision = unitLooking.NightVision; }
-            if (terrain == 6 || (unitLooking.MovementType != 6 || unitLooking.MovementType != 7)) { vision += 3; }
-            if (terrain == 4 || terrain == 8) { vision = 1; }
-            if (Distance(tileOfLooker.LocalPlace, tileOfTarget.LocalPlace) > vision) { return false; }
-            if (unitLooking.MovementType != 6 || unitLooking.MovementType != 7)//ground unit
+            if (team == TeamTurn) { return !targetUnit.Invisible && tileOfTarget.CanSee; };
+            //need to reformat this to include sight of other team members
+            bool seen = false;
+            foreach (UnitBase unitLooking in unitBases.Keys)
             {
-                if (terrain == 5 || terrain == 9/*highgrass sees highgrass ravines see ravines*/)
+                if (unitLooking.Team == team)
                 {
-                    if (targetTerrain == terrain && targetTerrain != 6 /*&& tiles[v].elevated == unit.tile.elevated*/) { return !targetUnit.Invisible; }
-                }
-                else if (terrain == 4 || terrain == 8/*woods/coves see neighbors that are not highgrass or ravines or mountains*/)
-                {
-                    if (targetTerrain != 5 && targetTerrain != 9 && targetTerrain != 6 /*&& tiles[v].elevated == unit.tile.elevated*/) { return !targetUnit.Invisible; }
-                }
-                else
-                {
-                    if (targetTerrain != 5 && targetTerrain != 9 && targetTerrain != 6 && targetTerrain != 4 && targetTerrain != 8) { return !targetUnit.Invisible; }
+                    TileObject tileOfLooker = unitLooking.Tile;
+                    int terrain = tileOfLooker.TerrainType;
+                    int vision;
+                    vision = IsDay ? unitLooking.DayVision : unitLooking.NightVision;
+                    if (terrain == 6 || (unitLooking.MovementType != 6 || unitLooking.MovementType != 7)) { vision += 3; }
+                    else if (terrain == 4 || terrain == 8) { vision = 1; }
+                    if (Distance(tileOfLooker.LocalPlace, tileOfTarget.LocalPlace) > vision) { seen = false; }
+                    if (unitLooking.MovementType != 6 || unitLooking.MovementType != 7)//ground unit
+                    {
+                        if ((terrain == 5 || terrain == 9)/*highgrass sees highgrass ravines see ravines*/ && targetTerrain == terrain && targetTerrain != 6 /*&& tiles[v].elevated == unit.tile.elevated*/)
+                        {
+                            seen = !targetUnit.Invisible;
+                        }
+                        else if ((terrain == 4 || terrain == 8)/*woods/coves see neighbors that are not highgrass or ravines or mountains*/&& targetTerrain != 5 && targetTerrain != 9 && targetTerrain != 6 /*&& tiles[v].elevated == unit.tile.elevated*/)
+                        {
+                            seen = !targetUnit.Invisible;
+                        }
+                        else if (targetTerrain != 5 && targetTerrain != 9 && targetTerrain != 6 && targetTerrain != 4 && targetTerrain != 8)
+                        {
+                            seen = !targetUnit.Invisible;
+                        }
+                    }
+                    else if (terrain != 4 || terrain != 9 || terrain != 8)
+                    {
+                        seen = !targetUnit.Invisible;
+                    }
+                    if (seen) { return seen; }
                 }
             }
-            else { if (terrain != 4 || terrain != 9 || terrain != 8) { return !targetUnit.Invisible; } }
         }
         return false;
     }
+
     /*
     public bool HostileTo(UnitBase unit, UnitBase target)
     {
         return unit.Team != target.Team && !target.Charming;
     }
     */
-    public Building HostileVisibleBuildingOnTile(UnitBase u, Vector3Int v)
+
+    public bool AttackableAndHostileTo(UnitBase attacker, UnitBase defender, string attackType)
     {
-        if (tiles[v].building != null && VisibleAndHostileTo(u, tiles[v].building)) { return tiles[v].building; }/*&& u.CanHit(tiles[v].building)*/;
+        return attacker.CanHit(defender, attackType) && VisibleAndHostileTo(attacker.Team, defender);
+    }
+
+    public Building HostileVisibleBuildingOnTile(int team, Vector3Int v)
+    {
+        if (tiles[v].building != null && VisibleAndHostileTo(team, tiles[v].building)) { return tiles[v].building; }/*&& u.CanHit(tiles[v].building)*/;
         return null;
     }
 
-    public Unit HostileVisibleUnitOnTile(UnitBase u, Vector3Int v)
+    public Unit HostileVisibleUnitOnTile(int team, Vector3Int v)
     {
-        if (tiles[v].unit != null && VisibleAndHostileTo(u, tiles[v].unit)) { return tiles[v].unit; } /*&& u.CanHit(tiles[v].building)*/;
+        if (tiles[v].unit != null && VisibleAndHostileTo(team, tiles[v].unit)) { return tiles[v].unit; } /*&& u.CanHit(tiles[v].building)*/;
+        return null;
+    }
+
+    public UnitBase HostileAttackableUnitOrBuildingOnTile(UnitBase attacker, Vector3Int v, string attackType)
+    {
+        if (HostileAttackableUnitOnTile(attacker, v, attackType) != null)
+        {
+            return tiles[v].unit;
+        }
+        else if (HostileAttackableBuildingOnTile(attacker, v, attackType) != null)
+        {
+            return tiles[v].building;
+        }
         return null;
     }
 
@@ -541,19 +574,6 @@ public class TileManager : MonoBehaviour
     public void SetUpTargetTiles(List<Vector3Int> targetList)
     {
         foreach (Vector3Int t in targetList) { tiles[t].tile.IsTarget = true; }
-    }
-
-    public UnitBase HostileAttackableUnitOrBuildingOnTile(UnitBase attacker, Vector3Int v, string attackType)
-    {
-        if (HostileAttackableUnitOnTile(attacker, v, attackType))
-        {
-            return tiles[v].unit;
-        }
-        else if (HostileAttackableBuildingOnTile(attacker, v, attackType))
-        {
-            return tiles[v].building;
-        }
-        return null;
     }
 
     public void EndTurn()

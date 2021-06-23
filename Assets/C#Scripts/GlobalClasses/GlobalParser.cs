@@ -190,7 +190,7 @@ public static class GlobalParser
                             case "hostileVisibleBuildingOnTile":
                                 foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
                                 {
-                                    if (TileManager.globalInstance.HostileVisibleBuildingOnTile(owner, v))
+                                    if (TileManager.globalInstance.HostileVisibleBuildingOnTile(owner.Team, v) != null)
                                     {
                                         b = true;
                                         break;
@@ -200,7 +200,7 @@ public static class GlobalParser
                             case "hostileVisibleUnitOnTile":
                                 foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
                                 {
-                                    if (TileManager.globalInstance.HostileVisibleUnitOnTile(owner, v))
+                                    if (TileManager.globalInstance.HostileVisibleUnitOnTile(owner.Team, v) != null)
                                     {
                                         b = true;
                                         break;
@@ -233,7 +233,7 @@ public static class GlobalParser
                     switch (target)
                     {
                         case "hostileVisibleBuildingOnThisTile":
-                            if (!TileManager.globalInstance.HostileVisibleBuildingOnTile(owner, owner.Tile.LocalPlace)) { return; }
+                            if (TileManager.globalInstance.HostileVisibleBuildingOnTile(owner.Team, owner.Tile.LocalPlace) == null) { return; }
                             break;
                     }
                 }
@@ -259,11 +259,11 @@ public static class GlobalParser
             {
                 case "hostileVisibleBuildingOnTile":
                     //add building as target
-                    if (TileManager.globalInstance.HostileVisibleBuildingOnTile(owner, target)) { buildingList.Add(TileManager.globalInstance.GetBuilding(target)); }
+                    if (TileManager.globalInstance.HostileVisibleBuildingOnTile(owner.Team, target) != null) { buildingList.Add(TileManager.globalInstance.HostileVisibleBuildingOnTile(owner.Team, target)); }
                     break;
                 case "hostileVisibleUnitOnTile":
                     // add unit
-                    if (TileManager.globalInstance.HostileVisibleUnitOnTile(owner, target)) { unitList.Add(TileManager.globalInstance.GetUnit(target)); }
+                    if (TileManager.globalInstance.HostileVisibleUnitOnTile(owner.Team, target) != null) { unitList.Add(TileManager.globalInstance.HostileVisibleUnitOnTile(owner.Team, target)); }
                     break;
                 case "v":
                     // add vector3int
