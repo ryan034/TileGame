@@ -99,17 +99,7 @@ public abstract class UnitBase : MonoBehaviour
 
     public TileObject Tile => TileManager.globalInstance.GetTile(this);
 
-    public virtual int CoverBonus
-    {
-        get
-        {
-            if (MovementType == 6 || MovementType == 7)
-            {
-                return skyDefenseMatrix[MovementType, Tile.SkyTerrainType];
-            }
-            else { return terrainDefenseMatrix[MovementType, Tile.TerrainType]; }
-        }
-    }
+    public virtual int CoverBonus => terrainDefenseMatrix[MovementType, Tile.TerrainType];
 
     protected class InternalVariables
     {
@@ -138,9 +128,9 @@ public abstract class UnitBase : MonoBehaviour
 
     protected virtual void DestroyThis() => TileManager.globalInstance.DestroyUnit(this);
 
-    protected virtual void TakeDamage(UnitBase unit, int damagetype, int damage)
+    protected virtual void TakeDamage(UnitBase unit, int damageType, int damage)
     {
-        DamageTaken = DamageTaken + (int)Math.Round(GetResistance(damagetype) * damage);
+        DamageTaken = DamageTaken + (int)Math.Round(GetResistance(damageType) * damage);
         /*
         else
         {
@@ -179,10 +169,10 @@ public abstract class UnitBase : MonoBehaviour
         unitBaseList.Clear();
     }
 
-    public float GetResistance(int damagetype)
+    public float GetResistance(int damageType)
     {
         //check buffs
-        return attackToArmour[damagetype, ArmourType];
+        return attackToArmour[damageType, ArmourType];
     }
 
     public void ChooseMenuAbility(string s) { abilityKey = s; GlobalParser.ChooseMenuAbility(s, AbilityTargetCode, AbilityLogicCode, AbilityAnimationCode, this); }
@@ -245,16 +235,16 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    public bool CanHit(UnitBase unitbase, string attackType)
+    public bool CanHit(UnitBase unitBase, string attackType)
     {
         bool b = false;
         switch (attackType)
         {
             case "same"://flying hits flying, land hits land
-                b = ((MovementType != 6 || MovementType != 7) && (unitbase.MovementType != 6 || unitbase.MovementType != 7)) || ((MovementType == 6 || MovementType == 7) && (unitbase.MovementType == 6 || unitbase.MovementType == 7));
+                b = BothLandOrSky(MovementType, unitBase.MovementType);
                 break;
             case "different"://flying hits land, land hits flying
-                b = ((MovementType != 6 || MovementType != 7) && (unitbase.MovementType == 6 || unitbase.MovementType == 7)) || ((MovementType == 6 || MovementType == 7) && (unitbase.MovementType != 6 || unitbase.MovementType != 7));
+                b = !BothLandOrSky(MovementType, unitBase.MovementType);
                 break;
             case "all":
                 b = true;
@@ -263,11 +253,11 @@ public abstract class UnitBase : MonoBehaviour
         return b;
     }
 
-    public bool CanCounterAttack(UnitBase targetunit)
+    public bool CanCounterAttack(UnitBase targetUnit)
     {
         foreach (string s in Abilities)
         {
-            if (GetTargetCode(s).Task == "Attack" && ValidateTargetForAttack(targetunit, s)/* todo move target validation to triggerpart of the stackchain*/)
+            if (GetTargetCode(s).Task == "Attack" && ValidateTargetForAttack(targetUnit, s)/* todo move target validation to triggerpart of the stackchain*/)
             {
                 return true;
             }
@@ -275,13 +265,13 @@ public abstract class UnitBase : MonoBehaviour
         return false;
     }
 
-    public void CounterAttack(bool before, UnitBase targetunit)
+    public void CounterAttack(bool before, UnitBase targetUnit)
     {
         foreach (string s in Abilities)
         {
             //string[] ability = GetCode(s).Split(' ');
             CodeObject ability = GetTargetCode(s);
-            if (ability.Task == "Attack" && ValidateTargetForAttack(targetunit, s)/* todo move target validation to triggerpart of the stackchain*/)
+            if (ability.Task == "Attack" && ValidateTargetForAttack(targetUnit, s)/* todo move target validation to triggerpart of the stackchain*/)
             {
                 //code=> attack:flying or not: siege or not:min range: max range:base damage:dicedamage:times:damagetype
                 /*
@@ -293,13 +283,13 @@ public abstract class UnitBase : MonoBehaviour
                 return;
                 */
                 //change this to just parse whatever the logic code may be with the targetunit as the single target
-                Parse(new StackItem(GetLogicCode(s), s, this, GetAnimationCode(s), null, new List<UnitBase>() { this, targetunit }, null, null, null), null, before);
+                Parse(new StackItem(GetLogicCode(s), s, this, GetAnimationCode(s), null, new List<UnitBase>() { this, targetUnit }, null, null, null), null, before);
                 return;
             }
         }
     }
 
-    public List<Unit> SpawnUnit(bool before, List<Vector3Int> tile, string script, int team_)
+    public List<Unit> SpawnUnit(bool before, List<Vector3Int> tile, string script, int unitTeam)
     {
         if (before) { EventsManager.InvokeOnBeforeSpawnUnit(this); return null; }
         else
@@ -309,7 +299,7 @@ public abstract class UnitBase : MonoBehaviour
             List<Unit> units = new List<Unit>();
             foreach (Vector3Int t in tile)
             {
-                Unit unit = TileManager.globalInstance.SpawnUnit(t, script, team_);
+                Unit unit = TileManager.globalInstance.SpawnUnit(t, script, unitTeam);
                 units.Add(unit);
             }
             EventsManager.InvokeOnSpawnUnit(this, units);
@@ -329,11 +319,11 @@ public abstract class UnitBase : MonoBehaviour
 
     protected CodeObject GetAnimationCode(string s) => data.GetAnimationCode(s);
 
-    protected bool ValidateTargetForAttack(UnitBase targetunit, string s)
+    protected bool ValidateTargetForAttack(UnitBase targetUnit, string s)
     {
         CodeObject ability = GetTargetCode(s);
         //return CanHit(targetunit, ability.GetVariable("canHit")) && TileManager.globalInstance.VisibleAndHostileTo(Team, targetunit) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit);
-        return TileManager.globalInstance.AttackableAndHostileTo(this, targetunit, ability.GetVariable("canHit")) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetunit);
+        return TileManager.globalInstance.AttackableAndHostileTo(this, targetUnit, ability.GetVariable("canHit")) && TileManager.globalInstance.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetUnit);
 
     }
 

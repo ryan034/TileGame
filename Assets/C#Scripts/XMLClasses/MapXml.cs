@@ -20,7 +20,6 @@ public class MapXml
     {
         public Vector3Int localPlace;
         public int terrain;
-        public int skyTerrain;
         public string building;
         public int buildingTeam;
         public string unit;

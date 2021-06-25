@@ -106,11 +106,11 @@ public class Building : UnitBase
         //Race_ = Race.noRace;
     }
 
-    protected override void TakeDamage(UnitBase unit, int damagetype, int damage)
+    protected override void TakeDamage(UnitBase unit, int damageType, int damage)
     {
         if (!Neutral)
         {
-            base.TakeDamage(unit, damagetype, damage);
+            base.TakeDamage(unit, damageType, damage);
         }/*
         damageTaken = damageTaken + (int)Math.Round(GetResistance(damagetype) * damage);
         if (HPCurrent <= 0)

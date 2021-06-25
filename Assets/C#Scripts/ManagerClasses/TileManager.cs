@@ -85,7 +85,7 @@ public class TileManager : MonoBehaviour
             AddNeighbors(HeldUnitTile, heldUnit, tiles);
             foreach (Tile tile in tiles)
             {
-                if (heldUnit.MovementTotal >= terrainMatrix[heldUnit.MovementType, tile.tile.TerrainType]/*and unit is not rooted*/) { return true; }
+                if (heldUnit.MovementTotal >= terrainMoveCostMatrix[heldUnit.MovementType, tile.tile.TerrainType]/*and unit is not rooted*/) { return true; }
             }
             return false;
         }
@@ -141,10 +141,10 @@ public class TileManager : MonoBehaviour
         }
     }
 
-    private List<Vector3Int> GetPath(Tile selectedtile)
+    private List<Vector3Int> GetPath(Tile endTile)
     {
-        List<Vector3Int> path = new List<Vector3Int>() { selectedtile.tile.LocalPlace };
-        TileObject current = selectedtile.tile;
+        List<Vector3Int> path = new List<Vector3Int>() { endTile.tile.LocalPlace };
+        TileObject current = endTile.tile;
         while (current.exploredFrom != null)
         {
             current = current.exploredFrom;
@@ -177,7 +177,7 @@ public class TileManager : MonoBehaviour
                 {
                     dist[v] = v.tile.moveScore;
                 }
-                int alt = dist[u.Key] + terrainMatrix[heldUnit.MovementType, v.tile.TerrainType];
+                int alt = dist[u.Key] + terrainMoveCostMatrix[heldUnit.MovementType, v.tile.TerrainType];
                 if (alt < dist[v])
                 {
                     dist[v] = alt;
@@ -196,37 +196,15 @@ public class TileManager : MonoBehaviour
     {
         TileObject tileOf = unit.Tile;
         tileOf.CanSee = true;
-        int vision;
         int terrain = tileOf.TerrainType;
-        if (IsDay) { vision = unit.DayVision; }
-        else { vision = unit.NightVision; }
-        if (tileOf.TerrainType == 6 && (unit.MovementType != 6 || unit.MovementType != 7)) { vision += 3; }
-        if (terrain == 4 || terrain == 8) { vision = 1; }
+        int movement = unit.MovementType;
+        int vision = IsDay ? TerrainVision(terrain, movement, unit.DayVision) : TerrainVision(terrain, movement, unit.NightVision);
         List<Vector3Int> offsets = CircleCoords(1, vision, tileOf.LocalPlace);
         foreach (Vector3Int v in offsets)
         {
-            if (tiles.ContainsKey(v))
+            if (tiles.ContainsKey(v) && CanSee(terrain, tiles[v].tile.TerrainType, movement))
             {
-                if (unit.MovementType != 6 || unit.MovementType != 7)//ground unit
-                {
-                    if ((terrain == 5 || terrain == 9)/*highgrass sees highgrass ravines see ravines*/&& tiles[v].tile.TerrainType == terrain && tiles[v].tile.TerrainType != 6 /*&& tiles[v].elevated == unit.tile.elevated*/)
-                    {
-                        tiles[v].tile.CanSee = true;
-                    }
-                    else if ((terrain == 4 || terrain == 8)/*woods/coves see neighbors that are not highgrass or ravines or mountains*/&& tiles[v].tile.TerrainType != 5 && tiles[v].tile.TerrainType != 9 && tiles[v].tile.TerrainType != 6 /*&& tiles[v].elevated == unit.tile.elevated*/)
-                    {
-                        tiles[v].tile.CanSee = true;
-                        //else if (tiles[v].tile.terraintype != 4 && tiles[v].tile.terraintype != 9/* && !tiles[v].elevated && unit.tile.elevated*/) { tiles[v].tile.cansee = true; }
-                    }
-                    else if (tiles[v].tile.TerrainType != 5 && tiles[v].tile.TerrainType != 9 && tiles[v].tile.TerrainType != 6 && tiles[v].tile.TerrainType != 4 && tiles[v].tile.TerrainType != 8)
-                    {
-                        tiles[v].tile.CanSee = true;
-                    }
-                }
-                else if (terrain != 4 || terrain != 9 || terrain != 8)
-                {
-                    tiles[v].tile.CanSee = true;
-                }
+                tiles[v].tile.CanSee = true;
             }
         }
     }
@@ -245,7 +223,7 @@ public class TileManager : MonoBehaviour
         return null;
     }
 
-    public void Load(int teams)
+    public void LoadPlayers(int teams)
     {
         for (int i = 0; i < teams; i++)
         {
@@ -285,7 +263,6 @@ public class TileManager : MonoBehaviour
             TileObject tileOfTarget = targetUnit.Tile;
             int targetTerrain = tileOfTarget.TerrainType;
             if (team == TeamTurn) { return !targetUnit.Invisible && tileOfTarget.CanSee; };
-            //need to reformat this to include sight of other team members
             bool seen = false;
             foreach (UnitBase unitLooking in unitBases.Keys)
             {
@@ -293,43 +270,15 @@ public class TileManager : MonoBehaviour
                 {
                     TileObject tileOfLooker = unitLooking.Tile;
                     int terrain = tileOfLooker.TerrainType;
-                    int vision;
-                    vision = IsDay ? unitLooking.DayVision : unitLooking.NightVision;
-                    if (terrain == 6 || (unitLooking.MovementType != 6 || unitLooking.MovementType != 7)) { vision += 3; }
-                    else if (terrain == 4 || terrain == 8) { vision = 1; }
+                    int movement = unitLooking.MovementType;
+                    int vision = IsDay ? TerrainVision(terrain, movement, unitLooking.DayVision) : TerrainVision(terrain, movement, unitLooking.NightVision);
                     if (Distance(tileOfLooker.LocalPlace, tileOfTarget.LocalPlace) > vision) { seen = false; }
-                    if (unitLooking.MovementType != 6 || unitLooking.MovementType != 7)//ground unit
-                    {
-                        if ((terrain == 5 || terrain == 9)/*highgrass sees highgrass ravines see ravines*/ && targetTerrain == terrain && targetTerrain != 6 /*&& tiles[v].elevated == unit.tile.elevated*/)
-                        {
-                            seen = !targetUnit.Invisible;
-                        }
-                        else if ((terrain == 4 || terrain == 8)/*woods/coves see neighbors that are not highgrass or ravines or mountains*/&& targetTerrain != 5 && targetTerrain != 9 && targetTerrain != 6 /*&& tiles[v].elevated == unit.tile.elevated*/)
-                        {
-                            seen = !targetUnit.Invisible;
-                        }
-                        else if (targetTerrain != 5 && targetTerrain != 9 && targetTerrain != 6 && targetTerrain != 4 && targetTerrain != 8)
-                        {
-                            seen = !targetUnit.Invisible;
-                        }
-                    }
-                    else if (terrain != 4 || terrain != 9 || terrain != 8)
-                    {
-                        seen = !targetUnit.Invisible;
-                    }
-                    if (seen) { return seen; }
+                    else if (CanSee(terrain, targetTerrain, movement)) { seen = !targetUnit.Invisible; if (seen) { return seen; } }
                 }
             }
         }
         return false;
     }
-
-    /*
-    public bool HostileTo(UnitBase unit, UnitBase target)
-    {
-        return unit.Team != target.Team && !target.Charming;
-    }
-    */
 
     public bool AttackableAndHostileTo(UnitBase attacker, UnitBase defender, string attackType)
     {
@@ -390,11 +339,6 @@ public class TileManager : MonoBehaviour
     {
         if (SelectedTile.unit != null && SelectedTile.unit.Team == TeamTurn && !SelectedTile.unit.Actioned)
         {
-            /*
-            if (!selectedtile.unit.moved) { menu.Add("move"); myDelegatelist.Add(UIwindow.Setup_move); startingtile = selectedtile; heldunit = selectedtile.unit; }
-            if (!selectedtile.unit.actioned) { selectedtile.unit.Setup(menu, myDelegatelist); }
-            menu.Add("end unit turn"); myDelegatelist.Add(UIwindow.Endunitturn);
-            */
             SelectedTile.unit.SetUp(menu);
             menu.Add("end unit turn");
         }
@@ -506,8 +450,7 @@ public class TileManager : MonoBehaviour
 
     public void CommitMove()
     {
-        if (SelectedTile.tile.IsExplored && PercievedUnitOnTile(CurrentLocation, TeamTurn) == null)//and unit not invisible)
-                                                                                                   // (heldunit.infiltrator || selectedtile.building == null || (selectedtile.building.team == heldunit.team && selectedtile.building.currenthp > 0 && !selectedtile.building.neutral))
+        if (SelectedTile.tile.IsExplored && PercievedUnitOnTile(CurrentLocation, TeamTurn) == null)
         {
             List<Vector3Int> path = GetPath(SelectedTile);
             //heldunit.tile.unit = null;

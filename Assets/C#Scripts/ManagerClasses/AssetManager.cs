@@ -162,20 +162,20 @@ public class AssetManager : MonoBehaviour
         if (map == null)
         {
             MapScript mapScript = Resources.Load(mapScriptPath + mapName) as MapScript;
-            TileManager.globalInstance.Load(mapScript.teamsTotal);
+            TileManager.globalInstance.LoadPlayers(mapScript.teamsTotal);
             foreach (MapScript.TileInfo t in mapScript.tilesInfo)
             {
-                InstantiateTile(t.prefab, t.localPlace, t.terrain, t.skyTerrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
+                InstantiateTile(t.prefab, t.localPlace, t.terrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
                 //TileObject spawnedtile = gameObject.AddComponent<TileObject>();
                 //spawnedtile.Load(t.localPlace, t.terrain, t.skyTerrain/*sprite and animation information*/);
             }
         }
         else
         {
-            TileManager.globalInstance.Load(map.teamsTotal);
+            TileManager.globalInstance.LoadPlayers(map.teamsTotal);
             foreach (MapXml.TileInfo t in map.tilesInfo)
             {
-                InstantiateTile(t.prefab, t.localPlace, t.terrain, t.skyTerrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
+                InstantiateTile(t.prefab, t.localPlace, t.terrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
                 //TileObject spawnedtile = gameObject.AddComponent<TileObject>();
                 //spawnedtile.Load(t.localPlace, t.terrain, t.skyTerrain/*sprite and animation information*/);
             }
@@ -208,7 +208,7 @@ public class AssetManager : MonoBehaviour
     }
 
     //private void InstantiateTile(string asset, Vector3Int localPlace, int terrain, int skyTerrain, string unit, string building, int unitTeam, int buildingTeam) => StartCoroutine(InstantiateTileCoRoutine(asset, localPlace, terrain, skyTerrain, unit, building, unitTeam, buildingTeam));
-    private void InstantiateTile(string asset, Vector3Int localPlace, int terrain, int skyTerrain, string unit, string building, int unitTeam, int buildingTeam)
+    private void InstantiateTile(string asset, Vector3Int localPlace, int terrain, string unit, string building, int unitTeam, int buildingTeam)
     {
         if (!tileCache.ContainsKey(asset))
         {
@@ -232,7 +232,7 @@ public class AssetManager : MonoBehaviour
         }
         GameObject prefab = tileCache[asset];
         prefab = Instantiate(prefab as GameObject, new Vector3(0, 0, 0), rotation);
-        prefab.GetComponent<TileObject>().Load(localPlace, terrain, skyTerrain);
+        prefab.GetComponent<TileObject>().Load(localPlace, terrain);
 
         InstantiateBuilding(localPlace, building, buildingTeam);
         InstantiateUnit(localPlace, unit, unitTeam);

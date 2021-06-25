@@ -12,7 +12,7 @@ public class TileObject : MonoBehaviour
     //public int id; //index in prefablist
 
     public int TerrainType { get; private set; }//int to determine terrain type
-    public int SkyTerrainType { get; private set; } //int to determine terrain type
+    //public int SkyTerrainType { get; private set; } //int to determine terrain type
 
     public Unit Unit => TileManager.globalInstance.GetUnit(LocalPlace);
     public Building Building => TileManager.globalInstance.GetBuilding(LocalPlace);
@@ -66,10 +66,10 @@ public class TileObject : MonoBehaviour
         if (Building != null) { Building.RefreshBuildingSprite(); }
     }
 
-    public void Load(Vector3Int localPlace, int terrain, int skyTerrain)
+    public void Load(Vector3Int localPlace, int terrain)
     {
         LocalPlace = localPlace;
-        SkyTerrainType = skyTerrain;
+        //SkyTerrainType = skyTerrain;
         TerrainType = terrain;
         transform.position = LocalToWord(LocalPlace);
         TileManager.globalInstance.AddTile(localPlace, this);
