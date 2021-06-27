@@ -56,7 +56,10 @@ public class Building : UnitBase
     {
         get
         {
-            if (Neutral) { return TileManager.globalInstance.TeamTurn; }
+            if (Neutral) {
+                return TileManager.globalInstance.TeamTurn;
+                //need to return team of object that asked
+            }
             else if (Race == "Unaligned") { return -1; }
             else { return base.Team; }
         }
@@ -66,6 +69,7 @@ public class Building : UnitBase
         }
     }
 
+    /*
     public override string Race
     {
         get => base.Race;
@@ -80,7 +84,7 @@ public class Building : UnitBase
                 }
             }
         }
-    }
+    }*/
 
     public override void Load(Vector3Int localPlace, UnitBaseData data, int team)
     {
@@ -92,7 +96,10 @@ public class Building : UnitBase
         {
             Race_ = TileManager.globalInstance.GetRace(team);
         }*/
-        if (Race == "Unaligned" && !Neutral) { DamageTaken = HP; }
+        if (Race == "Unaligned" /*&& !Neutral*/) {
+            //    DamageTaken = HP;
+            SetHPToZero();
+        }
         else { Team = team; }
     }
 
@@ -102,16 +109,17 @@ public class Building : UnitBase
         //parse code
         //unit.Destroy_v(this);
         ClearHold();
-        Race = "Unaligned";
+        ChangeBuildingForm("Unaligned");
         //Race_ = Race.noRace;
     }
 
-    protected override void TakeDamage(UnitBase unit, int damageType, int damage)
-    {
+    protected override void CalculateAndTakeDamage(UnitBase unit, int damageType, int damage)
+    {/*
         if (!Neutral)
         {
-            base.TakeDamage(unit, damageType, damage);
-        }/*
+            base.CalculateAndTakeDamage(unit, damageType, damage);
+        }*/
+        /*
         damageTaken = damageTaken + (int)Math.Round(GetResistance(damagetype) * damage);
         if (HPCurrent <= 0)
         {
@@ -122,8 +130,8 @@ public class Building : UnitBase
         }*/
         //rebalance hold of building
         //if team holds all then building is converted
+        base.CalculateAndTakeDamage(unit, damageType, damage);
         RebalanceHold(damage, unit);
-
     }
 
     /*
@@ -158,14 +166,39 @@ public class Building : UnitBase
         }
     }
 
+    private void ChangeBuildingForm(string race)
+    {
+        if (race != Race)
+        {
+            if (GetConvertedForm(race) != "")
+            {
+                if (race == "Unaligned")
+                {
+                    Animate("Death");
+                    ChangeForm(GetConvertedForm(race));
+                    SetHPToZero();
+                }
+                else
+                {
+                    ChangeForm(GetConvertedForm(race));
+                }
+            }
+        }
+    }
+
+    private void SetHPToZero()
+    {
+        internalVariables.damageTaken = HP;
+    }
+
     private void ConvertedBy(UnitBase unit)
     {
-        Race = unit.Race;
+        ChangeBuildingForm(unit.Race);
         Team = unit.Team;
         Actioned = true;
         TileManager.globalInstance.RefreshFogOfWar();
         //TileManager.globalInstance.WipeTiles();
-        Animate("Capture");
+        Animate("Captured");
     }
 
     private void ClearHold()

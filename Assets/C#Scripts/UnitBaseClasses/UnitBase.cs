@@ -69,13 +69,13 @@ public abstract class UnitBase : MonoBehaviour
     protected int manaUsed;//may need to mvoe this into internal variables
 
     public string Name => data.name;
+    public string Race => data.race;
     public int ArmourType => data.armourType;
     public int MovementType => data.movementType;
     //public bool Biological => data.Biological;
     //public bool Mechanical => data.Mechanical;
     //public bool Magical => data.Magical;
 
-    public virtual string Race { get => data.race; protected set { } }
     public virtual int Team { get => internalVariables.team; set { internalVariables.team = value; RefreshSprite(); } }
 
     public int DayVision => data.dayVision + buffs.Sum(x => x.dayVision);
@@ -128,7 +128,7 @@ public abstract class UnitBase : MonoBehaviour
 
     protected virtual void DestroyThis() => TileManager.globalInstance.DestroyUnit(this);
 
-    protected virtual void TakeDamage(UnitBase unit, int damageType, int damage)
+    protected virtual void CalculateAndTakeDamage(UnitBase unit, int damageType, int damage)
     {
         DamageTaken = DamageTaken + (int)Math.Round(GetResistance(damageType) * damage);
         /*
@@ -227,7 +227,7 @@ public abstract class UnitBase : MonoBehaviour
                 int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(baseDamage, diceDamage, diceTimes, cover));
                 //animator.Animate(targetAbility[8]);
                 //UnitTransformManager.globalInstance.QueueAnimation(this, targetAbility[8], target);
-                t.TakeDamage(this, damageType, totaldamage);
+                t.CalculateAndTakeDamage(this, damageType, totaldamage);
                 //t.CounterAttack(this);
                 //t.GetAttackedAndCounter(this, DamageType, totaldamage);
                 EventsManager.InvokeOnAttack(this, target);

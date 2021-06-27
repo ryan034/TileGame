@@ -8,7 +8,7 @@ public class UnitAnimator : MonoBehaviour
 {
     //for reactionary animations such as take damage, death etc
     private Animator animator;
-    private UnitBase unit;
+    private UnitBase unitBase;
 
     private IEnumerator WaitForAnimation(string s)
     {
@@ -26,7 +26,7 @@ public class UnitAnimator : MonoBehaviour
 
     public void Load(UnitBase unitBase)
     {
-        unit = unitBase;
+        this.unitBase = unitBase;
         animator = transform.GetChild(0).gameObject.GetComponent<Animator>();
     }
 
@@ -39,23 +39,19 @@ public class UnitAnimator : MonoBehaviour
         float a = 1f;
         float w = 1f;
         bool active = true;
-        if (unit.Team != TileManager.globalInstance.TeamTurn)
+        if (unitBase.Team != TileManager.globalInstance.TeamTurn)
         {
-            if (!unit.Tile.CanSee || unit.Invisible)//hide sprite
+            if (!unitBase.Tile.CanSee || unitBase.Invisible)//hide sprite
             { active = false; }
         }
-        else if (unit.Invisible && unit.Team == TileManager.globalInstance.TeamTurn)
+        else if (unitBase.Invisible && unitBase.Team == TileManager.globalInstance.TeamTurn)
         {
             //sprite is opaque
             a = .5f;
         }
-        if (unit.Actioned) { w = .5f; }
-        foreach (Transform child in transform)
-        {
-            //need to look into this
-            //child.GetComponent<Renderer>().material.color = new Color(r * w, g * w, b * w, a);
-            child.gameObject.SetActive(active);
-        }
+        if (unitBase.Actioned) { w = .5f; }
+        if (unitBase.Tile.Building != null && unitBase.Tile.Building.Team != unitBase.Team) { unitBase.Invisible = false; }
+        animator.gameObject.SetActive(active);
     }
 
     public void RefreshBuildingSprite()
@@ -66,26 +62,23 @@ public class UnitAnimator : MonoBehaviour
         float b = 1;
         float a = 1f;
         float w = 1f;
-        bool active = true;
-        if (!unit.Tile.CanSee)
+        if (!unitBase.Tile.CanSee)
         {
             //go to default form of building
-            ChangeModel(unit.GetConvertedForm("Unaligned"));
+            ChangeModel(unitBase.GetConvertedForm("Unaligned"));
             w = .5f;
         }
-        else if (unit.Invisible)
+        else if (unitBase.Tile.CanSee)
+        {
+            ChangeModel(unitBase.GetConvertedForm(unitBase.Race));
+        }
+        else if (unitBase.Invisible)
         {
             //sprite is opaque
             a = .5f;
         }
-        if (unit.Actioned) { w = .5f; }
-
-        foreach (Transform child in transform)
-        {
-            //need to look into this
-            //child.GetComponent<Renderer>().material.color = new Color(r * w, g * w, b * w, a);
-            child.gameObject.SetActive(active);
-        }
+        if (unitBase.Actioned) { w = .5f; }
+        //animator.gameObject.SetActive(active);
     }
 
     public void Animate(string code)
@@ -115,7 +108,7 @@ public class UnitAnimator : MonoBehaviour
                         u = stackItem.unitBaseData[int.Parse(indexCode)];
                         break;
                 }
-                UnitTransformManager.globalInstance.RotateTo(unit, u.Tile.LocalPlace);
+                UnitTransformManager.globalInstance.RotateTo(unitBase, u.Tile.LocalPlace);
             }
             if (code.GetVariable("animation") != "")
             {
@@ -141,16 +134,24 @@ public class UnitAnimator : MonoBehaviour
 
     public void ChangeModel(string model)
     {
-        foreach (Transform child in transform)
+        if (model != "")
         {
-            child.gameObject.SetActive(false);
+            if (transform.Find(model) == null)
+            {
+                GameObject g = AssetManager.globalInstance.InstantiateModel(model);
+                if (g != null)
+                {
+                    g.transform.parent = gameObject.transform;
+                }
+                else { return; }
+            }
+            foreach (Transform child in transform)
+            {
+                child.gameObject.SetActive(false);
+            }
+            transform.Find(model).gameObject.SetActive(true);
+            animator = transform.Find(model).gameObject.GetComponent<Animator>();
         }
-        if (transform.Find(model) == null)
-        {
-            AssetManager.globalInstance.InstantiateModel(model).transform.parent = gameObject.transform;
-        }
-        transform.Find(model).gameObject.SetActive(true);
-        animator = transform.Find(model).gameObject.GetComponent<Animator>();
     }
 
 }
