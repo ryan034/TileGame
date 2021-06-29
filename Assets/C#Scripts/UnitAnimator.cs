@@ -30,36 +30,36 @@ public class UnitAnimator : MonoBehaviour
         animator = transform.GetChild(0).gameObject.GetComponent<Animator>();
     }
 
-    public void RefreshSprite()
+    public void RefreshUnitSprite()
     {
         //called when team is  or unit is actioned or if tile goes in fog
-        float r = 1;
+        /*float r = 1;
         float g = 1;
-        float b = 1;
+        float b = 1;*/
         float a = 1f;
         float w = 1f;
         bool active = true;
-        if (unitBase.Team != TileManager.globalInstance.TeamTurn)
+        if (!unitBase.SameTeam(TileManager.globalInstance.TeamTurn))
         {
             if (!unitBase.Tile.CanSee || unitBase.Invisible)//hide sprite
             { active = false; }
         }
-        else if (unitBase.Invisible && unitBase.Team == TileManager.globalInstance.TeamTurn)
+        else if (unitBase.Invisible && unitBase.SameTeam(TileManager.globalInstance.TeamTurn))
         {
             //sprite is opaque
             a = .5f;
         }
         if (unitBase.Actioned) { w = .5f; }
-        if (unitBase.Tile.Building != null && unitBase.Tile.Building.Team != unitBase.Team) { unitBase.Invisible = false; }
+        if (unitBase.Tile.Building != null && !unitBase.Tile.Building.SameTeam(unitBase.Team) && unitBase.Invisible) { unitBase.Invisible = false; }
         animator.gameObject.SetActive(active);
     }
 
     public void RefreshBuildingSprite()
     {
         //called when team is  or unit is actioned or if tile goes in fog
-        float r = 1;
+        /*float r = 1;
         float g = 1;
-        float b = 1;
+        float b = 1;*/
         float a = 1f;
         float w = 1f;
         if (!unitBase.Tile.CanSee)
@@ -78,7 +78,6 @@ public class UnitAnimator : MonoBehaviour
             a = .5f;
         }
         if (unitBase.Actioned) { w = .5f; }
-        //animator.gameObject.SetActive(active);
     }
 
     public void Animate(string code)
@@ -149,8 +148,9 @@ public class UnitAnimator : MonoBehaviour
             {
                 child.gameObject.SetActive(false);
             }
-            transform.Find(model).gameObject.SetActive(true);
+            //transform.Find(model).gameObject.SetActive(true);
             animator = transform.Find(model).gameObject.GetComponent<Animator>();
+            animator.gameObject.SetActive(true);
         }
     }
 

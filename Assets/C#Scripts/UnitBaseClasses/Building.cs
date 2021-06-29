@@ -52,23 +52,6 @@ public class Building : UnitBase
     public bool Neutral => data.neutral;
     public int BuildingCover => data.buildingCover + buffs.Sum(x => x.buildingCover)/*+ other modifiers*/;
 
-    public override int Team
-    {
-        get
-        {
-            if (Neutral) {
-                return TileManager.globalInstance.TeamTurn;
-                //need to return team of object that asked
-            }
-            else if (Race == "Unaligned") { return -1; }
-            else { return base.Team; }
-        }
-        set
-        {
-            base.Team = value;
-        }
-    }
-
     /*
     public override string Race
     {
@@ -86,6 +69,13 @@ public class Building : UnitBase
         }
     }*/
 
+    public override bool SameTeam(int team_)
+    {
+        if (Neutral) { return true; }
+        else if (Race == "Unaligned") { return false; }
+        else { return base.SameTeam(team_); }
+    }
+
     public override void Load(Vector3Int localPlace, UnitBaseData data, int team)
     {
         TileManager.globalInstance.AddBuilding(this, localPlace);
@@ -96,7 +86,8 @@ public class Building : UnitBase
         {
             Race_ = TileManager.globalInstance.GetRace(team);
         }*/
-        if (Race == "Unaligned" /*&& !Neutral*/) {
+        if (Race == "Unaligned" && !Neutral)
+        {
             //    DamageTaken = HP;
             SetHPToZero();
         }
@@ -109,7 +100,7 @@ public class Building : UnitBase
         //parse code
         //unit.Destroy_v(this);
         ClearHold();
-        ChangeBuildingForm("Unaligned");
+        ChangeBuildingUsingRace("Unaligned");
         //Race_ = Race.noRace;
     }
 
@@ -158,7 +149,7 @@ public class Building : UnitBase
         base.StartOfTurn();
         if (HPCurrent > 0)
         {
-            if (Tile.Unit == null || Tile.Unit.Team == Team)
+            if (Tile.Unit == null || SameTeam(Tile.Unit.Team))
             {
                 ClearHold();
                 hold[Team] = HPCurrent;
@@ -166,7 +157,7 @@ public class Building : UnitBase
         }
     }
 
-    private void ChangeBuildingForm(string race)
+    private void ChangeBuildingUsingRace(string race)
     {
         if (race != Race)
         {
@@ -193,7 +184,7 @@ public class Building : UnitBase
 
     private void ConvertedBy(UnitBase unit)
     {
-        ChangeBuildingForm(unit.Race);
+        ChangeBuildingUsingRace(unit.Race);
         Team = unit.Team;
         Actioned = true;
         TileManager.globalInstance.RefreshFogOfWar();

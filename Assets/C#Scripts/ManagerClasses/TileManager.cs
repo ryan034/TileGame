@@ -20,7 +20,7 @@ public class TileManager : MonoBehaviour
     private Dictionary<UnitBase, Vector3Int> unitBases = new Dictionary<UnitBase, Vector3Int>();
     private Vector3Int CurrentLocation { get; set; /*Pointer.globalInstance.UpdatePosition(tiles[CurrentLocation].tile.transform.position);*/ }
     private Tile SelectedTile => tiles[CurrentLocation];
-    private bool FriendlyBuildingSelected => SelectedTile.building != null && !SelectedTile.building.Actioned && SelectedTile.building.Team == TeamTurn;
+    private bool FriendlyBuildingSelected => SelectedTile.building != null && !SelectedTile.building.Actioned && SelectedTile.building.SameTeam(TeamTurn);
     private Tile HeldUnitTile => tiles[unitBases[heldUnit]];
 
     private int TeamsTotal => players.Count;
@@ -99,8 +99,15 @@ public class TileManager : MonoBehaviour
 
     private Building BlockingBuildingOnTile(Vector3Int v, Unit unit)
     {
-        if (tiles[v].building == null || ((tiles[v].building.Team == unit.Team || unit.Infiltrator) && !tiles[v].building.Neutral)) { return null; }
-        return tiles[v].building;
+        //if (tiles[v].building == null || ((tiles[v].building.SameTeam(unit.Team) || unit.Infiltrator) && !tiles[v].building.Neutral)) { return null; }
+        if (tiles[v].building != null && ((!tiles[v].building.SameTeam(unit.Team) && !unit.Infiltrator) || tiles[v].building.Neutral)) { return tiles[v].building; }
+        return null;
+    }
+
+    private Unit BlockingUnitOnTile(Vector3Int v, int team)
+    {
+        if (tiles[v].unit != null && !tiles[v].unit.SameTeam(team)) { return tiles[v].unit; }
+        return null;
     }
     /*
     private bool NoPercievedUnitOnTile(Vector3Int n, int team)
@@ -118,7 +125,7 @@ public class TileManager : MonoBehaviour
 
     private Unit PercievedUnitOnTile(Vector3Int n, int team)
     {
-        if (!tiles[n].tile.CanSee || tiles[n].unit == null || (tiles[n].unit.Invisible && tiles[n].unit.Team != team))
+        if (!tiles[n].tile.CanSee || tiles[n].unit == null || (tiles[n].unit.Invisible && !tiles[n].unit.SameTeam(team)))
         {
             return null;
         }
@@ -132,7 +139,7 @@ public class TileManager : MonoBehaviour
         {
             if (tiles.ContainsKey(n))
             {
-                if (!tiles[n].tile.IsExplored && (PercievedUnitOnTile(n, TeamTurn) == null || (tiles[n].unit != null && tiles[n].unit.Team == unit.Team))
+                if (!tiles[n].tile.IsExplored && (PercievedUnitOnTile(n, TeamTurn) == null || BlockingUnitOnTile(n, TeamTurn) == null)
                     && BlockingBuildingOnTile(n, unit) == null)
                 {
                     list_.Add(tiles[n]);
@@ -154,7 +161,7 @@ public class TileManager : MonoBehaviour
 
         for (int i = 0; i < path.Count(); i++)
         {
-            if (tiles[path[i]].unit != null && tiles[path[i]].unit.Team != TeamTurn) { return path.GetRange(0, i); }
+            if (BlockingUnitOnTile(path[i], TeamTurn) != null/* tiles[path[i]].unit != null && !tiles[path[i]].unit.SameTeam(TeamTurn)*/) { return path.GetRange(0, i); }
         }
         return path;
     }
@@ -258,7 +265,7 @@ public class TileManager : MonoBehaviour
 
     public bool VisibleAndHostileTo(int team, UnitBase targetUnit)
     {
-        if (team != targetUnit.Team && !targetUnit.Charming)
+        if (!targetUnit.SameTeam(team) && !targetUnit.Charming)
         {
             TileObject tileOfTarget = targetUnit.Tile;
             int targetTerrain = tileOfTarget.TerrainType;
@@ -266,7 +273,7 @@ public class TileManager : MonoBehaviour
             bool seen = false;
             foreach (UnitBase unitLooking in unitBases.Keys)
             {
-                if (unitLooking.Team == team)
+                if (unitLooking.SameTeam(team))
                 {
                     TileObject tileOfLooker = unitLooking.Tile;
                     int terrain = tileOfLooker.TerrainType;
@@ -337,7 +344,7 @@ public class TileManager : MonoBehaviour
 
     public void GetMenuOptions(List<string> menu)
     {
-        if (SelectedTile.unit != null && SelectedTile.unit.Team == TeamTurn && !SelectedTile.unit.Actioned)
+        if (SelectedTile.unit != null && SelectedTile.unit.SameTeam(TeamTurn) && !SelectedTile.unit.Actioned)
         {
             SelectedTile.unit.SetUp(menu);
             menu.Add("end unit turn");
@@ -354,7 +361,7 @@ public class TileManager : MonoBehaviour
 
     public void SetHeldUnit()
     {
-        if (SelectedTile.unit != null && SelectedTile.unit.Team == TeamTurn && !SelectedTile.unit.Actioned && heldUnit == null)
+        if (SelectedTile.unit != null && SelectedTile.unit.SameTeam(TeamTurn) && !SelectedTile.unit.Actioned && heldUnit == null)
         {
             heldUnit = SelectedTile.unit;
             heldLocation = unitBases[heldUnit];
@@ -505,7 +512,7 @@ public class TileManager : MonoBehaviour
         }
         foreach (UnitBase unit in unitBases.Keys)
         {
-            if (unit.Team == TeamTurn) { ApplySight(unit); }
+            if (unit.SameTeam(TeamTurn)) { ApplySight(unit); }
         }
     }
 

@@ -39,7 +39,11 @@ public class AssetManager : MonoBehaviour
                 {
                     GameObject myLoadedGameObject = Resources.Load(unitAssetPath + asset + '/' + asset) as GameObject;
                     //myLoadedGameObject.transform.parent = rootGameObject.transform;
-                    unitBaseCache[asset] = myLoadedGameObject;
+                    if (myLoadedGameObject != null)
+                    {
+                        unitBaseCache[asset] = myLoadedGameObject;
+                    }
+                    else { return null; }
                 }
             }
             GameObject p = unitBaseCache[asset];
@@ -84,7 +88,11 @@ public class AssetManager : MonoBehaviour
                 {
                     GameObject myLoadedGameObject = Resources.Load(buildingAssetPath + asset + '/' + asset) as GameObject;
                     //myLoadedGameObject.transform.parent = rootGameObject.transform;
-                    unitBaseCache[asset] = myLoadedGameObject;
+                    if (myLoadedGameObject != null)
+                    {
+                        unitBaseCache[asset] = myLoadedGameObject;
+                    }
+                    else { return null; }
                 }
             }
             GameObject p = unitBaseCache[asset];
@@ -104,7 +112,7 @@ public class AssetManager : MonoBehaviour
 
     public GameObject InstantiateModel(string model)
     {
-        if (model != "" )
+        if (model != "")
         {
             if (!unitBaseCache.ContainsKey(model))
             {
@@ -118,7 +126,11 @@ public class AssetManager : MonoBehaviour
                 else
                 {
                     GameObject myLoadedGameObject = Resources.Load(buildingAssetPath + model + '/' + model) as GameObject;
-                    unitBaseCache[model] = myLoadedGameObject;
+                    if (myLoadedGameObject != null)
+                    {
+                        unitBaseCache[model] = myLoadedGameObject;
+                    }
+                    else { return null; }
                 }
             }
             GameObject p = unitBaseCache[model];
@@ -139,7 +151,7 @@ public class AssetManager : MonoBehaviour
         return loaded;
     }
 
-    public UnitBaseData LoadUnitBaseData( string form )
+    public UnitBaseData LoadUnitBaseData(string form)
     {
         //unitScriptPath +
         if (!unitDataCache.ContainsKey(form))
@@ -148,9 +160,13 @@ public class AssetManager : MonoBehaviour
             UnitBaseData loaded = new UnitBaseData(UnitBaseXml.Load(form));
             if (loaded == null)
             {
-                loaded = new UnitBaseData(Resources.Load(unitBaseScriptPath + form ) as UnitBaseScript);
+                loaded = new UnitBaseData(Resources.Load(unitBaseScriptPath + form) as UnitBaseScript);
             }
-            unitDataCache[form] = loaded;
+            if (loaded != null)
+            {
+                unitDataCache[form] = loaded;
+            }
+            else { return null; }
         }
         return unitDataCache[form];
     }
@@ -162,12 +178,15 @@ public class AssetManager : MonoBehaviour
         if (map == null)
         {
             MapScript mapScript = Resources.Load(mapScriptPath + mapName) as MapScript;
-            TileManager.globalInstance.LoadPlayers(mapScript.teamsTotal);
-            foreach (MapScript.TileInfo t in mapScript.tilesInfo)
+            if (mapScript != null)
             {
-                InstantiateTile(t.prefab, t.localPlace, t.terrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
-                //TileObject spawnedtile = gameObject.AddComponent<TileObject>();
-                //spawnedtile.Load(t.localPlace, t.terrain, t.skyTerrain/*sprite and animation information*/);
+                TileManager.globalInstance.LoadPlayers(mapScript.teamsTotal);
+                foreach (MapScript.TileInfo t in mapScript.tilesInfo)
+                {
+                    InstantiateTile(t.prefab, t.localPlace, t.terrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
+                    //TileObject spawnedtile = gameObject.AddComponent<TileObject>();
+                    //spawnedtile.Load(t.localPlace, t.terrain, t.skyTerrain/*sprite and animation information*/);
+                }
             }
         }
         else
@@ -210,32 +229,39 @@ public class AssetManager : MonoBehaviour
     //private void InstantiateTile(string asset, Vector3Int localPlace, int terrain, int skyTerrain, string unit, string building, int unitTeam, int buildingTeam) => StartCoroutine(InstantiateTileCoRoutine(asset, localPlace, terrain, skyTerrain, unit, building, unitTeam, buildingTeam));
     private void InstantiateTile(string asset, Vector3Int localPlace, int terrain, string unit, string building, int unitTeam, int buildingTeam)
     {
-        if (!tileCache.ContainsKey(asset))
+        if (asset != "")
         {
-            //yield return bundleLoadRequest;
-            if (File.Exists(tileModAssetPath + asset))
+            if (!tileCache.ContainsKey(asset))
             {
-                //myLoadedAssetBundle = Resources.Load(tileAssetPath + asset) as AssetBundle;
-                //Debug.Log(tileAssetPath + asset);
-                //yield return bundleResourceRequest;
-                AssetBundle myLoadedAssetBundle = AssetBundle.LoadFromFile(tileModAssetPath + asset);
-                GameObject p = myLoadedAssetBundle.LoadAsset<GameObject>(asset);
-                p.AddComponent<TileObject>();
-                p.GetComponent<MeshFilter>().mesh = tileDefault;
-                tileCache[asset] = p;
+                //yield return bundleLoadRequest;
+                if (File.Exists(tileModAssetPath + asset))
+                {
+                    //myLoadedAssetBundle = Resources.Load(tileAssetPath + asset) as AssetBundle;
+                    //Debug.Log(tileAssetPath + asset);
+                    //yield return bundleResourceRequest;
+                    AssetBundle myLoadedAssetBundle = AssetBundle.LoadFromFile(tileModAssetPath + asset);
+                    GameObject p = myLoadedAssetBundle.LoadAsset<GameObject>(asset);
+                    p.AddComponent<TileObject>();
+                    p.GetComponent<MeshFilter>().mesh = tileDefault;
+                    tileCache[asset] = p;
+                }
+                else
+                {
+                    GameObject p = Resources.Load(tileAssetPath + asset) as GameObject;
+                    if (p != null)
+                    {
+                        tileCache[asset] = p;
+                    }
+                    else { return; }
+                }
             }
-            else
-            {
-                GameObject p = Resources.Load(tileAssetPath + asset) as GameObject;
-                tileCache[asset] = p;
-            }
-        }
-        GameObject prefab = tileCache[asset];
-        prefab = Instantiate(prefab as GameObject, new Vector3(0, 0, 0), rotation);
-        prefab.GetComponent<TileObject>().Load(localPlace, terrain);
+            GameObject prefab = tileCache[asset];
+            prefab = Instantiate(prefab as GameObject, new Vector3(0, 0, 0), rotation);
+            prefab.GetComponent<TileObject>().Load(localPlace, terrain);
 
-        InstantiateBuilding(localPlace, building, buildingTeam);
-        InstantiateUnit(localPlace, unit, unitTeam);
+            InstantiateBuilding(localPlace, building, buildingTeam);
+            InstantiateUnit(localPlace, unit, unitTeam);
+        }
     }
     /*
     private IEnumerator InstantiateTileCoRoutine(string asset, Vector3Int localPlace, int terrain, int skyTerrain, string unit, string building, int unitTeam, int buildingTeam)

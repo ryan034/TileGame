@@ -72,11 +72,6 @@ public abstract class UnitBase : MonoBehaviour
     public string Race => data.race;
     public int ArmourType => data.armourType;
     public int MovementType => data.movementType;
-    //public bool Biological => data.Biological;
-    //public bool Mechanical => data.Mechanical;
-    //public bool Magical => data.Magical;
-
-    public virtual int Team { get => internalVariables.team; set { internalVariables.team = value; RefreshSprite(); } }
 
     public int DayVision => data.dayVision + buffs.Sum(x => x.dayVision);
     public int NightVision => data.nightVision + buffs.Sum(x => x.nightVision);
@@ -91,9 +86,10 @@ public abstract class UnitBase : MonoBehaviour
     public int MPCurrent => MP - manaUsed;
     public double HPPercentage => Math.Max((double)HPCurrent / HP, 0);
     //public int DamageType => int.Parse(AbilityLogicCode.GetVariable("damageType"));
+    public int Team { get => internalVariables.team; set { internalVariables.team = value; RefreshUnitSprite(); } }
 
-    public bool Actioned { get => internalVariables.actioned; set { internalVariables.actioned = value; RefreshSprite(); } } //alreadymoved and attacked
-    public bool Invisible { get => internalVariables.invisible; set { internalVariables.invisible = value; RefreshSprite(); } }
+    public bool Actioned { get => internalVariables.actioned; set { internalVariables.actioned = value; RefreshUnitSprite(); } } //alreadymoved and attacked
+    public bool Invisible { get => internalVariables.invisible; set { internalVariables.invisible = value; RefreshUnitSprite(); } }
 
     public IEnumerable<string> Abilities => data.Abilities;
 
@@ -124,6 +120,8 @@ public abstract class UnitBase : MonoBehaviour
         UnitTransformManager.globalInstance.SnapMove(this, localPlace);
     }
 
+    public virtual bool SameTeam(int team_) => team_== Team;
+
     public virtual void StartOfTurn() { }
 
     protected virtual void DestroyThis() => TileManager.globalInstance.DestroyUnit(this);
@@ -142,7 +140,7 @@ public abstract class UnitBase : MonoBehaviour
 
     public string GetConvertedForm(string race) => data.GetConvertedForm(race);
 
-    public void RefreshSprite() => animator.RefreshSprite();
+    public void RefreshUnitSprite() => animator.RefreshUnitSprite();
 
     public void RefreshBuildingSprite() => animator.RefreshBuildingSprite();
 
