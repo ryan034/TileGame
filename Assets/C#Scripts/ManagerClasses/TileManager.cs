@@ -13,21 +13,22 @@ public class TileManager : MonoBehaviour
     private Vector3Int currentLocation;
     //private int maxX;
     //private int maxY;
-    private int turnCount;
 
-    private Dictionary<int, Player> players = new Dictionary<int, Player>();
+    //private int turnCount;
+
+    //private Dictionary<int, Player> players = new Dictionary<int, Player>();
     private Dictionary<Vector3Int, Tile> tiles = new Dictionary<Vector3Int, Tile>();
     private Dictionary<UnitBase, Vector3Int> unitBases = new Dictionary<UnitBase, Vector3Int>();
     private Vector3Int CurrentLocation { get; set; /*Pointer.globalInstance.UpdatePosition(tiles[CurrentLocation].tile.transform.position);*/ }
     private Tile SelectedTile => tiles[CurrentLocation];
-    private bool FriendlyBuildingSelected => SelectedTile.building != null && !SelectedTile.building.Actioned && SelectedTile.building.SameTeam(TeamTurn);
+    private bool FriendlyBuildingSelected => SelectedTile.building != null && !SelectedTile.building.Actioned && SelectedTile.building.SameTeam(PlayerManager.globalInstance.TeamTurn);
     private Tile HeldUnitTile => tiles[unitBases[heldUnit]];
 
-    private int TeamsTotal => players.Count;
-    public int TeamTurn => turnCount % TeamsTotal;
+    //private int TeamsTotal => players.Count;
+    //public int TeamTurn => turnCount % TeamsTotal;
 
-    public int GetClockFrame() => (turnCount / TeamsTotal) % clockTotal;
-    public bool IsDay { get { if (GetClockFrame() / (clockTotal * 1.0) < 0.5) { return true; } else { return false; } } }
+    //public int GetClockFrame() => (turnCount / TeamsTotal) % clockTotal;
+    //public bool IsDay { get { if (GetClockFrame() / (clockTotal * 1.0) < 0.5) { return true; } else { return false; } } }
 
     private class Tile
     {
@@ -66,13 +67,15 @@ public class TileManager : MonoBehaviour
         //GameObject prefab = Instantiate(myLoadedAssetBundle, new Vector3(0, 0, 0), rotation);
         SpawnMap("bootybay");
         Pointer.globalInstance.Setup();
+        PlayerManager.globalInstance.EndAndStartNextTurn();
     }
 
     private void SpawnMap(string mapName)
     {
         AssetManager.globalInstance.SpawnMap(mapName);
         //set up player dictionary
-        RefreshFogOfWar();
+        //RefreshFogOfWar();
+        //PlayerManager.globalInstance.EndAndStartNextTurn();
     }
 
 
@@ -100,7 +103,7 @@ public class TileManager : MonoBehaviour
     private Building BlockingBuildingOnTile(Vector3Int v, Unit unit)
     {
         //if (tiles[v].building == null || ((tiles[v].building.SameTeam(unit.Team) || unit.Infiltrator) && !tiles[v].building.Neutral)) { return null; }
-        if (tiles[v].building != null && ((!tiles[v].building.SameTeam(unit.Team) && !unit.Infiltrator) || tiles[v].building.Neutral)) { return tiles[v].building; }
+        if (tiles[v].building != null && ((!tiles[v].building.SameTeam(unit.Team) && !unit.Infiltrator) || tiles[v].building.Race == "Neutral")) { return tiles[v].building; }
         return null;
     }
 
@@ -139,7 +142,7 @@ public class TileManager : MonoBehaviour
         {
             if (tiles.ContainsKey(n))
             {
-                if (!tiles[n].tile.IsExplored && (PercievedUnitOnTile(n, TeamTurn) == null || BlockingUnitOnTile(n, TeamTurn) == null)
+                if (!tiles[n].tile.IsExplored && (PercievedUnitOnTile(n, PlayerManager.globalInstance.TeamTurn) == null || BlockingUnitOnTile(n, PlayerManager.globalInstance.TeamTurn) == null)
                     && BlockingBuildingOnTile(n, unit) == null)
                 {
                     list_.Add(tiles[n]);
@@ -161,7 +164,7 @@ public class TileManager : MonoBehaviour
 
         for (int i = 0; i < path.Count(); i++)
         {
-            if (BlockingUnitOnTile(path[i], TeamTurn) != null/* tiles[path[i]].unit != null && !tiles[path[i]].unit.SameTeam(TeamTurn)*/) { return path.GetRange(0, i); }
+            if (BlockingUnitOnTile(path[i], PlayerManager.globalInstance.TeamTurn) != null/* tiles[path[i]].unit != null && !tiles[path[i]].unit.SameTeam(TeamTurn)*/) { return path.GetRange(0, i); }
         }
         return path;
     }
@@ -205,7 +208,7 @@ public class TileManager : MonoBehaviour
         tileOf.CanSee = true;
         int terrain = tileOf.TerrainType;
         int movement = unit.MovementType;
-        int vision = IsDay ? TerrainVision(terrain, movement, unit.DayVision) : TerrainVision(terrain, movement, unit.NightVision);
+        int vision = PlayerManager.globalInstance.IsDay ? TerrainVision(terrain, movement, unit.DayVision) : TerrainVision(terrain, movement, unit.NightVision);
         List<Vector3Int> offsets = CircleCoords(1, vision, tileOf.LocalPlace);
         foreach (Vector3Int v in offsets)
         {
@@ -229,14 +232,15 @@ public class TileManager : MonoBehaviour
         if (tiles[v].unit != null && AttackableAndHostileTo(attacker, tiles[v].unit, attackType)) { return tiles[v].unit; };
         return null;
     }
-
+    /*
     public void LoadPlayers(int teams)
     {
         for (int i = 0; i < teams; i++)
         {
             players[i] = new Player();
         }
-    }
+    }*/
+
     public Vector3 UpdateSelectedTile(Vector3Int vector3Int)
     {
         if (tiles.ContainsKey(vector3Int + CurrentLocation))
@@ -269,7 +273,7 @@ public class TileManager : MonoBehaviour
         {
             TileObject tileOfTarget = targetUnit.Tile;
             int targetTerrain = tileOfTarget.TerrainType;
-            if (team == TeamTurn) { return !targetUnit.Invisible && tileOfTarget.CanSee; };
+            if (team == PlayerManager.globalInstance.TeamTurn) { return !targetUnit.Invisible && tileOfTarget.CanSee; };
             bool seen = false;
             foreach (UnitBase unitLooking in unitBases.Keys)
             {
@@ -278,7 +282,7 @@ public class TileManager : MonoBehaviour
                     TileObject tileOfLooker = unitLooking.Tile;
                     int terrain = tileOfLooker.TerrainType;
                     int movement = unitLooking.MovementType;
-                    int vision = IsDay ? TerrainVision(terrain, movement, unitLooking.DayVision) : TerrainVision(terrain, movement, unitLooking.NightVision);
+                    int vision = PlayerManager.globalInstance.IsDay ? TerrainVision(terrain, movement, unitLooking.DayVision) : TerrainVision(terrain, movement, unitLooking.NightVision);
                     if (Distance(tileOfLooker.LocalPlace, tileOfTarget.LocalPlace) > vision) { seen = false; }
                     else if (CanSee(terrain, targetTerrain, movement)) { seen = !targetUnit.Invisible; if (seen) { return seen; } }
                 }
@@ -289,7 +293,7 @@ public class TileManager : MonoBehaviour
 
     public bool AttackableAndHostileTo(UnitBase attacker, UnitBase defender, string attackType)
     {
-        return attacker.CanHit(defender, attackType) && VisibleAndHostileTo(attacker.Team, defender);
+        return attacker.CanHit(defender, attackType) && VisibleAndHostileTo(attacker.Team, defender) && defender.HPCurrent > 0;
     }
 
     public Building HostileVisibleBuildingOnTile(int team, Vector3Int v)
@@ -344,7 +348,7 @@ public class TileManager : MonoBehaviour
 
     public void GetMenuOptions(List<string> menu)
     {
-        if (SelectedTile.unit != null && SelectedTile.unit.SameTeam(TeamTurn) && !SelectedTile.unit.Actioned)
+        if (SelectedTile.unit != null && SelectedTile.unit.SameTeam(PlayerManager.globalInstance.TeamTurn) && !SelectedTile.unit.Actioned)
         {
             SelectedTile.unit.SetUp(menu);
             menu.Add("end unit turn");
@@ -361,7 +365,7 @@ public class TileManager : MonoBehaviour
 
     public void SetHeldUnit()
     {
-        if (SelectedTile.unit != null && SelectedTile.unit.SameTeam(TeamTurn) && !SelectedTile.unit.Actioned && heldUnit == null)
+        if (SelectedTile.unit != null && SelectedTile.unit.SameTeam(PlayerManager.globalInstance.TeamTurn) && !SelectedTile.unit.Actioned && heldUnit == null)
         {
             heldUnit = SelectedTile.unit;
             heldLocation = unitBases[heldUnit];
@@ -383,12 +387,12 @@ public class TileManager : MonoBehaviour
         if (s == "end turn")
         {
             //execute end turn
-            EndTurn();
+            PlayerManager.globalInstance.EndAndStartNextTurn();
         }
         else if (s == "end unit turn")
         {
             //execute end unit turn
-            EndUnitTurn();
+            EndHeldUnitTurn();
         }
         else
         {
@@ -457,7 +461,7 @@ public class TileManager : MonoBehaviour
 
     public void CommitMove()
     {
-        if (SelectedTile.tile.IsExplored && PercievedUnitOnTile(CurrentLocation, TeamTurn) == null)
+        if (SelectedTile.tile.IsExplored && PercievedUnitOnTile(CurrentLocation, PlayerManager.globalInstance.TeamTurn) == null)
         {
             List<Vector3Int> path = GetPath(SelectedTile);
             //heldunit.tile.unit = null;
@@ -473,7 +477,7 @@ public class TileManager : MonoBehaviour
             {
                 UIWindow.globalInstance.SpawnMenu();
             }
-            else { EndUnitTurn();  /*trigger for ambush attack*/}
+            else { EndHeldUnitTurn();  /*trigger for ambush attack*/}
         }
         else if (SelectedTile == HeldUnitTile)
         {
@@ -504,7 +508,7 @@ public class TileManager : MonoBehaviour
     }
     */
 
-    public void RefreshFogOfWar()
+    public void RefreshFogOfWar(int team)
     {
         foreach (Tile tile in tiles.Values)
         {
@@ -512,7 +516,7 @@ public class TileManager : MonoBehaviour
         }
         foreach (UnitBase unit in unitBases.Keys)
         {
-            if (unit.SameTeam(TeamTurn)) { ApplySight(unit); }
+            if (unit.SameTeam(team)) { ApplySight(unit); }
         }
     }
 
@@ -526,23 +530,30 @@ public class TileManager : MonoBehaviour
         foreach (Vector3Int t in targetList) { tiles[t].tile.IsTarget = true; }
     }
 
-    public void EndTurn()
+    public void EndAndStartNextTurn(int team)
     {
-        turnCount = turnCount + 1;
+        //turnCount = turnCount + 1;
         foreach (UnitBase unit in unitBases.Keys) { unit.Actioned = false; /*add other start of turn triggers here*/};
         //foreach (Building building in buildings.Keys) { building.Actioned = false; /*add other start of turn triggers here*/};
-        RefreshFogOfWar();
+        RefreshFogOfWar(team);
         Pointer.globalInstance.GoToOpenMode();
     }
 
-    public void EndUnitTurn()
+    public void EndHeldUnitTurn()
     {
         if (heldUnit != null)
         {
             heldUnit.Actioned = true;
+            RefreshFogOfWar(heldUnit.Team);
             heldUnit = null;
         }
-        RefreshFogOfWar();
+        Pointer.globalInstance.GoToOpenMode();
+    }
+
+    public void EndUnitTurn(UnitBase unit)
+    {
+        unit.Actioned = true;
+        RefreshFogOfWar(unit.Team);
         Pointer.globalInstance.GoToOpenMode();
     }
 
@@ -566,12 +577,12 @@ public class TileManager : MonoBehaviour
         }
     }
 
-    public Unit SpawnUnit(Vector3Int v, string unitScript, int unitTeam) => AssetManager.globalInstance.InstantiateUnit(v, unitScript, unitTeam);
+    public Unit SpawnUnit(Vector3Int v, string unitScript, int unitTeam) => AssetManager.globalInstance.InstantiateUnit(false, v, unitScript, unitTeam);
     //newunit.teamcolour = teamcolours[unitteam];
     //load in the details from the script
     //newUnit.Load(v, unitScript, unitTeam);
 
-    public void DestroyUnit(UnitBase unit)//todo
+    public void DestroyUnit(UnitBase unit)//destroyed unit sight still stays for a turn
     {
         tiles[unitBases[unit]].unit = null;
         unitBases.Remove(unit);

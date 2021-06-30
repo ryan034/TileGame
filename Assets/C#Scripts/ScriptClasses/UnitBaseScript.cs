@@ -23,7 +23,7 @@ public class UnitBaseScript : ScriptableObject
     public int mP;
     public int armour;
 
-    public bool neutral;
+    //public bool neutral;
     public int buildingCover;//total movement pts // for armour bonuses
 
     public bool infiltrator;

@@ -39,12 +39,12 @@ public class UnitAnimator : MonoBehaviour
         float a = 1f;
         float w = 1f;
         bool active = true;
-        if (!unitBase.SameTeam(TileManager.globalInstance.TeamTurn))
+        if (!unitBase.SameTeam(PlayerManager.globalInstance.TeamTurn))
         {
             if (!unitBase.Tile.CanSee || unitBase.Invisible)//hide sprite
             { active = false; }
         }
-        else if (unitBase.Invisible && unitBase.SameTeam(TileManager.globalInstance.TeamTurn))
+        else if (unitBase.Invisible && unitBase.SameTeam(PlayerManager.globalInstance.TeamTurn))
         {
             //sprite is opaque
             a = .5f;

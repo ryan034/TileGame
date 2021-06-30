@@ -242,7 +242,7 @@ public static class GlobalParser
         }
     }
 
-    public static bool CommitTarget(string abilityKey, CodeObject abilityTargetCode, UnitBase owner, Vector3Int target, List<Building> buildingList, List<Unit> unitList, List<UnitBase> unitBaseList, List<Vector3Int> vectorList, List<int> intList)
+    public static bool ValidateTargetBeforeCommit(string abilityKey, CodeObject abilityTargetCode, UnitBase owner, Vector3Int target, List<Building> buildingList, List<Unit> unitList, List<UnitBase> unitBaseList, List<Vector3Int> vectorList, List<int> intList)
     {
         if (abilityTargetCode.Task == "Attack")
         {

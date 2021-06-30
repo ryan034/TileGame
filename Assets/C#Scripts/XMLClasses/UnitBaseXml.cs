@@ -25,7 +25,7 @@ public class UnitBaseXml
     public bool infiltrator;
     public int movementTotal;//total movement pts
 
-    public bool neutral;
+    //public bool neutral;
     public int buildingCover;//total movement pts // for armour bonuses
 
     public struct ActiveAbility

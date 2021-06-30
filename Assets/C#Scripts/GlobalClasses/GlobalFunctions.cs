@@ -48,6 +48,11 @@ public static class GlobalFunctions
         return circlecoords;
     }
 
+    public static int MapTeam(int team)
+    {
+        return Math.Abs(team + 1);
+    }
+
     public static int Rolldamage(int baseDamage, int dice, int number, int cover)
     {
         int r = 0;

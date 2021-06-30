@@ -21,7 +21,7 @@ public class AssetManager : MonoBehaviour
     private Dictionary<string, GameObject> unitBaseCache = new Dictionary<string, GameObject>();
     private Dictionary<string, UnitBaseData> unitDataCache = new Dictionary<string, UnitBaseData>();
 
-    public Unit InstantiateUnit(Vector3Int localPlace, string asset, int unitTeam)
+    public Unit InstantiateUnit(bool initial, Vector3Int localPlace, string asset, int unitTeam)
     {
         if (asset != "")
         {
@@ -55,13 +55,13 @@ public class AssetManager : MonoBehaviour
             p.transform.parent = rootGameObject.transform;
             Unit unit = rootGameObject.GetComponent<Unit>();
             UnitBaseData data = LoadUnitBaseData(asset);
-            unit.Load(localPlace, data, unitTeam);
+            unit.Load(true, localPlace, data, unitTeam);
             return unit;
         }
         return null;
     }
 
-    public Building InstantiateBuilding(Vector3Int localPlace, string asset, int buildingTeam)
+    public Building InstantiateBuilding(bool initial, Vector3Int localPlace, string asset, int buildingTeam)
     {
         //check if streamingassets has adressable if not check in system assets for building prefab
         // if addresable in streaming assets then: 
@@ -104,7 +104,7 @@ public class AssetManager : MonoBehaviour
             p.transform.parent = rootGameObject.transform;
             Building building = rootGameObject.GetComponent<Building>();
             UnitBaseData data = LoadUnitBaseData(asset);
-            building.Load(localPlace, data, buildingTeam);
+            building.Load(true, localPlace, data, buildingTeam);
             return building;
         }
         return null;
@@ -180,7 +180,7 @@ public class AssetManager : MonoBehaviour
             MapScript mapScript = Resources.Load(mapScriptPath + mapName) as MapScript;
             if (mapScript != null)
             {
-                TileManager.globalInstance.LoadPlayers(mapScript.teamsTotal);
+                //TileManager.globalInstance.LoadPlayers(mapScript.teamsTotal);
                 foreach (MapScript.TileInfo t in mapScript.tilesInfo)
                 {
                     InstantiateTile(t.prefab, t.localPlace, t.terrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
@@ -191,7 +191,7 @@ public class AssetManager : MonoBehaviour
         }
         else
         {
-            TileManager.globalInstance.LoadPlayers(map.teamsTotal);
+            //TileManager.globalInstance.LoadPlayers(map.teamsTotal);
             foreach (MapXml.TileInfo t in map.tilesInfo)
             {
                 InstantiateTile(t.prefab, t.localPlace, t.terrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
@@ -259,8 +259,8 @@ public class AssetManager : MonoBehaviour
             prefab = Instantiate(prefab as GameObject, new Vector3(0, 0, 0), rotation);
             prefab.GetComponent<TileObject>().Load(localPlace, terrain);
 
-            InstantiateBuilding(localPlace, building, buildingTeam);
-            InstantiateUnit(localPlace, unit, unitTeam);
+            InstantiateBuilding(true, localPlace, building, buildingTeam);
+            InstantiateUnit(true, localPlace, unit, unitTeam);
         }
     }
     /*

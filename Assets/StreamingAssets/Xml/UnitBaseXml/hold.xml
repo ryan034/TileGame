@@ -7,7 +7,7 @@
   </abilitiesCode>
   <unitTags>
   </unitTags>
-  <race>greenrace</race>
+  <race>GreenRace</race>
   <armourType>1</armourType>
   <movementType>0</movementType>
   <dayVision>5</dayVision>
@@ -18,7 +18,6 @@
   <infiltrator>false</infiltrator>
   <movementTotal>0</movementTotal>
   <captureDamage>0</captureDamage>
-  <neutral>false</neutral>
   <buildingCover>1</buildingCover>
   <buildingConversions>
     <BuildingConversion>
@@ -26,7 +25,7 @@
       <building>barracks</building>
     </BuildingConversion>
     <BuildingConversion>
-      <race>greenrace</race>
+      <race>GreenRace</race>
       <building>hold</building>
     </BuildingConversion>
   </buildingConversions>

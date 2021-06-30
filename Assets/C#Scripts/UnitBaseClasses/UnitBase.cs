@@ -35,10 +35,10 @@ public abstract class UnitBase : MonoBehaviour
         {
             if (/*internalVariables.damageTaken < HP && */internalVariables.damageTaken < value)//getting damaged
             {
-                if (value >= HP)
+                if (value >= HPMax)
                 {
                     DestroyThis();
-                    internalVariables.damageTaken = HP;
+                    internalVariables.damageTaken = HPMax;
                     //parse code triggers
                 }
                 else
@@ -75,21 +75,21 @@ public abstract class UnitBase : MonoBehaviour
 
     public int DayVision => data.dayVision + buffs.Sum(x => x.dayVision);
     public int NightVision => data.nightVision + buffs.Sum(x => x.nightVision);
-    public int HP => data.hP + buffs.Sum(x => x.hP);
-    public int MP => data.mP + buffs.Sum(x => x.mP);
+    public int HPMax => data.hP + buffs.Sum(x => x.hP);
+    public int MPMax => data.mP + buffs.Sum(x => x.mP);
     public int Armour => data.armour + buffs.Sum(x => x.armour);
     public bool Charming => buffs.Select(x => x.notHostile).Contains(true);
     public bool Disarmed => buffs.Select(x => x.disarmed).Contains(true);
     public bool Silenced => buffs.Select(x => x.silenced).Contains(true);
 
-    public int HPCurrent => HP - DamageTaken;
-    public int MPCurrent => MP - manaUsed;
-    public double HPPercentage => Math.Max((double)HPCurrent / HP, 0);
+    public int HPCurrent => HPMax - DamageTaken;
+    public int MPCurrent => MPMax - manaUsed;
+    public double HPPercentage => Math.Max((double)HPCurrent / HPMax, 0);
     //public int DamageType => int.Parse(AbilityLogicCode.GetVariable("damageType"));
-    public int Team { get => internalVariables.team; set { internalVariables.team = value; RefreshUnitSprite(); } }
+    public int Team { get => internalVariables.team; set { internalVariables.team = value; Tile.RefreshSprite(); } }
 
-    public bool Actioned { get => internalVariables.actioned; set { internalVariables.actioned = value; RefreshUnitSprite(); } } //alreadymoved and attacked
-    public bool Invisible { get => internalVariables.invisible; set { internalVariables.invisible = value; RefreshUnitSprite(); } }
+    public bool Actioned { get => internalVariables.actioned; set { internalVariables.actioned = value; Tile.RefreshSprite(); } } //alreadymoved and attacked
+    public bool Invisible { get => internalVariables.invisible; set { internalVariables.invisible = value; Tile.RefreshSprite(); } }
 
     public IEnumerable<string> Abilities => data.Abilities;
 
@@ -106,7 +106,7 @@ public abstract class UnitBase : MonoBehaviour
         public int manaUsed;
     }
 
-    public virtual void Load(Vector3Int localPlace, UnitBaseData data, int team)
+    public virtual void Load(bool initial, Vector3Int localPlace, UnitBaseData data, int team)
     {
         internalVariables = new InternalVariables();
         animator = transform.GetComponent<UnitAnimator>();
@@ -120,7 +120,7 @@ public abstract class UnitBase : MonoBehaviour
         UnitTransformManager.globalInstance.SnapMove(this, localPlace);
     }
 
-    public virtual bool SameTeam(int team_) => team_== Team;
+    public virtual bool SameTeam(int team_) => team_ == Team;
 
     public virtual void StartOfTurn() { }
 
@@ -177,7 +177,7 @@ public abstract class UnitBase : MonoBehaviour
 
     public void CommitTarget(Vector3Int target)
     {
-        if (GlobalParser.CommitTarget(abilityKey, AbilityTargetCode, this, target, buildingList, unitList, unitBaseList, vectorList, intList))
+        if (ValidateTargetBeforeCommit(abilityKey, AbilityTargetCode, this, target, buildingList, unitList, unitBaseList, vectorList, intList))
         {
             EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimationCode, intList, unitBaseList, unitList, buildingList, vectorList);
             ClearTargets();

@@ -30,7 +30,7 @@
           <task>Animate</task>
           <duration>finish</duration>
           <animation>Attack</animation>
-          <to>1</to>
+          <to>0</to>
         </CodeObject>]]>
       </animation>
     </ActiveAbility>
@@ -63,7 +63,7 @@
   <unitTags>
     <string>biological</string>
   </unitTags>
-  <race>greenrace</race>
+  <race>GreenRace</race>
   <armourType>0</armourType>
   <movementType>0</movementType>
   <dayVision>5</dayVision>
@@ -74,6 +74,5 @@
   <infiltrator>true</infiltrator>
   <movementTotal>10</movementTotal>
   <captureDamage>10</captureDamage>
-  <neutral>false</neutral>
   <buildingCover>0</buildingCover>
 </UnitBaseXml>

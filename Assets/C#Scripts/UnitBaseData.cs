@@ -15,7 +15,7 @@ public class UnitBaseData
 
     public readonly bool infiltrator;
     public readonly int movementTotal;//total movement
-    public readonly bool neutral;
+    //public readonly bool neutral;
     public readonly int buildingCover;
 
     private Dictionary<string, string> buildingConversions = new Dictionary<string, string>();
@@ -74,7 +74,7 @@ public class UnitBaseData
         infiltrator = unitScript.infiltrator;
         movementTotal = unitScript.movementTotal; //total movement pts
         infiltrator = unitScript.infiltrator;
-        neutral = unitScript.neutral; //total movement pts
+        //neutral = unitScript.neutral; //total movement pts
         buildingCover = unitScript.buildingCover; //normally 10
         foreach (UnitBaseScript.ActiveAbility item in unitScript.abilitiesCode)
         {
@@ -110,7 +110,7 @@ public class UnitBaseData
         infiltrator = unitXml.infiltrator;
         movementTotal = unitXml.movementTotal; //total movement pts
         infiltrator = unitXml.infiltrator;
-        neutral = unitXml.neutral; //total movement pts
+        //neutral = unitXml.neutral; //total movement pts
         buildingCover = unitXml.buildingCover; //normally 10
         foreach (UnitBaseXml.ActiveAbility item in unitXml.abilitiesCode)
         {

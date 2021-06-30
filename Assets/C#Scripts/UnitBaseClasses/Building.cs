@@ -1,4 +1,4 @@
-﻿using System;
+﻿using static GlobalFunctions;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -49,7 +49,7 @@ public class Building : UnitBase
         }
     }
 
-    public bool Neutral => data.neutral;
+    //public bool Neutral => data.neutral;
     public int BuildingCover => data.buildingCover + buffs.Sum(x => x.buildingCover)/*+ other modifiers*/;
 
     /*
@@ -71,27 +71,38 @@ public class Building : UnitBase
 
     public override bool SameTeam(int team_)
     {
-        if (Neutral) { return true; }
-        else if (Race == "Unaligned") { return false; }
-        else { return base.SameTeam(team_); }
+        switch (Race)
+        {
+            case "Neutral":
+                return true;
+            case "Unaligned":
+                return false;
+            default:
+                return base.SameTeam(team_);
+        }
     }
 
-    public override void Load(Vector3Int localPlace, UnitBaseData data, int team)
+    public override void Load(bool initial, Vector3Int localPlace, UnitBaseData data, int team)
     {
         TileManager.globalInstance.AddBuilding(this, localPlace);
-        base.Load(localPlace, data, team);
+        base.Load(initial, localPlace, data, team);
         //if (team == -1 && !Neutral) { DamageTaken = HP; }
         //else { Team = team; }
         /*else
         {
             Race_ = TileManager.globalInstance.GetRace(team);
         }*/
-        if (Race == "Unaligned" && !Neutral)
+        if (Race == "Unaligned" /*&& !Neutral*/)
         {
             //    DamageTaken = HP;
             SetHPToZero();
         }
-        else { Team = team; }
+        else if (Race != "Neutral")
+        {
+            if (initial) { internalVariables.team = MapTeam(team); }
+            else { Team = team; }
+            PlayerManager.globalInstance.LoadPlayer(Team);
+        }
     }
 
     protected override void DestroyThis()
@@ -179,7 +190,7 @@ public class Building : UnitBase
 
     private void SetHPToZero()
     {
-        internalVariables.damageTaken = HP;
+        internalVariables.damageTaken = HPMax;
     }
 
     private void ConvertedBy(UnitBase unit)
@@ -187,7 +198,7 @@ public class Building : UnitBase
         ChangeBuildingUsingRace(unit.Race);
         Team = unit.Team;
         Actioned = true;
-        TileManager.globalInstance.RefreshFogOfWar();
+        //TileManager.globalInstance.RefreshFogOfWar();
         //TileManager.globalInstance.WipeTiles();
         Animate("Captured");
     }
@@ -251,7 +262,7 @@ public class Building : UnitBase
         }
         else
         {
-            residual = hold.Values.Sum() + damage - HP;
+            residual = hold.Values.Sum() + damage - HPMax;
             if (residual > 0)
             {
                 residual = RemoveFromHold(residual, unit.Team);
@@ -262,7 +273,7 @@ public class Building : UnitBase
                 }
             }
         }
-        hold[unit.Team] = hold[unit.Team] + damage > HP ? HP : hold[unit.Team] + damage;
+        hold[unit.Team] = hold[unit.Team] + damage > HPMax ? HPMax : hold[unit.Team] + damage;
     }
 
 }

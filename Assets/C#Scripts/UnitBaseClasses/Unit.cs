@@ -2,6 +2,7 @@
 using System.Linq;
 using UnityEngine;
 using static GlobalData;
+using static GlobalFunctions;
 
 public class Unit : UnitBase
 {
@@ -16,11 +17,13 @@ public class Unit : UnitBase
 
     public override int CoverBonus => Tile.Building != null && BothLandOrSky(MovementType, Tile.Building.MovementType) ? terrainDefenseMatrix[MovementType, Tile.TerrainType] + Tile.Building.BuildingCover : terrainDefenseMatrix[MovementType, Tile.TerrainType];
 
-    public override void Load(Vector3Int localPlace, UnitBaseData data, int team)
+    public override void Load(bool initial, Vector3Int localPlace, UnitBaseData data, int team)
     {
         TileManager.globalInstance.AddUnit(this, localPlace);
-        base.Load(localPlace, data, team);
-        Team = team;
+        base.Load(initial, localPlace, data, team);
+        if (initial) { internalVariables.team = MapTeam(team); }
+        else { Team = team; }
+        PlayerManager.globalInstance.LoadPlayer(Team);
     }
 
     public void Capture(bool before, Building building, int cDamage)

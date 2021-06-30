@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using static GlobalData;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,8 +19,26 @@ public class PlayerManager : MonoBehaviour
      * pick a random combination of 2 choices at age 3 not picked and a random hero not spawned at age 1 or 2 (the hero choice is randomly generated after hero choice at age 1 and 2)
      *
     */
+    public static PlayerManager globalInstance;
 
+    private Dictionary<int, Player> players = new Dictionary<int, Player>();
+    private List<int> turnOrder = new List<int>();
+    private int turnCount = -1; //first turn is 0
+    private int TeamsTotal => players.Count;
+    private int RoundCount => turnCount % TeamsTotal; // number of completed rounds
 
+    public int TeamTurn => turnOrder[turnCount % TeamsTotal]; //team thats taking current turn
+    public int ClockFrame => RoundCount % clockTotal; // time of day night cycle, 0 is dawn/morning, 1 is midday, 2 is afternoon, 3 dusk/evening, 4 is night, is 5 late night approaching early dawn
+    public bool IsDay => ClockFrame / (clockTotal * 1.0) < 0.5 ? true : false;
+
+    private class Player
+    {
+        public int wood;
+        public int gold;
+        public string race;
+    }
+
+    /*
     private Dictionary<int, PietyNode> pietyTrees;
 
     private class PietyNode
@@ -31,26 +50,7 @@ public class PlayerManager : MonoBehaviour
         public bool chosen;
 
     }
-
-    /*
-    private PietyNode GenerateTree(UnitBase.Race race)
-    {
-        //load race
-        PietyNode root = new PietyNode();
-        List<int> heroes = new List<int> { 0, 1, 2, 3 };
-        foreach(PietyNode node in )
-        {
-            node.hero = Random.Range(1, heroes.Count + 1);//pick random out of list
-            root.forwardNodes.Add(node);
-            
-            
-            node.forwardNodes.Add()
-        }
-
-        return root;
-    }*/
-
-    public static PlayerManager globalInstance;
+    */
 
     private void Awake()
     {
@@ -62,5 +62,43 @@ public class PlayerManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    /*
+    private PietyNode GenerateTree(UnitBase.Race race)
+    {
+        //load race
+        PietyNode root = new PietyNode();
+        List<int> heroes = new List<int> { 0, 1, 2, 3 };
+        foreach (PietyNode node in )
+        {
+            node.hero = Random.Range(1, heroes.Count + 1);//pick random out of list
+            root.forwardNodes.Add(node);
+
+
+            node.forwardNodes.Add()
+        }
+
+        return root;
+    }*/
+    /*
+    public void LoadPlayers(int teams)
+    {
+        for (int i = 0; i < teams; i++)
+        {
+            players[i] = new Player();
+        }
+    }*/
+
+    public void LoadPlayer(int team)
+    {
+        if (!players.ContainsKey(team)) { players[team] = new Player(); }
+        if (!turnOrder.Contains(team)) { turnOrder.Add(team); }
+    }
+
+    public void EndAndStartNextTurn()
+    {
+        turnCount = turnCount + 1;
+        TileManager.globalInstance.EndAndStartNextTurn(TeamTurn);
     }
 }

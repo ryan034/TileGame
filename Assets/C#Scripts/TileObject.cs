@@ -30,7 +30,7 @@ public class TileObject : MonoBehaviour
     private bool canSee;
 
     //public bool elevated;
-    private void RefreshSprite()
+    public void RefreshSprite()
     {
         //gameObject.GetComponent<Renderer>().material.color = new Color(255, 255, 255);
 
