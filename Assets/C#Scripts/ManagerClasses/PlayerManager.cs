@@ -1,9 +1,8 @@
-﻿using System;
-using static GlobalData;
+﻿using static GlobalData;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerManager : MonoBehaviour
+public class PlayerManager
 {
     //holds economy, piety choices
     /*you unlock a new hero at every upgrade. the heroes xp starts at the average xp of all your other heroes. every age should give your passive upgrades to your units of lower age.
@@ -17,9 +16,7 @@ public class PlayerManager : MonoBehaviour
      * pick a random hero out that is not picked (4 in total)
      * pick a random combination of 2 choices at age 2 not picked and a random hero not spawned at age 1 (the hero choice is randomly generated after hero choice at age 1)
      * pick a random combination of 2 choices at age 3 not picked and a random hero not spawned at age 1 or 2 (the hero choice is randomly generated after hero choice at age 1 and 2)
-     *
     */
-    public static PlayerManager globalInstance;
 
     private Dictionary<int, Player> players = new Dictionary<int, Player>();
     private List<int> turnOrder = new List<int>();
@@ -29,7 +26,7 @@ public class PlayerManager : MonoBehaviour
 
     public int TeamTurn => turnOrder[turnCount % TeamsTotal]; //team thats taking current turn
     public int ClockFrame => RoundCount % clockTotal; // time of day night cycle, 0 is dawn/morning, 1 is midday, 2 is afternoon, 3 dusk/evening, 4 is night, is 5 late night approaching early dawn
-    public bool IsDay => ClockFrame / (clockTotal * 1.0) < 0.5 ? true : false;
+    public bool IsDay => ClockFrame < 3 ? true : false;
 
     private class Player
     {
@@ -51,19 +48,6 @@ public class PlayerManager : MonoBehaviour
 
     }
     */
-
-    private void Awake()
-    {
-        if (globalInstance == null)
-        {
-            globalInstance = this;
-        }
-        else if (globalInstance != this)
-        {
-            Destroy(gameObject);
-        }
-    }
-
     /*
     private PietyNode GenerateTree(UnitBase.Race race)
     {
@@ -81,14 +65,6 @@ public class PlayerManager : MonoBehaviour
 
         return root;
     }*/
-    /*
-    public void LoadPlayers(int teams)
-    {
-        for (int i = 0; i < teams; i++)
-        {
-            players[i] = new Player();
-        }
-    }*/
 
     public void LoadPlayer(int team)
     {
@@ -99,6 +75,7 @@ public class PlayerManager : MonoBehaviour
     public void EndAndStartNextTurn()
     {
         turnCount = turnCount + 1;
-        TileManager.globalInstance.EndAndStartNextTurn(TeamTurn);
+        GlobalManager.TileManager.EndAndStartNextTurn(TeamTurn);
     }
+
 }

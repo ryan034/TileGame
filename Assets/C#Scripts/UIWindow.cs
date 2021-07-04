@@ -46,7 +46,7 @@ public class UIWindow : MonoBehaviour
 
     public void Execute()
     {
-        TileManager.globalInstance.Execute(menu[index]);
+        GlobalManager.TileManager.Execute(menu[index]);
         gameObject.SetActive(false);
     }
 
@@ -54,7 +54,7 @@ public class UIWindow : MonoBehaviour
     {
         index = 0;
         menu.Clear();
-        TileManager.globalInstance.GetMenuOptions(menu);
+        GlobalManager.TileManager.GetMenuOptions(menu);
         if (menu.Count == 0)
         {
             return;

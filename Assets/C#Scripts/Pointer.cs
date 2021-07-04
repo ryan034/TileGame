@@ -80,7 +80,7 @@ public class Pointer : MonoBehaviour
                 UIWindow.globalInstance.TriggerDirection(v);
                 break;
             default:
-                UpdatePosition(TileManager.globalInstance.UpdateSelectedTile(v));
+                UpdatePosition(GlobalManager.TileManager.UpdateSelectedTile(v));
                 break;
         }
     }
@@ -94,15 +94,15 @@ public class Pointer : MonoBehaviour
                 UIWindow.globalInstance.Execute();
                 break;
             case Mode.open:
-                TileManager.globalInstance.SetHeldUnit();
+                GlobalManager.TileManager.SetHeldUnit();
                 //mode = Mode.window;
                 break;
             case Mode.moving:
-                TileManager.globalInstance.CommitMove();
+                GlobalManager.TileManager.CommitMove();
                 //mode = Mode.window;
                 break;
             case Mode.attacking:
-                TileManager.globalInstance.CommitTarget();
+                GlobalManager.TileManager.CommitTarget();
                 break;
         }
     }
@@ -113,15 +113,15 @@ public class Pointer : MonoBehaviour
         switch (mode)
         {
             case Mode.window:
-                UpdatePosition(TileManager.globalInstance.RetractMoveFromWindow());
+                UpdatePosition(GlobalManager.TileManager.RetractMoveFromWindow());
                 UIWindow.globalInstance.gameObject.SetActive(false);
                 break;
             case Mode.moving:
-                UpdatePosition(TileManager.globalInstance.RetractMove());
+                UpdatePosition(GlobalManager.TileManager.RetractMove());
                 mode = Mode.open;
                 break;
             case Mode.attacking:
-                UpdatePosition(TileManager.globalInstance.RetractTarget());
+                UpdatePosition(GlobalManager.TileManager.RetractTarget());
                 //TileManager.globalInstance.SetHeldUnit();
                 UIWindow.globalInstance.SpawnMenu();
                 break;
@@ -130,7 +130,7 @@ public class Pointer : MonoBehaviour
 
     public void Setup()
     {
-        UpdatePosition(TileManager.globalInstance.UpdateSelectedTile(new Vector3Int(0, 0, 0)));
+        UpdatePosition(GlobalManager.TileManager.UpdateSelectedTile(new Vector3Int(0, 0, 0)));
         //transform.rotation = globalRotation;
     }
 

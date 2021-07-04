@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -7,8 +5,6 @@ using static GlobalData;
 
 public class AssetManager : MonoBehaviour
 {
-    public static AssetManager globalInstance;
-
     [SerializeField] private Mesh tileDefault;
 
     //Addressables.LoadAsset<GameObject>("AssetAddress");
@@ -51,7 +47,7 @@ public class AssetManager : MonoBehaviour
             p = Instantiate(p, asset);
             GameObject rootGameObject = new GameObject();
             rootGameObject.AddComponent<Unit>();
-            rootGameObject.AddComponent<UnitAnimator>();
+            //rootGameObject.AddComponent<UnitAnimator>();
             p.transform.parent = rootGameObject.transform;
             Unit unit = rootGameObject.GetComponent<Unit>();
             UnitBaseData data = LoadUnitBaseData(asset);
@@ -63,15 +59,6 @@ public class AssetManager : MonoBehaviour
 
     public Building InstantiateBuilding(bool initial, Vector3Int localPlace, string asset, int buildingTeam)
     {
-        //check if streamingassets has adressable if not check in system assets for building prefab
-        // if addresable in streaming assets then: 
-        //add unit component to gameobject
-        //cache loaded unit and use next time is called
-
-        //check if streamingassets has adressable if not check in system assets for buildingscript
-        // if addresable in streaming assets then: 
-        //newBuilding.Load(v, unitScript, unitTeam);
-        //cache loaded unit and use next time is called  
         if (asset != "")
         {
             if (!unitBaseCache.ContainsKey(asset))
@@ -100,7 +87,7 @@ public class AssetManager : MonoBehaviour
             p = Instantiate(p, asset);
             GameObject rootGameObject = new GameObject();
             rootGameObject.AddComponent<Building>();
-            rootGameObject.AddComponent<UnitAnimator>();
+            //rootGameObject.AddComponent<UnitAnimator>();
             p.transform.parent = rootGameObject.transform;
             Building building = rootGameObject.GetComponent<Building>();
             UnitBaseData data = LoadUnitBaseData(asset);
@@ -153,7 +140,6 @@ public class AssetManager : MonoBehaviour
 
     public UnitBaseData LoadUnitBaseData(string form)
     {
-        //unitScriptPath +
         if (!unitDataCache.ContainsKey(form))
         {
             //look for xml in modfile
@@ -173,7 +159,6 @@ public class AssetManager : MonoBehaviour
 
     public void SpawnMap(string mapName)
     {
-        //Dictionary<string, GameObject> tileCache = new Dictionary<string, GameObject>();
         MapXml map = MapXml.Load(mapName);
         if (map == null)
         {
@@ -184,8 +169,6 @@ public class AssetManager : MonoBehaviour
                 foreach (MapScript.TileInfo t in mapScript.tilesInfo)
                 {
                     InstantiateTile(t.prefab, t.localPlace, t.terrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
-                    //TileObject spawnedtile = gameObject.AddComponent<TileObject>();
-                    //spawnedtile.Load(t.localPlace, t.terrain, t.skyTerrain/*sprite and animation information*/);
                 }
             }
         }
@@ -195,27 +178,7 @@ public class AssetManager : MonoBehaviour
             foreach (MapXml.TileInfo t in map.tilesInfo)
             {
                 InstantiateTile(t.prefab, t.localPlace, t.terrain, t.unit, t.building, t.unitTeam, t.buildingTeam);
-                //TileObject spawnedtile = gameObject.AddComponent<TileObject>();
-                //spawnedtile.Load(t.localPlace, t.terrain, t.skyTerrain/*sprite and animation information*/);
             }
-        }
-        //teamcolours = map.teamcolours;
-        //Instantiate(cursorprefab, new Vector3(0, 0, 0), Quaternion.identity);
-        //maxX = map.maxX;
-        //maxY = map.maxY;
-        //Pointer.globalInstance.Spawn(tiles[new Vector3Int(0, 0, 0)]);
-        //return map;
-    }
-
-    private void Awake()
-    {
-        if (globalInstance == null)
-        {
-            globalInstance = this;
-        }
-        else if (globalInstance != this)
-        {
-            Destroy(gameObject);
         }
     }
 
@@ -298,5 +261,13 @@ public class AssetManager : MonoBehaviour
 
         InstantiateBuilding(localPlace, building, buildingTeam);
         InstantiateUnit(localPlace, unit, unitTeam);
+    }
+
+    private void Awake()
+    {
+        if (GlobalManager.AssetManager != this)
+        {
+            Destroy(gameObject);
+        }
     }*/
 }

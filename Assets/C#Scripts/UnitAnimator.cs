@@ -1,8 +1,5 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using static GlobalData;
 
 public class UnitAnimator : MonoBehaviour
 {
@@ -39,12 +36,12 @@ public class UnitAnimator : MonoBehaviour
         float a = 1f;
         float w = 1f;
         bool active = true;
-        if (!unitBase.SameTeam(PlayerManager.globalInstance.TeamTurn))
+        if (!unitBase.SameTeam(GlobalManager.PlayerManager.TeamTurn))
         {
             if (!unitBase.Tile.CanSee || unitBase.Invisible)//hide sprite
             { active = false; }
         }
-        else if (unitBase.Invisible && unitBase.SameTeam(PlayerManager.globalInstance.TeamTurn))
+        else if (unitBase.Invisible && unitBase.SameTeam(GlobalManager.PlayerManager.TeamTurn))
         {
             //sprite is opaque
             a = .5f;
@@ -107,7 +104,7 @@ public class UnitAnimator : MonoBehaviour
                         u = stackItem.unitBaseData[int.Parse(indexCode)];
                         break;
                 }
-                UnitTransformManager.globalInstance.RotateTo(unitBase, u.Tile.LocalPlace);
+                GlobalManager.UnitTransformManager.RotateTo(unitBase, u.Tile.LocalPlace);
             }
             if (code.GetVariable("animation") != "")
             {
@@ -137,7 +134,7 @@ public class UnitAnimator : MonoBehaviour
         {
             if (transform.Find(model) == null)
             {
-                GameObject g = AssetManager.globalInstance.InstantiateModel(model);
+                GameObject g = GlobalManager.AssetManager.InstantiateModel(model);
                 if (g != null)
                 {
                     g.transform.parent = gameObject.transform;

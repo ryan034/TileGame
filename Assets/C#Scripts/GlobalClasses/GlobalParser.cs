@@ -166,9 +166,9 @@ public static class GlobalParser
             case "Attack":
                 if (!owner.Disarmed)
                 {
-                    foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
+                    foreach (Vector3Int v in GlobalManager.TileManager.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
                     {
-                        if (TileManager.globalInstance.HostileAttackableUnitOrBuildingOnTile(owner, v, abilityTargetCode.GetVariable("canHit")) != null)
+                        if (GlobalManager.TileManager.HostileAttackableUnitOrBuildingOnTile(owner, v, abilityTargetCode.GetVariable("canHit")) != null)
                         {
                             menu.Add(s);
                             return;
@@ -188,9 +188,9 @@ public static class GlobalParser
                         switch (target)
                         {
                             case "hostileVisibleBuildingOnTile":
-                                foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
+                                foreach (Vector3Int v in GlobalManager.TileManager.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
                                 {
-                                    if (TileManager.globalInstance.HostileVisibleBuildingOnTile(owner.Team, v) != null)
+                                    if (GlobalManager.TileManager.HostileVisibleBuildingOnTile(owner.Team, v) != null)
                                     {
                                         b = true;
                                         break;
@@ -198,9 +198,9 @@ public static class GlobalParser
                                 }
                                 break;
                             case "hostileVisibleUnitOnTile":
-                                foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
+                                foreach (Vector3Int v in GlobalManager.TileManager.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
                                 {
-                                    if (TileManager.globalInstance.HostileVisibleUnitOnTile(owner.Team, v) != null)
+                                    if (GlobalManager.TileManager.HostileVisibleUnitOnTile(owner.Team, v) != null)
                                     {
                                         b = true;
                                         break;
@@ -233,7 +233,7 @@ public static class GlobalParser
                     switch (target)
                     {
                         case "hostileVisibleBuildingOnThisTile":
-                            if (TileManager.globalInstance.HostileVisibleBuildingOnTile(owner.Team, owner.Tile.LocalPlace) == null) { return; }
+                            if (GlobalManager.TileManager.HostileVisibleBuildingOnTile(owner.Team, owner.Tile.LocalPlace) == null) { return; }
                             break;
                     }
                 }
@@ -246,7 +246,7 @@ public static class GlobalParser
     {
         if (abilityTargetCode.Task == "Attack")
         {
-            unitBaseList.Add(TileManager.globalInstance.HostileAttackableUnitOrBuildingOnTile(owner, target, abilityTargetCode.GetVariable("canHit")));
+            unitBaseList.Add(GlobalManager.TileManager.HostileAttackableUnitOrBuildingOnTile(owner, target, abilityTargetCode.GetVariable("canHit")));
             if (owner.TargetCount == int.Parse(abilityTargetCode.GetVariable("targets")))
             {
                 return true;
@@ -259,11 +259,11 @@ public static class GlobalParser
             {
                 case "hostileVisibleBuildingOnTile":
                     //add building as target
-                    if (TileManager.globalInstance.HostileVisibleBuildingOnTile(owner.Team, target) != null) { buildingList.Add(TileManager.globalInstance.HostileVisibleBuildingOnTile(owner.Team, target)); }
+                    if (GlobalManager.TileManager.HostileVisibleBuildingOnTile(owner.Team, target) != null) { buildingList.Add(GlobalManager.TileManager.HostileVisibleBuildingOnTile(owner.Team, target)); }
                     break;
                 case "hostileVisibleUnitOnTile":
                     // add unit
-                    if (TileManager.globalInstance.HostileVisibleUnitOnTile(owner.Team, target) != null) { unitList.Add(TileManager.globalInstance.HostileVisibleUnitOnTile(owner.Team, target)); }
+                    if (GlobalManager.TileManager.HostileVisibleUnitOnTile(owner.Team, target) != null) { unitList.Add(GlobalManager.TileManager.HostileVisibleUnitOnTile(owner.Team, target)); }
                     break;
                 case "v":
                     // add vector3int
@@ -285,12 +285,12 @@ public static class GlobalParser
             //tasks can be spells, attacks or abilities. attacks are always (multi) target by default (ie cannot target ground)
             case "Attack":
                 List<Vector3Int> targets = new List<Vector3Int>();
-                foreach (Vector3Int v in TileManager.globalInstance.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
+                foreach (Vector3Int v in GlobalManager.TileManager.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
                 {
-                    if (TileManager.globalInstance.HostileAttackableUnitOrBuildingOnTile(owner, v, abilityTargetCode.GetVariable("canHit")) != null)
+                    if (GlobalManager.TileManager.HostileAttackableUnitOrBuildingOnTile(owner, v, abilityTargetCode.GetVariable("canHit")) != null)
                     { targets.Add(v); }
                 }
-                TileManager.globalInstance.SetUpTargetTiles(targets);
+                GlobalManager.TileManager.SetUpTargetTiles(targets);
                 Pointer.globalInstance.GoToAttackingMode();
                 return;
             //need to rework onsite for spawn and capture
@@ -313,7 +313,7 @@ public static class GlobalParser
                             break;
                     }
                 }
-                EventsManager.globalInstance.AddToStack(abilityLogicCode, abilityKey, owner, abilityAnimation, iList, uBList, uList, bList, vList);
+                GlobalManager.EventsManager.AddToStack(abilityLogicCode, abilityKey, owner, abilityAnimation, iList, uBList, uList, bList, vList);
                 return;
         }
     }
