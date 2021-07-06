@@ -1,4 +1,5 @@
 ﻿using static GlobalFunctions;
+using static GlobalData;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -42,7 +43,7 @@ public class Building : UnitBase
         get => base.DamageTaken;
         set
         {
-            if (Race != "Unaligned" && base.DamageTaken > value)//can only heal if building not unaligned
+            if (Race != unaligned && base.DamageTaken > value)//can only heal if building not unaligned
             {
                 base.DamageTaken = value;
             }
@@ -71,20 +72,23 @@ public class Building : UnitBase
 
     public override bool SameTeam(int team_)
     {
-        switch (Race)
+        if (Race == neutral)
         {
-            case "Neutral":
-                return true;
-            case "Unaligned":
-                return false;
-            default:
-                return base.SameTeam(team_);
+            return true;
+        }
+        else if (Race == unaligned)
+        {
+            return false;
+        }
+        else
+        {
+            return base.SameTeam(team_);
         }
     }
 
     public override void Load(bool initial, Vector3Int localPlace, UnitBaseData data, int team)
     {
-        GlobalManager.TileManager.AddBuilding(this, localPlace);
+        Manager.TileManager.AddBuilding(this, localPlace);
         base.Load(initial, localPlace, data, team);
         //if (team == -1 && !Neutral) { DamageTaken = HP; }
         //else { Team = team; }
@@ -92,16 +96,16 @@ public class Building : UnitBase
         {
             Race_ = TileManager.globalInstance.GetRace(team);
         }*/
-        if (Race == "Unaligned" /*&& !Neutral*/)
+        if (Race == unaligned /*&& !Neutral*/)
         {
             //    DamageTaken = HP;
             SetHPToZero();
         }
-        else if (Race != "Neutral")
+        else if (Race != neutral)
         {
             if (initial) { internalVariables.team = MapTeam(team); }
             else { Team = team; }
-            GlobalManager.PlayerManager.LoadPlayer(Team);
+            Manager.PlayerManager.LoadPlayer(Team);
         }
     }
 
@@ -111,7 +115,7 @@ public class Building : UnitBase
         //parse code
         //unit.Destroy_v(this);
         ClearHold();
-        ChangeBuildingUsingRace("Unaligned");
+        ChangeBuildingUsingRace(unaligned);
         //Race_ = Race.noRace;
     }
 
@@ -174,7 +178,7 @@ public class Building : UnitBase
         {
             if (GetConvertedForm(race) != "")
             {
-                if (race == "Unaligned")
+                if (race == unaligned)
                 {
                     Animate("Death");
                     ChangeForm(GetConvertedForm(race));

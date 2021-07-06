@@ -75,7 +75,7 @@ public class PlayerManager
     public void EndAndStartNextTurn()
     {
         turnCount = turnCount + 1;
-        GlobalManager.TileManager.EndAndStartNextTurn(TeamTurn);
+        Manager.TileManager.EndAndStartNextTurn(TeamTurn);
     }
 
 }

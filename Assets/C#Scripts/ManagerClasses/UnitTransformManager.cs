@@ -10,13 +10,13 @@ public class UnitTransformManager : MonoBehaviour
     {
         StartCoroutine(SmoothLerp(unit, path));
     }
-
+    /*
     public IEnumerator DestroyUnit(UnitBase unit)
     {
         unit.Animate("Death");
         yield return StartCoroutine(WaitForAnimation(unit, "Death"));
         Destroy(unit.gameObject);
-    }
+    }*/
 
     public void SnapMove(UnitBase unit, Vector3Int v)
     {

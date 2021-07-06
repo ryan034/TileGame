@@ -79,10 +79,9 @@ public class EventsManager : MonoBehaviour
         StackItem s;
         while (currentStack.Count > 0)
         {
-            //yield return StartCoroutine(ResolveStack(currentStack[currentStack.Count - 1]));
             s = currentStack[currentStack.Count - 1];
-            yield return StartCoroutine(s.owner.ParseAnimation(s));
-            //yield return StartCoroutine(ResolveAnimation(stackItem.owner, stackItem.animationCode));
+            //yield return StartCoroutine(s.owner.ParseAnimation(s));
+            yield return Manager.AnimationManager.ParseAnimation(s);
             Parse(s);
             currentStack.Remove(s);
         }

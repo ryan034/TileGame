@@ -19,11 +19,11 @@ public class Unit : UnitBase
 
     public override void Load(bool initial, Vector3Int localPlace, UnitBaseData data, int team)
     {
-        GlobalManager.TileManager.AddUnit(this, localPlace);
+        Manager.TileManager.AddUnit(this, localPlace);
         base.Load(initial, localPlace, data, team);
         if (initial) { internalVariables.team = MapTeam(team); }
         else { Team = team; }
-        GlobalManager.PlayerManager.LoadPlayer(Team);
+        Manager.PlayerManager.LoadPlayer(Team);
     }
 
     public void Capture(bool before, Building building, int cDamage)

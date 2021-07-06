@@ -32,6 +32,10 @@ public static class GlobalData
     public static readonly int pixelPerUnit = 100;
     public static readonly int tileRadius = 60;
 
+    public static readonly string unaligned = "Unaligned";
+    public static readonly string neutral = "Neutral";
+    public static readonly string endTurn = "end turn";
+    public static readonly string endUnitTurn = "end unit turn";
     //called from resources.load
     public static readonly string unitBaseScriptPath = "Scripts/UnitScripts/";
     public static readonly string mapScriptPath = "Scripts/MapScripts/";

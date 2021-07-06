@@ -93,7 +93,7 @@ public abstract class UnitBase : MonoBehaviour
 
     public IEnumerable<string> Abilities => data.Abilities;
 
-    public TileObject Tile => GlobalManager.TileManager.GetTile(this);
+    public TileObject Tile => Manager.TileManager.GetTile(this);
 
     public virtual int CoverBonus => terrainDefenseMatrix[MovementType, Tile.TerrainType];
 
@@ -116,14 +116,14 @@ public abstract class UnitBase : MonoBehaviour
         {
             buffs.Add(Buff.Load(this, s));
         }
-        GlobalManager.UnitTransformManager.SnapMove(this, localPlace);
+        Manager.UnitTransformManager.SnapMove(this, localPlace);
     }
 
     public virtual bool SameTeam(int team_) => team_ == Team;
 
     public virtual void StartOfTurn() { }
 
-    protected virtual void DestroyThis() => GlobalManager.TileManager.DestroyUnit(this);
+    protected virtual void DestroyThis() { Manager.TileManager.DestroyUnit(this); /*deference everything from here and change state to destroyed*/ animator.DestroyUnit(); }
 
     protected virtual void CalculateAndTakeDamage(UnitBase unit, int damageType, int damage)
     {
@@ -147,7 +147,9 @@ public abstract class UnitBase : MonoBehaviour
 
     public void Animate(string animation) => animator.Animate(animation);
 
-    public IEnumerator ParseAnimation(StackItem animation) { yield return StartCoroutine(animator.ParseAnimation(animation)); }
+    //public IEnumerator PlayWaitForDuration(float v) => animator.PlayWaitForDuration(v);
+
+    public IEnumerator PlayAnimationAndFinish(string v) => animator.PlayAnimationAndFinish(v);
 
     public void SetUp(List<string> menu)
     {
@@ -178,7 +180,7 @@ public abstract class UnitBase : MonoBehaviour
     {
         if (ValidateTargetBeforeCommit(abilityKey, AbilityTargetCode, this, target, buildingList, unitList, unitBaseList, vectorList, intList))
         {
-            GlobalManager.EventsManager.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimationCode, intList, unitBaseList, unitList, buildingList, vectorList);
+            Manager.EventsManager.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimationCode, intList, unitBaseList, unitList, buildingList, vectorList);
             ClearTargets();
         }
         /*
@@ -292,7 +294,7 @@ public abstract class UnitBase : MonoBehaviour
             List<Unit> units = new List<Unit>();
             foreach (Vector3Int t in tile)
             {
-                Unit unit = GlobalManager.TileManager.SpawnUnit(t, script, unitTeam);
+                Unit unit = Manager.TileManager.SpawnUnit(t, script, unitTeam);
                 units.Add(unit);
             }
             EventsManager.InvokeOnSpawnUnit(this, units);
@@ -302,7 +304,7 @@ public abstract class UnitBase : MonoBehaviour
 
     protected void ChangeForm(string form)
     {
-        data = GlobalManager.AssetManager.LoadUnitBaseData(form);
+        data = Manager.AssetManager.LoadUnitBaseData(form);
         animator.ChangeModel(form);
     }
 
@@ -315,7 +317,7 @@ public abstract class UnitBase : MonoBehaviour
     protected bool ValidateTargetForAttack(UnitBase targetUnit, string s)
     {
         CodeObject ability = GetTargetCode(s);
-        return GlobalManager.TileManager.AttackableAndHostileTo(this, targetUnit, ability.GetVariable("canHit")) && GlobalManager.TileManager.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetUnit);
+        return Manager.TileManager.AttackableAndHostileTo(this, targetUnit, ability.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetUnit);
     }
 
     /*

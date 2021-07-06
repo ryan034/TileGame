@@ -67,7 +67,7 @@ public class Buff
         defender.Insert(0, attacker);
         if (code.ContainsKey("OnMainAttack") && Parse(code["OnMainAttack"].filterCode, owner, defender))
         {
-            GlobalManager.EventsManager.AddToStack(code["OnMainAttack"].logicCode, name, owner, code["OnMainAttack"].animationCode, null, defender);
+            Manager.EventsManager.AddToStack(code["OnMainAttack"].logicCode, name, owner, code["OnMainAttack"].animationCode, null, defender);
             //this is where counterattack would be triggered
         }
     }
@@ -76,7 +76,7 @@ public class Buff
     {
         if (code.ContainsKey("OnDestroy") && Parse(code["OnDestroy"].filterCode, owner, new List<UnitBase>() { destroyer, destroyee }))
         {
-            GlobalManager.EventsManager.AddToStack(code["OnDestroy"].logicCode, name, owner, code["OnDestroy"].animationCode, null, new List<UnitBase>() { destroyer, destroyee });
+            Manager.EventsManager.AddToStack(code["OnDestroy"].logicCode, name, owner, code["OnDestroy"].animationCode, null, new List<UnitBase>() { destroyer, destroyee });
         }
     }
 
@@ -85,7 +85,7 @@ public class Buff
         if (code.ContainsKey("OnDeath") && Parse(code["OnDeath"].filterCode, owner, new List<UnitBase>() { dead }))
         {
             //extract animation code from s and set it to animation
-            GlobalManager.EventsManager.AddToStack(code["OnDeath"].logicCode, name, owner, code["OnDeath"].animationCode, null, new List<UnitBase>() { dead });
+            Manager.EventsManager.AddToStack(code["OnDeath"].logicCode, name, owner, code["OnDeath"].animationCode, null, new List<UnitBase>() { dead });
         }
     }
 
@@ -93,13 +93,13 @@ public class Buff
     {
         if (code.ContainsKey("OnSpawnUnit") && Parse(code["OnSpawnUnit"].filterCode, owner, null, new List<Unit>() { spawned }, new List<Building>() { spawner }, null))
         {
-            GlobalManager.EventsManager.AddToStack(code["OnSpawnUnit"].logicCode, name, owner, code["OnSpawnUnit"].animationCode, null, new List<UnitBase>() { spawner, spawned });
+            Manager.EventsManager.AddToStack(code["OnSpawnUnit"].logicCode, name, owner, code["OnSpawnUnit"].animationCode, null, new List<UnitBase>() { spawner, spawned });
         }
     }
 
     public static Buff Load(UnitBase unit, string script)
     {
-        Buff loaded = GlobalManager.AssetManager.LoadBuff(script);
+        Buff loaded = Manager.AssetManager.LoadBuff(script);
         loaded.owner = unit;
         /*
         name = loaded.buffName;

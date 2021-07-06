@@ -14,8 +14,8 @@ public class TileObject : MonoBehaviour
     public int TerrainType { get; private set; }//int to determine terrain type
     //public int SkyTerrainType { get; private set; } //int to determine terrain type
 
-    public Unit Unit => GlobalManager.TileManager.GetUnit(LocalPlace);
-    public Building Building => GlobalManager.TileManager.GetBuilding(LocalPlace);
+    public Unit Unit => Manager.TileManager.GetUnit(LocalPlace);
+    public Building Building => Manager.TileManager.GetBuilding(LocalPlace);
 
     public TileObject exploredFrom;
     public int moveScore = int.MaxValue;
@@ -72,7 +72,7 @@ public class TileObject : MonoBehaviour
         //SkyTerrainType = skyTerrain;
         TerrainType = terrain;
         transform.position = LocalToWord(LocalPlace);
-        GlobalManager.TileManager.AddTile(localPlace, this);
+        Manager.TileManager.AddTile(localPlace, this);
         //gameObject.GetComponent<SpriteRenderer>().sprite = Resources.Load("MapSprites/"+ sprite) as Sprite;
     }
 

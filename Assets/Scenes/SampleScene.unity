@@ -233,7 +233,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &187146866
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -372,7 +372,7 @@ GameObject:
   - component: {fileID: 308727898}
   - component: {fileID: 308727897}
   m_Layer: 0
-  m_Name: GlobalManager
+  m_Name: Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -390,15 +390,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a75df21f36e388748b44c52a62a91392, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tileManagerPrefab: {fileID: 7965998834205496614, guid: 38b1314fc2b09a145b0cc4129a4b99e2,
-    type: 3}
   assetManagerPrefab: {fileID: 8436380628877411208, guid: 361741ca2d161cc48b60d29956d35588,
     type: 3}
   eventsManagerPrefab: {fileID: 1946188371544212296, guid: 7f25145064bd7b74dade802c047204e1,
     type: 3}
-  playerManagerPrefab: {fileID: 1967668752200375799, guid: 70e84ca4c29465e41a9984e11875f1e3,
-    type: 3}
   unitTransformManagerPrefab: {fileID: 7015775316744728583, guid: be368cfa5c93b8e40bbf6cc3475e56ad,
+    type: 3}
+  animationManagerPrefab: {fileID: 2649937891968755178, guid: ca589783665e40d45ba9facf1599d402,
     type: 3}
 --- !u!4 &308727898
 Transform:

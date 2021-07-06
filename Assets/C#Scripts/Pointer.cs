@@ -80,7 +80,7 @@ public class Pointer : MonoBehaviour
                 UIWindow.globalInstance.TriggerDirection(v);
                 break;
             default:
-                UpdatePosition(GlobalManager.TileManager.UpdateSelectedTile(v));
+                UpdatePosition(Manager.TileManager.UpdateSelectedTile(v));
                 break;
         }
     }
@@ -94,15 +94,15 @@ public class Pointer : MonoBehaviour
                 UIWindow.globalInstance.Execute();
                 break;
             case Mode.open:
-                GlobalManager.TileManager.SetHeldUnit();
+                Manager.TileManager.SetHeldUnit();
                 //mode = Mode.window;
                 break;
             case Mode.moving:
-                GlobalManager.TileManager.CommitMove();
+                Manager.TileManager.CommitMove();
                 //mode = Mode.window;
                 break;
             case Mode.attacking:
-                GlobalManager.TileManager.CommitTarget();
+                Manager.TileManager.CommitTarget();
                 break;
         }
     }
@@ -113,15 +113,15 @@ public class Pointer : MonoBehaviour
         switch (mode)
         {
             case Mode.window:
-                UpdatePosition(GlobalManager.TileManager.RetractMoveFromWindow());
+                UpdatePosition(Manager.TileManager.RetractMoveFromWindow());
                 UIWindow.globalInstance.gameObject.SetActive(false);
                 break;
             case Mode.moving:
-                UpdatePosition(GlobalManager.TileManager.RetractMove());
+                UpdatePosition(Manager.TileManager.RetractMove());
                 mode = Mode.open;
                 break;
             case Mode.attacking:
-                UpdatePosition(GlobalManager.TileManager.RetractTarget());
+                UpdatePosition(Manager.TileManager.RetractTarget());
                 //TileManager.globalInstance.SetHeldUnit();
                 UIWindow.globalInstance.SpawnMenu();
                 break;
@@ -130,7 +130,7 @@ public class Pointer : MonoBehaviour
 
     public void Setup()
     {
-        UpdatePosition(GlobalManager.TileManager.UpdateSelectedTile(new Vector3Int(0, 0, 0)));
+        UpdatePosition(Manager.TileManager.UpdateSelectedTile(new Vector3Int(0, 0, 0)));
         //transform.rotation = globalRotation;
     }
 

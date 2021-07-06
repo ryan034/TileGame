@@ -16,7 +16,7 @@ public class TileManager
     private Dictionary<UnitBase, Vector3Int> unitBases = new Dictionary<UnitBase, Vector3Int>();
     private Vector3Int CurrentLocation { get; set; }
     private Tile SelectedTile => tiles[CurrentLocation];
-    private bool FriendlyBuildingSelected => SelectedTile.building != null && !SelectedTile.building.Actioned && SelectedTile.building.SameTeam(GlobalManager.PlayerManager.TeamTurn);
+    private bool FriendlyBuildingSelected => SelectedTile.building != null && !SelectedTile.building.Actioned && SelectedTile.building.SameTeam(Manager.PlayerManager.TeamTurn);
     private Tile HeldUnitTile => tiles[unitBases[heldUnit]];
 
     private class Tile
@@ -62,7 +62,7 @@ public class TileManager
         {
             TileObject tileOfTarget = targetUnit.Tile;
             int targetTerrain = tileOfTarget.TerrainType;
-            if (team == GlobalManager.PlayerManager.TeamTurn) { return !targetUnit.Invisible && tileOfTarget.CanSee; };
+            if (team == Manager.PlayerManager.TeamTurn) { return !targetUnit.Invisible && tileOfTarget.CanSee; };
             bool seen = false;
             foreach (UnitBase unitLooking in unitBases.Keys)
             {
@@ -71,7 +71,7 @@ public class TileManager
                     TileObject tileOfLooker = unitLooking.Tile;
                     int terrain = tileOfLooker.TerrainType;
                     int movement = unitLooking.MovementType;
-                    int vision = GlobalManager.PlayerManager.IsDay ? TerrainVision(terrain, movement, unitLooking.DayVision) : TerrainVision(terrain, movement, unitLooking.NightVision);
+                    int vision = Manager.PlayerManager.IsDay ? TerrainVision(terrain, movement, unitLooking.DayVision) : TerrainVision(terrain, movement, unitLooking.NightVision);
                     if (Distance(tileOfLooker.LocalPlace, tileOfTarget.LocalPlace) > vision) { seen = false; }
                     else if (CanSee(terrain, targetTerrain, movement)) { seen = !targetUnit.Invisible; if (seen) { return seen; } }
                 }
@@ -131,10 +131,10 @@ public class TileManager
 
     public void GetMenuOptions(List<string> menu)
     {
-        if (SelectedTile.unit != null && SelectedTile.unit.SameTeam(GlobalManager.PlayerManager.TeamTurn) && !SelectedTile.unit.Actioned)
+        if (SelectedTile.unit != null && SelectedTile.unit.SameTeam(Manager.PlayerManager.TeamTurn) && !SelectedTile.unit.Actioned)
         {
             SelectedTile.unit.SetUp(menu);
-            menu.Add("end unit turn");
+            menu.Add(endUnitTurn);
         }
         else if (FriendlyBuildingSelected)
         {
@@ -142,13 +142,13 @@ public class TileManager
         }
         else
         {
-            menu.Add("end turn");
+            menu.Add(endTurn);
         }
     }
 
     public void SetHeldUnit()
     {
-        if (SelectedTile.unit != null && SelectedTile.unit.SameTeam(GlobalManager.PlayerManager.TeamTurn) && !SelectedTile.unit.Actioned && heldUnit == null)
+        if (SelectedTile.unit != null && SelectedTile.unit.SameTeam(Manager.PlayerManager.TeamTurn) && !SelectedTile.unit.Actioned && heldUnit == null)
         {
             heldUnit = SelectedTile.unit;
             heldLocation = unitBases[heldUnit];
@@ -167,12 +167,12 @@ public class TileManager
 
     public void Execute(string s)
     {
-        if (s == "end turn")
+        if (s == endTurn)
         {
             //execute end turn
-            GlobalManager.PlayerManager.EndAndStartNextTurn();
+            Manager.PlayerManager.EndAndStartNextTurn();
         }
-        else if (s == "end unit turn")
+        else if (s == endUnitTurn)
         {
             //execute end unit turn
             EndHeldUnitTurn();
@@ -209,7 +209,7 @@ public class TileManager
                 tiles[heldLocation].unit = heldUnit;
                 unitBases[heldUnit] = heldLocation;
                 CurrentLocation = heldLocation;
-                GlobalManager.UnitTransformManager.SnapMove(heldUnit, CurrentLocation);
+                Manager.UnitTransformManager.SnapMove(heldUnit, CurrentLocation);
                 SetUpMovementTiles();
                 Pointer.globalInstance.GoToMovingMode();
             }
@@ -236,12 +236,12 @@ public class TileManager
 
     public void CommitMove()
     {
-        if (SelectedTile.tile.IsExplored && PercievedUnitOnTile(CurrentLocation, GlobalManager.PlayerManager.TeamTurn) == null)
+        if (SelectedTile.tile.IsExplored && PercievedUnitOnTile(CurrentLocation, Manager.PlayerManager.TeamTurn) == null)
         {
             List<Vector3Int> path = GetPath(SelectedTile);
             HeldUnitTile.unit = null;
             tiles[path[path.Count - 1]].unit = heldUnit;
-            GlobalManager.UnitTransformManager.QueuePath(heldUnit, path);
+            Manager.UnitTransformManager.QueuePath(heldUnit, path);
             unitBases[heldUnit] = path[path.Count - 1];
             WipeTiles();
             if (SelectedTile == HeldUnitTile)
@@ -332,7 +332,7 @@ public class TileManager
         }
     }
 
-    public Unit SpawnUnit(Vector3Int v, string unitScript, int unitTeam) => GlobalManager.AssetManager.InstantiateUnit(false, v, unitScript, unitTeam);
+    public Unit SpawnUnit(Vector3Int v, string unitScript, int unitTeam) => Manager.AssetManager.InstantiateUnit(false, v, unitScript, unitTeam);
     //newunit.teamcolour = teamcolours[unitteam];
 
     public void DestroyUnit(UnitBase unit)//destroyed unit sight still stays for a turn
@@ -342,7 +342,7 @@ public class TileManager
         //RefreshTiles();
         //Trigger static event
         if (heldUnit == unit) { heldUnit = null; };
-        GlobalManager.UnitTransformManager.DestroyUnit(unit);
+        //Manager.UnitTransformManager.DestroyUnit(unit);
     }
 
     private bool SomewhereToMove
@@ -368,7 +368,7 @@ public class TileManager
 
     private Building BlockingBuildingOnTile(Vector3Int v, Unit unit)
     {
-        if (tiles[v].building != null && ((!tiles[v].building.SameTeam(unit.Team) && !unit.Infiltrator) || tiles[v].building.Race == "Neutral")) { return tiles[v].building; }
+        if (tiles[v].building != null && ((!tiles[v].building.SameTeam(unit.Team) && !unit.Infiltrator) || tiles[v].building.Race == neutral)) { return tiles[v].building; }
         return null;
     }
 
@@ -408,7 +408,7 @@ public class TileManager
         {
             if (tiles.ContainsKey(n))
             {
-                if (!tiles[n].tile.IsExplored && (PercievedUnitOnTile(n, GlobalManager.PlayerManager.TeamTurn) == null || BlockingUnitOnTile(n, GlobalManager.PlayerManager.TeamTurn) == null)
+                if (!tiles[n].tile.IsExplored && (PercievedUnitOnTile(n, Manager.PlayerManager.TeamTurn) == null || BlockingUnitOnTile(n, Manager.PlayerManager.TeamTurn) == null)
                     && BlockingBuildingOnTile(n, unit) == null)
                 {
                     list_.Add(tiles[n]);
@@ -430,7 +430,7 @@ public class TileManager
 
         for (int i = 0; i < path.Count(); i++)
         {
-            if (BlockingUnitOnTile(path[i], GlobalManager.PlayerManager.TeamTurn) != null) { return path.GetRange(0, i); }
+            if (BlockingUnitOnTile(path[i], Manager.PlayerManager.TeamTurn) != null) { return path.GetRange(0, i); }
         }
         return path;
     }
@@ -474,7 +474,7 @@ public class TileManager
         tileOf.CanSee = true;
         int terrain = tileOf.TerrainType;
         int movement = unit.MovementType;
-        int vision = GlobalManager.PlayerManager.IsDay ? TerrainVision(terrain, movement, unit.DayVision) : TerrainVision(terrain, movement, unit.NightVision);
+        int vision = Manager.PlayerManager.IsDay ? TerrainVision(terrain, movement, unit.DayVision) : TerrainVision(terrain, movement, unit.NightVision);
         List<Vector3Int> offsets = CircleCoords(1, vision, tileOf.LocalPlace);
         foreach (Vector3Int v in offsets)
         {

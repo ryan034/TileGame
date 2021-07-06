@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using static GlobalData;
 
 public class UnitAnimator : MonoBehaviour
 {
@@ -36,12 +37,12 @@ public class UnitAnimator : MonoBehaviour
         float a = 1f;
         float w = 1f;
         bool active = true;
-        if (!unitBase.SameTeam(GlobalManager.PlayerManager.TeamTurn))
+        if (!unitBase.SameTeam(Manager.PlayerManager.TeamTurn))
         {
             if (!unitBase.Tile.CanSee || unitBase.Invisible)//hide sprite
             { active = false; }
         }
-        else if (unitBase.Invisible && unitBase.SameTeam(GlobalManager.PlayerManager.TeamTurn))
+        else if (unitBase.Invisible && unitBase.SameTeam(Manager.PlayerManager.TeamTurn))
         {
             //sprite is opaque
             a = .5f;
@@ -62,7 +63,7 @@ public class UnitAnimator : MonoBehaviour
         if (!unitBase.Tile.CanSee)
         {
             //go to default form of building
-            ChangeModel(unitBase.GetConvertedForm("Unaligned"));
+            ChangeModel(unitBase.GetConvertedForm(unaligned));
             w = .5f;
         }
         else if (unitBase.Tile.CanSee)
@@ -83,6 +84,7 @@ public class UnitAnimator : MonoBehaviour
         animator.Play(code);
     }
 
+    /*
     public IEnumerator ParseAnimation(StackItem stackItem)
     {
         CodeObject code = stackItem.animationCode;
@@ -104,7 +106,7 @@ public class UnitAnimator : MonoBehaviour
                         u = stackItem.unitBaseData[int.Parse(indexCode)];
                         break;
                 }
-                GlobalManager.UnitTransformManager.RotateTo(unitBase, u.Tile.LocalPlace);
+                Manager.UnitTransformManager.RotateTo(unitBase, u.Tile.LocalPlace);
             }
             if (code.GetVariable("animation") != "")
             {
@@ -120,6 +122,24 @@ public class UnitAnimator : MonoBehaviour
                 yield return StartCoroutine(WaitForDuration(int.Parse(code.GetVariable("duration"))));
             }
         }
+    }*/
+
+    public IEnumerator DestroyUnit()
+    {
+        Animate("Death");
+        yield return StartCoroutine(WaitForAnimation("Death"));
+        Destroy(gameObject);
+    }
+    /*
+    public IEnumerator PlayWaitForDuration(float v)
+    {
+        yield return StartCoroutine(WaitForDuration(v));
+    }*/
+
+    public IEnumerator PlayAnimationAndFinish(string s)
+    {
+        Animate(s);
+        yield return StartCoroutine(WaitForAnimation(s));
     }
 
     public bool IsPlaying(string animationCode)
@@ -134,7 +154,7 @@ public class UnitAnimator : MonoBehaviour
         {
             if (transform.Find(model) == null)
             {
-                GameObject g = GlobalManager.AssetManager.InstantiateModel(model);
+                GameObject g = Manager.AssetManager.InstantiateModel(model);
                 if (g != null)
                 {
                     g.transform.parent = gameObject.transform;

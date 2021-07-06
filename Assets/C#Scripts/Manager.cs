@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class GlobalManager : MonoBehaviour
+public class Manager : MonoBehaviour
 {
-    private static GlobalManager globalManager;
+    private static Manager manager;
 
     private TileManager tileManager;
     private PlayerManager playerManager;
@@ -10,20 +10,22 @@ public class GlobalManager : MonoBehaviour
     private AssetManager assetManager;
     private EventsManager eventsManager;
     private UnitTransformManager unitTransformManager;
+    private AnimationManager animationManager;
 
     [SerializeField] private GameObject assetManagerPrefab;
     [SerializeField] private GameObject eventsManagerPrefab;
     [SerializeField] private GameObject unitTransformManagerPrefab;
+    [SerializeField] private GameObject animationManagerPrefab;
 
     public static TileManager TileManager
     {
         get
         {
-            if (globalManager.tileManager == null)
+            if (manager.tileManager == null)
             {
-                globalManager.tileManager = new TileManager();
+                manager.tileManager = new TileManager();
             }
-            return globalManager.tileManager;
+            return manager.tileManager;
         }
     }
 
@@ -31,11 +33,11 @@ public class GlobalManager : MonoBehaviour
     {
         get
         {
-            if (globalManager.playerManager == null)
+            if (manager.playerManager == null)
             {
-                globalManager.playerManager = new PlayerManager();
+                manager.playerManager = new PlayerManager();
             }
-            return globalManager.playerManager;
+            return manager.playerManager;
         }
     }
 
@@ -43,11 +45,11 @@ public class GlobalManager : MonoBehaviour
     {
         get
         {
-            if (globalManager.assetManager == null)
+            if (manager.assetManager == null)
             {
-                globalManager.assetManager = Instantiate(globalManager.assetManagerPrefab).GetComponent<AssetManager>();
+                manager.assetManager = Instantiate(manager.assetManagerPrefab).GetComponent<AssetManager>();
             }
-            return globalManager.assetManager;
+            return manager.assetManager;
         }
     }
 
@@ -55,11 +57,11 @@ public class GlobalManager : MonoBehaviour
     {
         get
         {
-            if (globalManager.eventsManager == null)
+            if (manager.eventsManager == null)
             {
-                globalManager.eventsManager = Instantiate(globalManager.eventsManagerPrefab).GetComponent<EventsManager>();
+                manager.eventsManager = Instantiate(manager.eventsManagerPrefab).GetComponent<EventsManager>();
             }
-            return globalManager.eventsManager;
+            return manager.eventsManager;
         }
     }
 
@@ -67,19 +69,31 @@ public class GlobalManager : MonoBehaviour
     {
         get
         {
-            if (globalManager.unitTransformManager == null)
+            if (manager.unitTransformManager == null)
             {
-                globalManager.unitTransformManager = Instantiate(globalManager.unitTransformManagerPrefab).GetComponent<UnitTransformManager>();
+                manager.unitTransformManager = Instantiate(manager.unitTransformManagerPrefab).GetComponent<UnitTransformManager>();
             }
-            return globalManager.unitTransformManager;
+            return manager.unitTransformManager;
+        }
+    }
+
+    public static AnimationManager AnimationManager
+    {
+        get
+        {
+            if (manager.animationManager == null)
+            {
+                manager.animationManager = Instantiate(manager.animationManager).GetComponent<AnimationManager>();
+            }
+            return manager.animationManager;
         }
     }
 
     private void Awake()
     {
-        if (globalManager == null)
+        if (manager == null)
         {
-            globalManager = this;
+            manager = this;
         }
         else
         {
