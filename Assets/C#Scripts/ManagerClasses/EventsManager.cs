@@ -18,9 +18,13 @@ public class EventsManager : MonoBehaviour
     public static event Action<UnitBase, List<Unit>> OnSpawnUnit;
     public static event Action<UnitBase> OnBeforeSpawnUnit;
 
-    public static event Action<UnitBase, UnitBase> OnDestroy;
+    public static event Action<UnitBase, UnitBase> OnKill;
 
     public static event Action<UnitBase> OnDeath;
+
+    public static event Action<UnitBase> OnObjectDestroyUnitBase;
+    public static event Action<Unit> OnObjectDestroyUnit;
+    //public static event Action<Building> OnObjectDestroyBuilding;
 
     private List<StackItem> currentStack = new List<StackItem>();
 
@@ -37,6 +41,11 @@ public class EventsManager : MonoBehaviour
     public static void InvokeOnMainAttack(UnitBase attacker, List<UnitBase> defender)
     {
         OnMainAttack?.Invoke(attacker, defender);
+    }
+
+    public static void InvokeOnDeath(UnitBase unitBase)
+    {
+        OnDeath?.Invoke(unitBase);
     }
 
     public static void InvokeOnBeforeMainAttack(UnitBase attacker, List<UnitBase> defender)
@@ -64,12 +73,26 @@ public class EventsManager : MonoBehaviour
         OnBeforeSpawnUnit?.Invoke(spawner);
     }
 
+    public static void InvokeOnObjectDestroyUnitBase(UnitBase unit)
+    {
+        OnObjectDestroyUnitBase?.Invoke(unit);
+    }
+
+    public static void InvokeOnObjectDestroyUnit(Unit unit)
+    {
+        OnObjectDestroyUnit?.Invoke(unit);
+    }
+    /*
+    public static void InvokeOnObjectDestroyBuilding(Building unit)
+    {
+        OnObjectDestroyBuilding?.Invoke(unit);
+    }*/
+
     public void AddToStack(CodeObject code, string name, UnitBase owner, CodeObject animation, List<int> intData = null, List<UnitBase> targetData = null, List<Unit> unitTargetData = null, List<Building> buildingTargetData = null, List<Vector3Int> vectorData = null)
     {
         int i = currentStack.Count;
         StackItem s = new StackItem(code, name, owner, animation, intData, targetData, unitTargetData, buildingTargetData, vectorData);
         currentStack.Add(s);
-        //todo: parse code logic and invoke all events here instead of at the source
         Parse(s, null, true);
         if (i == 0) { StartCoroutine(ResolveStack()); }
     }
@@ -80,12 +103,10 @@ public class EventsManager : MonoBehaviour
         while (currentStack.Count > 0)
         {
             s = currentStack[currentStack.Count - 1];
-            //yield return StartCoroutine(s.owner.ParseAnimation(s));
             yield return Manager.AnimationManager.ParseAnimation(s);
             Parse(s);
             currentStack.Remove(s);
         }
     }
-
 
 }

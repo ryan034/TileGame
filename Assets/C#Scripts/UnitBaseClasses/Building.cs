@@ -43,7 +43,7 @@ public class Building : UnitBase
         get => base.DamageTaken;
         set
         {
-            if (Race != unaligned && base.DamageTaken > value)//can only heal if building not unaligned
+            if (Race != unaligned && Race != neutral && base.DamageTaken > value)//can only heal if building not unaligned
             {
                 base.DamageTaken = value;
             }
@@ -109,11 +109,11 @@ public class Building : UnitBase
         }
     }
 
+    public override void RefreshSprite() => animator.RefreshBuildingSprite();
+
     protected override void DestroyThis()
-    {/*death triggers*/
-        //Destroyed_v();
-        //parse code
-        //unit.Destroy_v(this);
+    {
+        EventsManager.InvokeOnDeath(this);
         ClearHold();
         ChangeBuildingUsingRace(unaligned);
         //Race_ = Race.noRace;

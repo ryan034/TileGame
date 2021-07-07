@@ -14,7 +14,7 @@ public class Unit : UnitBase
     public bool Infiltrator => data.infiltrator;
     public bool Rooted => buffs.Select(x => x.rooted).Contains(true);
     //protected override TileObject Tile => TileManager.globalInstance.GetTile(this);
-
+    public bool dead;
     public override int CoverBonus => Tile.Building != null && BothLandOrSky(MovementType, Tile.Building.MovementType) ? terrainDefenseMatrix[MovementType, Tile.TerrainType] + Tile.Building.BuildingCover : terrainDefenseMatrix[MovementType, Tile.TerrainType];
 
     public override void Load(bool initial, Vector3Int localPlace, UnitBaseData data, int team)
@@ -24,6 +24,13 @@ public class Unit : UnitBase
         if (initial) { internalVariables.team = MapTeam(team); }
         else { Team = team; }
         Manager.PlayerManager.LoadPlayer(Team);
+    }
+    
+    protected override void DestroyThis()
+    {
+        dead = true;
+        base.DestroyThis();
+        EventsManager.InvokeOnObjectDestroyUnit(this);
     }
 
     public void Capture(bool before, Building building, int cDamage)

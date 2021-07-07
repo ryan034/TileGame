@@ -62,8 +62,8 @@ public class TileObject : MonoBehaviour
         {
             child.GetComponent<Renderer>().material.color = new Color(r * w, g * w, b * w);
         }
-        if (Unit != null) { Unit.RefreshUnitSprite(); }
-        if (Building != null) { Building.RefreshBuildingSprite(); }
+        if (Unit != null) { Unit.RefreshSprite(); }
+        if (Building != null) { Building.RefreshSprite(); }
     }
 
     public void Load(Vector3Int localPlace, int terrain)

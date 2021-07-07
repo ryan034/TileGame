@@ -13,19 +13,18 @@ public abstract class UnitBase : MonoBehaviour
     protected UnitBaseData data;
     protected InternalVariables internalVariables;
 
-    //protected string[] AbilityVariables => GetCode(abilityKey).Split(' ');
     protected CodeObject AbilityTargetCode => GetTargetCode(abilityKey);
     protected CodeObject AbilityLogicCode => GetLogicCode(abilityKey);
     protected CodeObject AbilityAnimationCode => GetAnimationCode(abilityKey);
     protected string abilityKey;
-    //protected List<Vector3Int> targetList = new List<Vector3Int>();
+
     protected List<Unit> unitList = new List<Unit>();
     protected List<Building> buildingList = new List<Building>();
     protected List<Vector3Int> vectorList = new List<Vector3Int>();
     protected List<int> intList = new List<int>();
     protected List<UnitBase> unitBaseList = new List<UnitBase>();
     public int TargetCount => unitList.Count + buildingList.Count + vectorList.Count + intList.Count + unitBaseList.Count;
-    //protected int targetIndex;
+
     protected List<Buff> buffs = new List<Buff>();
 
     protected virtual int DamageTaken
@@ -33,40 +32,61 @@ public abstract class UnitBase : MonoBehaviour
         get => internalVariables.damageTaken;
         set
         {
-            if (/*internalVariables.damageTaken < HP && */internalVariables.damageTaken < value)//getting damaged
+            if (internalVariables.damageTaken < value)//getting damaged
             {
                 if (value >= HPMax)
                 {
-                    DestroyThis();
                     internalVariables.damageTaken = HPMax;
-                    //parse code triggers
+                    DestroyThis();
                 }
                 else
                 {
-                    internalVariables.damageTaken = value;
-                    //Takedamage_v(damagetype, damage);
-                    //unit.Dealtdamage_v(damagetype, damage);
-                    //parse code
+                    internalVariables.damageTaken = value;//Takedamage_v(damagetype, damage);unit.Dealtdamage_v(damagetype, damage);
                 }
             }
             if (internalVariables.damageTaken > value)//getting healed
             {
                 if (value < 0)
                 {
-                    //healed, if race is not unaligned
-                    internalVariables.damageTaken = 0;
-                    //parse code triggers
+                    internalVariables.damageTaken = 0;//parse code triggers
                 }
                 else
                 {
-                    internalVariables.damageTaken = value;
-                    //parse code triggers
+                    internalVariables.damageTaken = value;//parse code triggers
                 }
             }
         }
     }
 
-    protected int manaUsed;//may need to mvoe this into internal variables
+    protected int ManaUsed
+    {
+        get => internalVariables.manaUsed;
+        set
+        {
+            if (internalVariables.manaUsed < value)//getting damaged
+            {
+                if (value >= MPMax)
+                {
+                    internalVariables.manaUsed = HPMax;
+                }
+                else
+                {
+                    internalVariables.manaUsed = value;
+                }
+            }
+            if (internalVariables.manaUsed > value)//getting healed
+            {
+                if (value < 0)
+                {
+                    internalVariables.manaUsed = 0;
+                }
+                else
+                {
+                    internalVariables.manaUsed = value;
+                }
+            }
+        }
+    }
 
     public string Name => data.name;
     public string Race => data.race;
@@ -83,7 +103,7 @@ public abstract class UnitBase : MonoBehaviour
     public bool Silenced => buffs.Select(x => x.silenced).Contains(true);
 
     public int HPCurrent => HPMax - DamageTaken;
-    public int MPCurrent => MPMax - manaUsed;
+    public int MPCurrent => MPMax - ManaUsed;
     public double HPPercentage => Math.Max((double)HPCurrent / HPMax, 0);
     //public int DamageType => int.Parse(AbilityLogicCode.GetVariable("damageType"));
     public int Team { get => internalVariables.team; set { internalVariables.team = value; Tile.RefreshSprite(); } }
@@ -117,31 +137,33 @@ public abstract class UnitBase : MonoBehaviour
             buffs.Add(Buff.Load(this, s));
         }
         Manager.UnitTransformManager.SnapMove(this, localPlace);
+        EventsManager.OnObjectDestroyUnitBase += OnObjectDestroyUnitBase;
+        EventsManager.OnObjectDestroyUnit += OnObjectDestroyUnit;
+        //EventsManager.OnObjectDestroyBuilding += OnObjectDestroyBuilding;
     }
 
     public virtual bool SameTeam(int team_) => team_ == Team;
 
     public virtual void StartOfTurn() { }
 
-    protected virtual void DestroyThis() { Manager.TileManager.DestroyUnit(this); /*deference everything from here and change state to destroyed*/ animator.DestroyUnit(); }
+    public virtual void RefreshSprite() => animator.RefreshUnitSprite();
 
-    protected virtual void CalculateAndTakeDamage(UnitBase unit, int damageType, int damage)
+    protected virtual void DestroyThis()
     {
-        DamageTaken = DamageTaken + (int)Math.Round(GetResistance(damageType) * damage);
-        /*
-        else
-        {
-            //animator.Animate("Damage");
-        }*/
+        EventsManager.InvokeOnDeath(this);
+        Manager.TileManager.DestroyUnit(this); /*deference everything from here and change state to destroyed*/
+        foreach (Buff buff in buffs) { buff.Destroy(); }
+        EventsManager.OnObjectDestroyUnitBase -= OnObjectDestroyUnitBase;
+        EventsManager.OnObjectDestroyUnit -= OnObjectDestroyUnit;
+        animator.DestroyUnit();
+        EventsManager.InvokeOnObjectDestroyUnitBase(this);
     }
+
+    protected virtual void CalculateAndTakeDamage(UnitBase unit, int damageType, int damage) { DamageTaken = DamageTaken + (int)Math.Round(GetResistance(damageType) * damage);/*//animator.Animate("Damage");*/}
 
     public bool HasTag(string tag) => (data.HasTag(tag) || buffs.Select(x => x.HasTag(tag)).Contains(true));
 
     public string GetConvertedForm(string race) => data.GetConvertedForm(race);
-
-    public void RefreshUnitSprite() => animator.RefreshUnitSprite();
-
-    public void RefreshBuildingSprite() => animator.RefreshBuildingSprite();
 
     public bool IsPlaying(string animation) => animator.IsPlaying(animation);
 
@@ -326,5 +348,9 @@ public abstract class UnitBase : MonoBehaviour
         buffs.Add(buff);
         //some buffs may not stack but rather in duration
     }*/
+    protected void OnObjectDestroyUnitBase(UnitBase unit) { unitBaseList.Remove(unit); }
 
+    protected void OnObjectDestroyUnit(Unit unit) { unitList.Remove(unit); }
+
+    //protected void OnObjectDestroyBuilding(Building unit) { buildingList.Remove(unit); }
 }

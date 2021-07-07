@@ -6,7 +6,7 @@ using System;
 public class Buff
 {
     private UnitBase owner;
-    
+
     private Dictionary<string, EventCodeBlock> code = new Dictionary<string, EventCodeBlock>();
     private List<string> unitTags = new List<string>();
     private int duration;
@@ -52,8 +52,8 @@ public class Buff
                 //execute parsed code for selected abilities
                 EventsManager.OnMainAttack += OnMainAttack;
                 break;
-            case "OnDestroy":
-                EventsManager.OnDestroy += OnDestroy;
+            case "OnKill":
+                EventsManager.OnKill += OnKill;
                 break;
             case "OnDeath":
                 EventsManager.OnDeath += OnDeath;
@@ -61,6 +61,22 @@ public class Buff
         }
     }
 
+    private void Disable(string s)
+    {
+        switch (s)
+        {
+            case "OnMainAttack":
+                //execute parsed code for selected abilities
+                EventsManager.OnMainAttack -= OnMainAttack;
+                break;
+            case "OnKill":
+                EventsManager.OnKill -= OnKill;
+                break;
+            case "OnDeath":
+                EventsManager.OnDeath -= OnDeath;
+                break;
+        }
+    }
 
     private void OnMainAttack(UnitBase attacker, List<UnitBase> defender)
     {
@@ -72,11 +88,11 @@ public class Buff
         }
     }
 
-    private void OnDestroy(UnitBase destroyer, UnitBase destroyee)
+    private void OnKill(UnitBase destroyer, UnitBase destroyee)
     {
-        if (code.ContainsKey("OnDestroy") && Parse(code["OnDestroy"].filterCode, owner, new List<UnitBase>() { destroyer, destroyee }))
+        if (code.ContainsKey("OnKill") && Parse(code["OnKill"].filterCode, owner, new List<UnitBase>() { destroyer, destroyee }))
         {
-            Manager.EventsManager.AddToStack(code["OnDestroy"].logicCode, name, owner, code["OnDestroy"].animationCode, null, new List<UnitBase>() { destroyer, destroyee });
+            Manager.EventsManager.AddToStack(code["OnKill"].logicCode, name, owner, code["OnKill"].animationCode, null, new List<UnitBase>() { destroyer, destroyee });
         }
     }
 
@@ -167,4 +183,11 @@ public class Buff
             code[b.event_] = new EventCodeBlock(b.trigger, b.code, b.animation);
         }
     }
+
+    public void Destroy()
+    {
+        owner = null;
+        foreach (string item in code.Keys) { Disable(item); }
+    }
+
 }
