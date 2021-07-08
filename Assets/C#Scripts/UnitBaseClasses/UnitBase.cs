@@ -41,18 +41,18 @@ public abstract class UnitBase : MonoBehaviour
                 }
                 else
                 {
-                    internalVariables.damageTaken = value;//Takedamage_v(damagetype, damage);unit.Dealtdamage_v(damagetype, damage);
+                    internalVariables.damageTaken = value;//call getting damaged event
                 }
             }
             if (internalVariables.damageTaken > value)//getting healed
             {
                 if (value < 0)
                 {
-                    internalVariables.damageTaken = 0;//parse code triggers
+                    internalVariables.damageTaken = 0;//call healed to full heath event
                 }
                 else
                 {
-                    internalVariables.damageTaken = value;//parse code triggers
+                    internalVariables.damageTaken = value;//call healed event
                 }
             }
         }
@@ -139,7 +139,7 @@ public abstract class UnitBase : MonoBehaviour
         Manager.UnitTransformManager.SnapMove(this, localPlace);
         EventsManager.OnObjectDestroyUnitBase += OnObjectDestroyUnitBase;
         EventsManager.OnObjectDestroyUnit += OnObjectDestroyUnit;
-        //EventsManager.OnObjectDestroyBuilding += OnObjectDestroyBuilding;
+        EventsManager.OnObjectDestroyBuilding += OnObjectDestroyBuilding;
     }
 
     public virtual bool SameTeam(int team_) => team_ == Team;
@@ -352,5 +352,5 @@ public abstract class UnitBase : MonoBehaviour
 
     protected void OnObjectDestroyUnit(Unit unit) { unitList.Remove(unit); }
 
-    //protected void OnObjectDestroyBuilding(Building unit) { buildingList.Remove(unit); }
+    protected void OnObjectDestroyBuilding(Building unit) { buildingList.Remove(unit); }
 }

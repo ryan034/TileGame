@@ -24,7 +24,7 @@ public class EventsManager : MonoBehaviour
 
     public static event Action<UnitBase> OnObjectDestroyUnitBase;
     public static event Action<Unit> OnObjectDestroyUnit;
-    //public static event Action<Building> OnObjectDestroyBuilding;
+    public static event Action<Building> OnObjectDestroyBuilding;
 
     private List<StackItem> currentStack = new List<StackItem>();
 
@@ -82,11 +82,11 @@ public class EventsManager : MonoBehaviour
     {
         OnObjectDestroyUnit?.Invoke(unit);
     }
-    /*
+
     public static void InvokeOnObjectDestroyBuilding(Building unit)
     {
         OnObjectDestroyBuilding?.Invoke(unit);
-    }*/
+    }
 
     public void AddToStack(CodeObject code, string name, UnitBase owner, CodeObject animation, List<int> intData = null, List<UnitBase> targetData = null, List<Unit> unitTargetData = null, List<Building> buildingTargetData = null, List<Vector3Int> vectorData = null)
     {

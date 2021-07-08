@@ -43,9 +43,17 @@ public class Building : UnitBase
         get => base.DamageTaken;
         set
         {
-            if (Race != unaligned && Race != neutral && base.DamageTaken > value)//can only heal if building not unaligned
+            if (Race != unaligned && Race != neutral)
             {
-                base.DamageTaken = value;
+                if (base.DamageTaken > value)
+                {
+                    base.DamageTaken = value;
+                    hold[Team] += base.DamageTaken - value;
+                }
+                else
+                {
+                    base.DamageTaken = value;
+                }
             }
         }
     }
@@ -116,26 +124,15 @@ public class Building : UnitBase
         EventsManager.InvokeOnDeath(this);
         ClearHold();
         ChangeBuildingUsingRace(unaligned);
+        foreach (Buff buff in buffs) { buff.Destroy(); }
+        animator.Animate("Death");
+        EventsManager.InvokeOnObjectDestroyBuilding(this);
+        EventsManager.InvokeOnObjectDestroyUnitBase(this);
         //Race_ = Race.noRace;
     }
 
     protected override void CalculateAndTakeDamage(UnitBase unit, int damageType, int damage)
-    {/*
-        if (!Neutral)
-        {
-            base.CalculateAndTakeDamage(unit, damageType, damage);
-        }*/
-        /*
-        damageTaken = damageTaken + (int)Math.Round(GetResistance(damagetype) * damage);
-        if (HPCurrent <= 0)
-        {
-            DestroyedBy(unit);
-            //Takedamage_v(damagetype, damage);
-            //unit.Dealtdamage_v(damagetype, damage);
-            //parse code
-        }*/
-        //rebalance hold of building
-        //if team holds all then building is converted
+    {
         base.CalculateAndTakeDamage(unit, damageType, damage);
         RebalanceHold(damage, unit);
     }
@@ -202,8 +199,6 @@ public class Building : UnitBase
         ChangeBuildingUsingRace(unit.Race);
         Team = unit.Team;
         Actioned = true;
-        //TileManager.globalInstance.RefreshFogOfWar();
-        //TileManager.globalInstance.WipeTiles();
         Animate("Captured");
     }
 
@@ -244,7 +239,7 @@ public class Building : UnitBase
         if (HPCurrent > 0)
         {
             int residual = RemoveFromHold(damage, unit.Team);
-            if (residual >= 0)
+            if (residual > 0)
             {
                 hold[unit.Team] -= residual;
                 ConvertedBy(unit);
@@ -258,7 +253,7 @@ public class Building : UnitBase
         if (HPCurrent > 0)
         {
             residual = RemoveFromHold(damage, unit.Team);
-            if (residual >= 0)
+            if (residual > 0)
             {
                 //DamageTaken -= residual;// heals the building
                 ConvertedBy(unit);
@@ -270,7 +265,7 @@ public class Building : UnitBase
             if (residual > 0)
             {
                 residual = RemoveFromHold(residual, unit.Team);
-                if (residual >= 0)
+                if (residual > 0)
                 {
                     ConvertedBy(unit);
                     DamageTaken = 0;
