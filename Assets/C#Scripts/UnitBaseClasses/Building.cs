@@ -119,9 +119,11 @@ public class Building : UnitBase
 
     public override void RefreshSprite() => animator.RefreshBuildingSprite();
 
-    protected override void DestroyThis()
+    protected override void DestroyThis(UnitBase killer)
     {
-        EventsManager.InvokeOnDeath(this);
+        EventsManager.InvokeOnDeathBuilding(this);
+        EventsManager.InvokeOnDeathUnitBase(this);
+        EventsManager.InvokeOnKill(killer, this);
         ClearHold();
         ChangeBuildingUsingRace(unaligned);
         foreach (Buff buff in buffs) { buff.Destroy(); }
@@ -131,10 +133,10 @@ public class Building : UnitBase
         //Race_ = Race.noRace;
     }
 
-    protected override void CalculateAndTakeDamage(UnitBase unit, int damageType, int damage)
+    protected override void CalculateAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
     {
-        base.CalculateAndTakeDamage(unit, damageType, damage);
-        RebalanceHold(damage, unit);
+        base.CalculateAndTakeDamage(before, unit, damageType, damage);
+        if (!before) { RebalanceHold(damage, unit); }
     }
 
     /*

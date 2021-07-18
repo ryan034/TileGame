@@ -55,8 +55,8 @@ public class Buff
             case "OnKill":
                 EventsManager.OnKill += OnKill;
                 break;
-            case "OnDeath":
-                EventsManager.OnDeath += OnDeath;
+            case "OnDeathUnitBase":
+                EventsManager.OnDeathUnitBase += OnDeathUnitBase;
                 break;
         }
     }
@@ -72,8 +72,8 @@ public class Buff
             case "OnKill":
                 EventsManager.OnKill -= OnKill;
                 break;
-            case "OnDeath":
-                EventsManager.OnDeath -= OnDeath;
+            case "OnDeathUnitBase":
+                EventsManager.OnDeathUnitBase -= OnDeathUnitBase;
                 break;
         }
     }
@@ -96,12 +96,12 @@ public class Buff
         }
     }
 
-    private void OnDeath(UnitBase dead)
+    private void OnDeathUnitBase(UnitBase dead)
     {
-        if (code.ContainsKey("OnDeath") && Parse(code["OnDeath"].filterCode, owner, new List<UnitBase>() { dead }))
+        if (code.ContainsKey("OnDeathUnitBase") && Parse(code["OnDeathUnitBase"].filterCode, owner, new List<UnitBase>() { dead }))
         {
             //extract animation code from s and set it to animation
-            Manager.EventsManager.AddToStack(code["OnDeath"].logicCode, name, owner, code["OnDeath"].animationCode, null, new List<UnitBase>() { dead });
+            Manager.EventsManager.AddToStack(code["OnDeathUnitBase"].logicCode, name, owner, code["OnDeathUnitBase"].animationCode, null, new List<UnitBase>() { dead });
         }
     }
 

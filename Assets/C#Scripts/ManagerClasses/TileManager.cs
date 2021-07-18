@@ -335,7 +335,7 @@ public class TileManager
     public Unit SpawnUnit(Vector3Int v, string unitScript, int unitTeam) => Manager.AssetManager.InstantiateUnit(false, v, unitScript, unitTeam);
     //newunit.teamcolour = teamcolours[unitteam];
 
-    public void DestroyUnit(UnitBase unit)//destroyed unit sight still stays for a turn
+    public void DestroyUnitBase(UnitBase unit)//destroyed unit sight still stays for a turn
     {
         tiles[unitBases[unit]].unit = null;
         unitBases.Remove(unit);

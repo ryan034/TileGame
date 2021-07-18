@@ -1,9 +1,6 @@
 <?xml version="1.0"?>
 <UnitBaseXml>
   <name>Archer</name>
-  <buffs>
-    <string>counterattack</string>
-  </buffs>
   <abilitiesCode>
     <ActiveAbility>
       <name>Bow</name>
@@ -28,7 +25,6 @@
       <animation>
         <![CDATA[<CodeObject>
           <task>Animate</task>
-          <duration>finish</duration>
           <animation>Attack</animation>
           <to>0</to>
         </CodeObject>]]>
@@ -54,7 +50,6 @@
       <animation>
         <![CDATA[<CodeObject>
           <task>Animate</task>
-          <duration>finish</duration>
           <animation>Capture</animation>
         </CodeObject>]]>
       </animation>

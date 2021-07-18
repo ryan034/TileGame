@@ -9,8 +9,8 @@ public class EventsManager : MonoBehaviour
     public static event Action<UnitBase, List<UnitBase>> OnMainAttack;
     public static event Action<UnitBase, List<UnitBase>> OnBeforeMainAttack;
 
-    public static event Action<UnitBase, List<UnitBase>> OnAttack;
-    public static event Action<UnitBase, List<UnitBase>> OnBeforeAttack;
+    public static event Action<UnitBase, List<UnitBase>> OnNonMainAttack;
+    public static event Action<UnitBase, List<UnitBase>> OnBeforeNonMainAttack;
 
     public static event Action<UnitBase, UnitBase> OnCapture;
     public static event Action<UnitBase, UnitBase> OnBeforeCapture;
@@ -20,32 +20,29 @@ public class EventsManager : MonoBehaviour
 
     public static event Action<UnitBase, UnitBase> OnKill;
 
-    public static event Action<UnitBase> OnDeath;
+    public static event Action<UnitBase> OnDeathUnitBase; //deathrattle effects different to OnObjectDestroyUnitBase as it deals with in game effects
+    public static event Action<Building> OnDeathBuilding; //deathrattle effects different to OnObjectDestroyUnitBase as it deals with in game effects
+    public static event Action<Unit> OnDeathUnit; //deathrattle effects different to OnObjectDestroyUnitBase as it deals with in game effects
 
-    public static event Action<UnitBase> OnObjectDestroyUnitBase;
-    public static event Action<Unit> OnObjectDestroyUnit;
-    public static event Action<Building> OnObjectDestroyBuilding;
+    public static event Action<UnitBase> OnObjectDestroyUnitBase; //called for memory management reasons,
+    public static event Action<Unit> OnObjectDestroyUnit; //called for memory management reasons,
+    public static event Action<Building> OnObjectDestroyBuilding; //called for memory management reasons,
 
     private List<StackItem> currentStack = new List<StackItem>();
 
-    public static void InvokeOnAttack(UnitBase attacker, List<UnitBase> defender)
+    public static void InvokeOnNonMainAttack(UnitBase attacker, List<UnitBase> defender)
     {
-        OnAttack?.Invoke(attacker, defender);
+        OnNonMainAttack?.Invoke(attacker, defender);
     }
 
-    public static void InvokeOnBeforeAttack(UnitBase attacker, List<UnitBase> defender)
+    public static void InvokeOnBeforeNonMainAttack(UnitBase attacker, List<UnitBase> defender)
     {
-        OnBeforeAttack?.Invoke(attacker, defender);
+        OnBeforeNonMainAttack?.Invoke(attacker, defender);
     }
 
     public static void InvokeOnMainAttack(UnitBase attacker, List<UnitBase> defender)
     {
         OnMainAttack?.Invoke(attacker, defender);
-    }
-
-    public static void InvokeOnDeath(UnitBase unitBase)
-    {
-        OnDeath?.Invoke(unitBase);
     }
 
     public static void InvokeOnBeforeMainAttack(UnitBase attacker, List<UnitBase> defender)
@@ -71,6 +68,26 @@ public class EventsManager : MonoBehaviour
     public static void InvokeOnBeforeSpawnUnit(UnitBase spawner)
     {
         OnBeforeSpawnUnit?.Invoke(spawner);
+    }
+
+    public static void InvokeOnKill(UnitBase killer, UnitBase killed)
+    {
+        OnKill?.Invoke(killer, killed);
+    }
+
+    public static void InvokeOnDeathUnitBase(UnitBase unitBase)
+    {
+        OnDeathUnitBase?.Invoke(unitBase);
+    }
+
+    public static void InvokeOnDeathBuilding(Building building)
+    {
+        OnDeathBuilding?.Invoke(building);
+    }
+
+    public static void InvokeOnDeathUnit(Unit unit)
+    {
+        OnDeathUnit?.Invoke(unit);
     }
 
     public static void InvokeOnObjectDestroyUnitBase(UnitBase unit)

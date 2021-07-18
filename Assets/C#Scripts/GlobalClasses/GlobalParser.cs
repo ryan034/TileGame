@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -29,7 +30,7 @@ public static class GlobalParser
         return v;
     }
 
-    public static void Parse(StackItem stack, CodeObject code = null, bool before = false)
+    public static void Parse(StackItem stack, CodeObject code = null, bool before = false, string additonalVariable = "")
     {
         if (code == null) { code = stack.code; }
         if (code.IsConditional)
@@ -39,23 +40,23 @@ public static class GlobalParser
             {
                 foreach (CodeObject c in code.GetCodeObjects("true"))
                 {
-                    Parse(stack, c, before);
+                    Parse(stack, c, before, additonalVariable);
                 }
             }
             else
             {
                 foreach (CodeObject c in code.GetCodeObjects("false"))
                 {
-                    Parse(stack, c, before);
+                    Parse(stack, c, before, additonalVariable);
                 }
             }
         }
         else
         {
-            ParseCode(code, stack, before);
+            ParseCode(code, stack, before, additonalVariable);
             foreach (CodeObject c in code.GetCodeObjects("next"))
             {
-                Parse(stack, c, before);
+                Parse(stack, c, before, additonalVariable);
             }
         }
     }
@@ -66,23 +67,19 @@ public static class GlobalParser
     {
         if (conditional.Task == "CanCounterAttack")
         {
-            //return CanCounterAttack(list[int.Parse(filter.GetVariable("to"))]);
             UnitBase u;
             string toCode = conditional.GetVariable("to") == "" ? "0" : conditional.GetVariable("to");
             string fromCode = conditional.GetVariable("from") == "" ? "0" : conditional.GetVariable("from");
             switch (fromCode[0])
             {
                 case 'u':
-                    //return u.CanCounterAttack(listUnit[int.Parse(toCode.Substring(1))]);
                     u = listUnit[int.Parse(fromCode.Substring(1))];
                     break;
                 case 'b':
                     u = listBuilding[int.Parse(fromCode.Substring(1))];
-                    //return u.CanCounterAttack(listBuilding[int.Parse(toCode.Substring(1))]);
                     break;
                 default:
                     u = list[int.Parse(fromCode)];
-                    //return u.CanCounterAttack(list[int.Parse(toCode)]);
                     break;
             }
             switch (toCode[0])
@@ -97,41 +94,38 @@ public static class GlobalParser
         }
         if (conditional.GetVariable("scope") == "all") { return true; }
         if (conditional.Task == "OnAttack" && conditional.GetVariable("scope") == "self" && conditional.GetVariable("side") == "defender") { return (list[1] == owner); }
-        //if (filter.Task == "OnBeforeAttack" && filter.GetVariable("scope") == "self" && filter.GetVariable("side") == "defender") { return (list[1] == this) /*CanCounterAttack(list[0])*/; }
         return false;
     }
 
-    public static void ParseCode(CodeObject code, StackItem data, bool before)
+    public static void ParseCode(CodeObject code, StackItem data, bool before, string additonalVariable = "")
     {
         switch (code.Task)
         {
             case "Attack":// only refers to main attack
-                //UnitBase fromUnit = code.GetVariable("from") == "" ? data.owner : data.unitBaseData[int.Parse(code.GetVariable("from"))];
-                //int toStart = code.GetVariable("toStart") == "" ? 0 : int.Parse(code.GetVariable("toStart"));
-                //int toNumber = code.GetVariable("toNumber") == "" ? data.unitBaseData.Count : int.Parse(code.GetVariable("toNumber"));
-                data.owner.Attack(before, data.unitBaseData, int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")));
+                if (additonalVariable == "NonMainAttack")
+                {
+                    data.owner.NonMainAttack(before, data.unitBaseData, int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")));
+                }
+                else
+                {
+                    int speed = code.GetVariable("Speed") == "" ? 0 : int.Parse(code.GetVariable("Speed"));
+                    data.owner.MainAttack(before, data.unitBaseData, speed, int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")));
+                }
                 break;
             case "CounterAttack": //refers to any attack thats not main attack
-                /*
-                if (stack.code.GetVariable("from") == "") { CounterAttack(stack.unitBaseData[int.Parse(stack.code.GetVariable("to"))]); }
-                else { stack.unitBaseData[int.Parse(stack.code.GetVariable("from"))].CounterAttack(stack.unitBaseData[int.Parse(stack.code.GetVariable("to"))]); }
-                break;*/
                 UnitBase u;
                 string toCode = code.GetVariable("to") == "" ? "0" : code.GetVariable("to");
                 string fromCode = code.GetVariable("from") == "" ? "0" : code.GetVariable("from");
                 switch (fromCode[0])
                 {
                     case 'u':
-                        //return u.CanCounterAttack(listUnit[int.Parse(toCode.Substring(1))]);
                         u = data.unitData[int.Parse(fromCode.Substring(1))];
                         break;
                     case 'b':
                         u = data.buildingData[int.Parse(fromCode.Substring(1))];
-                        //return u.CanCounterAttack(listBuilding[int.Parse(toCode.Substring(1))]);
                         break;
                     default:
                         u = data.unitBaseData[int.Parse(fromCode)];
-                        //return u.CanCounterAttack(list[int.Parse(toCode)]);
                         break;
                 }
                 switch (toCode[0])
@@ -242,8 +236,9 @@ public static class GlobalParser
         }
     }
 
-    public static bool ValidateTargetBeforeCommit(string abilityKey, CodeObject abilityTargetCode, UnitBase owner, Vector3Int target, List<Building> buildingList, List<Unit> unitList, List<UnitBase> unitBaseList, List<Vector3Int> vectorList, List<int> intList)
+    public static bool ValidateTargetAndCommit(string abilityKey, CodeObject abilityTargetCode, UnitBase owner, Vector3Int target, List<Building> buildingList, List<Unit> unitList, List<UnitBase> unitBaseList, List<Vector3Int> vectorList, List<int> intList)
     {
+        //first validates whether target can be added as a valid target and then returns true when all requirements are fulfilled and the ability can be added to the stack
         if (abilityTargetCode.Task == "Attack")
         {
             unitBaseList.Add(Manager.TileManager.HostileAttackableUnitOrBuildingOnTile(owner, target, abilityTargetCode.GetVariable("canHit")));
