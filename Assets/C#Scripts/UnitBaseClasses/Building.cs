@@ -59,7 +59,7 @@ public class Building : UnitBase
     }
 
     //public bool Neutral => data.neutral;
-    public int BuildingCover => data.buildingCover + buffs.Sum(x => x.buildingCover)/*+ other modifiers*/;
+    public int BuildingCover => Data.buildingCover + buffs.Sum(x => x.buildingCover)/*+ other modifiers*/;
 
     /*
     public override string Race

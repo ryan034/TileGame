@@ -9,9 +9,9 @@ public class Unit : UnitBase
     //public bool infiltrator;// can occupy non allied buildings or not
     //public bool moved;
     //public bool invisible;
-    public int MovementTotal => data.movementTotal + buffs.Sum(x => x.movementTotal);
+    public int MovementTotal => Data.movementTotal + buffs.Sum(x => x.movementTotal);
     public int CaptureDamage => buffs.Sum(x => x.captureDamage);
-    public bool Infiltrator => data.infiltrator;
+    public bool Infiltrator => Data.infiltrator;
     public bool Rooted => buffs.Select(x => x.rooted).Contains(true);
     //protected override TileObject Tile => TileManager.globalInstance.GetTile(this);
     //public bool dead;
@@ -25,7 +25,7 @@ public class Unit : UnitBase
         else { Team = team; }
         Manager.PlayerManager.LoadPlayer(Team);
     }
-    
+
     protected override void DestroyThis(UnitBase killer)
     {
         //dead = true;

@@ -67,7 +67,7 @@ public static class GlobalParser
     {
         if (conditional.Task == "CanCounterAttack")
         {
-            UnitBase u;
+            UnitBase u, v;
             string toCode = conditional.GetVariable("to") == "" ? "0" : conditional.GetVariable("to");
             string fromCode = conditional.GetVariable("from") == "" ? "0" : conditional.GetVariable("from");
             switch (fromCode[0])
@@ -85,12 +85,22 @@ public static class GlobalParser
             switch (toCode[0])
             {
                 case 'u':
-                    return u.CanCounterAttack(listUnit[int.Parse(toCode.Substring(1))]);
+                    v = listUnit[int.Parse(toCode.Substring(1))];
+                    break;
                 case 'b':
-                    return u.CanCounterAttack(listBuilding[int.Parse(toCode.Substring(1))]);
+                    v = listBuilding[int.Parse(toCode.Substring(1))];
+                    break;
                 default:
-                    return u.CanCounterAttack(list[int.Parse(toCode)]);
+                    v = list[int.Parse(toCode)];
+                    break;
             }
+            foreach (string s in u.Abilities)
+            {
+                CodeObject c = u.GetTargetCode(s);
+                return c.Task == "Attack" && /*u.ValidateTargetForAttack(v, s)*/ Manager.TileManager.AttackableAndHostileTo(u, v, c.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), u, v);
+            }
+            //return u.CanCounterAttack(v);
+            return false;
         }
         if (conditional.GetVariable("scope") == "all") { return true; }
         if (conditional.Task == "OnAttack" && conditional.GetVariable("scope") == "self" && conditional.GetVariable("side") == "defender") { return (list[1] == owner); }
@@ -109,11 +119,24 @@ public static class GlobalParser
                 else
                 {
                     int speed = code.GetVariable("Speed") == "" ? 0 : int.Parse(code.GetVariable("Speed"));
-                    data.owner.MainAttack(before, data.unitBaseData, speed, int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")));
+                    foreach (UnitBase t in data.unitBaseData)
+                    {
+                        foreach (string s in t.Abilities)
+                        {
+                            CodeObject c = t.GetTargetCode(s);
+                            if (c.Task == "Attack" && /*t.ValidateTargetForAttack(data.owner, s)*/ Manager.TileManager.AttackableAndHostileTo(t, data.owner, c.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), t, data.owner))
+                            {
+                                int thisSpeed = c.GetVariable("Speed") == "" ? 0 : int.Parse(c.GetVariable("Speed"));
+                                t.GetAttackedByAndCounterAttack(before, data.owner, s, thisSpeed, speed + 1, int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")));
+                                break;
+                            }
+                        }
+                    }
+                    data.owner.MainAttack(before, data.unitBaseData);
                 }
                 break;
             case "CounterAttack": //refers to any attack thats not main attack
-                UnitBase u;
+                UnitBase u, v;
                 string toCode = code.GetVariable("to") == "" ? "0" : code.GetVariable("to");
                 string fromCode = code.GetVariable("from") == "" ? "0" : code.GetVariable("from");
                 switch (fromCode[0])
@@ -131,14 +154,27 @@ public static class GlobalParser
                 switch (toCode[0])
                 {
                     case 'u':
-                        u.CounterAttack(before, data.unitData[int.Parse(toCode.Substring(1))]);
+                        //u.CounterAttack(before, data.unitData[int.Parse(toCode.Substring(1))]);
+                        v = data.unitData[int.Parse(toCode.Substring(1))];
                         break;
                     case 'b':
-                        u.CounterAttack(before, data.buildingData[int.Parse(toCode.Substring(1))]);
+                        //u.CounterAttack(before, data.buildingData[int.Parse(toCode.Substring(1))]);
+                        v = data.buildingData[int.Parse(toCode.Substring(1))];
                         break;
                     default:
-                        u.CounterAttack(before, data.unitBaseData[int.Parse(toCode)]);
+                        //u.CounterAttack(before, data.unitBaseData[int.Parse(toCode)]);
+                        v = data.unitBaseData[int.Parse(toCode)];
                         break;
+                }
+                foreach (string s in u.Abilities)
+                {
+                    CodeObject c = u.GetTargetCode(s);
+                    if (c.Task == "Attack" && /*u.ValidateTargetForAttack(v, s)*/ Manager.TileManager.AttackableAndHostileTo(u, v, c.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), u, v))
+                    {
+                        //int speed = u.GetLogicCode(s).GetVariable("Speed") == "" ? 0 : int.Parse(u.GetLogicCode(s).GetVariable("Speed"));
+                        u.GetAttackedByAndCounterAttack(before, v, s);
+                        break;
+                    }
                 }
                 break;
             case "Capture":

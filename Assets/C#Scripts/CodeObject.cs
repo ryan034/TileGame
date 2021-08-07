@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -64,11 +65,11 @@ public class CodeObject
 
     public string GetVariable(string s) { if (variablesSingle.ContainsKey(s)) { return variablesSingle[s]; } else { return ""; } }
 
-    public List<string> GetListVariables(string s)
+    public ReadOnlyCollection<string> GetListVariables(string s)
     {
         if (variablesList.ContainsKey(s))
         {
-            return variablesList[s];
+            return variablesList[s].AsReadOnly();
         }
         return null;
     }

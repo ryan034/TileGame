@@ -10,12 +10,8 @@ using static GlobalParser;
 public abstract class UnitBase : MonoBehaviour
 {
     protected UnitAnimator animator;
-    protected UnitBaseData data;
     protected InternalVariables internalVariables;
 
-    protected CodeObject AbilityTargetCode => GetTargetCode(abilityKey);
-    protected CodeObject AbilityLogicCode => GetLogicCode(abilityKey);
-    protected CodeObject AbilityAnimationCode => GetAnimationCode(abilityKey);
     protected string abilityKey;
 
     protected List<Unit> unitList = new List<Unit>();
@@ -73,16 +69,18 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    public string Name => data.name;
-    public string Race => data.race;
-    public int ArmourType => data.armourType;
-    public int MovementType => data.movementType;
+    public UnitBaseData Data { get; protected set; }
 
-    public int DayVision => data.dayVision + buffs.Sum(x => x.dayVision);
-    public int NightVision => data.nightVision + buffs.Sum(x => x.nightVision);
-    public int HPMax => data.hP + buffs.Sum(x => x.hP);
-    public int MPMax => data.mP + buffs.Sum(x => x.mP);
-    public int Armour => data.armour + buffs.Sum(x => x.armour);
+    public string Name => Data.name;
+    public string Race => Data.race;
+    public int ArmourType => Data.armourType;
+    public int MovementType => Data.movementType;
+
+    public int DayVision => Data.dayVision + buffs.Sum(x => x.dayVision);
+    public int NightVision => Data.nightVision + buffs.Sum(x => x.nightVision);
+    public int HPMax => Data.hP + buffs.Sum(x => x.hP);
+    public int MPMax => Data.mP + buffs.Sum(x => x.mP);
+    public int Armour => Data.armour + buffs.Sum(x => x.armour);
     public bool Charming => buffs.Select(x => x.notHostile).Contains(true);
     public bool Disarmed => buffs.Select(x => x.disarmed).Contains(true);
     public bool Silenced => buffs.Select(x => x.silenced).Contains(true);
@@ -90,13 +88,12 @@ public abstract class UnitBase : MonoBehaviour
     public int HPCurrent => HPMax - DamageTaken;
     public int MPCurrent => MPMax - ManaUsed;
     public double HPPercentage => Math.Max((double)HPCurrent / HPMax, 0);
-    //public int DamageType => int.Parse(AbilityLogicCode.GetVariable("damageType"));
     public int Team { get => internalVariables.team; set { internalVariables.team = value; Tile.RefreshSprite(); } }
 
     public bool Actioned { get => internalVariables.actioned; set { internalVariables.actioned = value; Tile.RefreshSprite(); } } //alreadymoved and attacked
     public bool Invisible { get => internalVariables.invisible; set { internalVariables.invisible = value; Tile.RefreshSprite(); } }
 
-    public IEnumerable<string> Abilities => data.Abilities;
+    public IEnumerable<string> Abilities => Data.Abilities;
 
     public TileObject Tile => Manager.TileManager.GetTile(this);
 
@@ -116,7 +113,7 @@ public abstract class UnitBase : MonoBehaviour
         internalVariables = new InternalVariables();
         animator = gameObject.AddComponent<UnitAnimator>();
         animator.Load(this);
-        this.data = data;
+        this.Data = data;
         foreach (string s in data.Buffs)
         {
             buffs.Add(Buff.Load(this, s));
@@ -145,13 +142,6 @@ public abstract class UnitBase : MonoBehaviour
         EventsManager.InvokeOnObjectDestroyUnitBase(this);
     }
 
-    protected void AttackTarget(bool before, UnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType)
-    {
-        int cover = target.CoverBonus;
-        int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(baseDamage, diceDamage, diceTimes, cover));
-        target.CalculateAndTakeDamage(before, this, damageType, totaldamage);
-    }
-
     protected virtual void CalculateAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
     {
         //add take damage event here
@@ -171,9 +161,16 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    public bool HasTag(string tag) => (data.HasTag(tag) || buffs.Select(x => x.HasTag(tag)).Contains(true));
+    public CodeObject GetLogicCode(string s) => Data.GetLogicCode(s);
 
-    public string GetConvertedForm(string race) => data.GetConvertedForm(race);
+    public CodeObject GetTargetCode(string s) => Data.GetTargetCode(s);
+
+    public CodeObject GetAnimationCode(string s) => Data.GetAnimationCode(s);
+
+
+    public bool HasTag(string tag) => (Data.HasTag(tag) || buffs.Select(x => x.HasTag(tag)).Contains(true));
+
+    public string GetConvertedForm(string race) => Data.GetConvertedForm(race);
 
     public bool IsPlaying(string animation) => animator.IsPlaying(animation);
 
@@ -206,38 +203,32 @@ public abstract class UnitBase : MonoBehaviour
         return attackToArmour[damageType, ArmourType];
     }
 
-    public void ChooseMenuAbility(string s) { abilityKey = s; GlobalParser.ChooseMenuAbility(s, AbilityTargetCode, AbilityLogicCode, AbilityAnimationCode, this); }
+    public void ChooseMenuAbility(string s) { abilityKey = s; GlobalParser.ChooseMenuAbility(abilityKey, GetTargetCode(abilityKey), GetLogicCode(abilityKey), GetAnimationCode(abilityKey), this); }
 
     public void CommitTarget(Vector3Int target)
     {
-        if (ValidateTargetAndCommit(abilityKey, AbilityTargetCode, this, target, buildingList, unitList, unitBaseList, vectorList, intList))
+        if (ValidateTargetAndCommit(abilityKey, GetTargetCode(abilityKey), this, target, buildingList, unitList, unitBaseList, vectorList, intList))
         {
-            Manager.EventsManager.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimationCode, intList, unitBaseList, unitList, buildingList, vectorList);
+            Manager.EventsManager.AddToStack(GetLogicCode(abilityKey), abilityKey, this, GetAnimationCode(abilityKey), intList, unitBaseList, unitList, buildingList, vectorList);
             ClearTargets();
         }
     }
 
-    public void MainAttack(bool before, List<UnitBase> target, int speed, int baseDamage, int diceDamage, int diceTimes, int damageType)
+    public void MainAttack(bool before, List<UnitBase> target)
     {
+        /*
         foreach (UnitBase t in target)
         {
             //AttackTarget(before, t, baseDamage, diceDamage, diceTimes, damageType);
             //t.CounterAttack(before, this);
-            t.CounterAttack(before, this, speed + 1, baseDamage, diceDamage, diceTimes, damageType);
-        }
+            t.GetAttackedByAndCounterAttack(before, this, s, thisSpeed, speed + 1, baseDamage, diceDamage, diceTimes, damageType);
+        }*/
         if (before) { EventsManager.InvokeOnBeforeMainAttack(this, target); }
         else
         {
             EventsManager.InvokeOnMainAttack(this, target);
         }
     }
-
-    /*
-    protected void GetAttackedAndCounterAttack(bool before, UnitBase attacker, int speed, int baseDamage, int diceDamage, int diceTimes, int damageType)
-    {
-        attacker.AttackTarget(before, this, baseDamage, diceDamage, diceTimes, damageType);
-        CounterAttack(before, attacker);
-    }*/
 
     public void NonMainAttack(bool before, List<UnitBase> target, int baseDamage, int diceDamage, int diceTimes, int damageType)
     {
@@ -252,39 +243,39 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    public void CounterAttack(bool before, UnitBase targetUnit, int attackerSpeed = int.MinValue, int baseDamage = 0, int diceDamage = 0, int diceTimes = 0, int damageType = 0)
+    public void GetAttackedByAndCounterAttack(bool before, UnitBase attackerUnit, string abilityForCounterAttack, int thisSpeed = int.MaxValue, int attackerSpeed = int.MinValue, int attackerBaseDamage = 0, int attackerDiceDamage = 0, int attackerDiceTimes = 0, int attackerDamageType = 0)
     {
-        foreach (string s in Abilities)
+        //foreach (string s in Abilities)
+        //{
+        //CodeObject ability = GetTargetCode(s);
+        //if (ability.Task == "Attack" && ValidateTargetForAttack(attackerUnit, s))
+        //{
+        //int speed = GetLogicCode(s).GetVariable("Speed") == "" ? 0 : int.Parse(GetLogicCode(s).GetVariable("Speed"));
+        if (thisSpeed == int.MaxValue)
         {
-            CodeObject ability = GetTargetCode(s);
-            if (ability.Task == "Attack" && ValidateTargetForAttack(targetUnit, s)/* todo move target validation to triggerpart of the stackchain*/)
-            {
-                int speed = GetLogicCode(s).GetVariable("Speed") == "" ? 0 : int.Parse(GetLogicCode(s).GetVariable("Speed"));
-                if (attackerSpeed == int.MinValue)
-                {
-                    Parse(new StackItem(GetLogicCode(s), s, this, GetAnimationCode(s), null, new List<UnitBase>() { this, targetUnit }, null, null, null), null, before, "NonMainAttack");
-                }
-                else if (speed - attackerSpeed >= 1)
-                {
-                    Parse(new StackItem(GetLogicCode(s), s, this, GetAnimationCode(s), null, new List<UnitBase>() { this, targetUnit }, null, null, null), null, before, "NonMainAttack");
-                    targetUnit.AttackTarget(before, this, baseDamage, diceDamage, diceTimes, damageType);
-                }
-                else if (speed == attackerSpeed)
-                {
-                    //units attack eachother at the same time
-                }
-                else if (speed - attackerSpeed == -1)
-                {
-                    targetUnit.AttackTarget(before, this, baseDamage, diceDamage, diceTimes, damageType);
-                    Parse(new StackItem(GetLogicCode(s), s, this, GetAnimationCode(s), null, new List<UnitBase>() { this, targetUnit }, null, null, null), null, before, "NonMainAttack");
-                }
-                else if (speed - attackerSpeed <= -2)
-                {
-                    targetUnit.AttackTarget(before, this, baseDamage, diceDamage, diceTimes, damageType);
-                }
-                return;
-            }
+            Parse(new StackItem(GetLogicCode(abilityForCounterAttack), abilityForCounterAttack, this, GetAnimationCode(abilityForCounterAttack), null, new List<UnitBase>() { attackerUnit }, null, null, null), null, before, "NonMainAttack");
         }
+        else if (thisSpeed - attackerSpeed >= 1)
+        {
+            Parse(new StackItem(GetLogicCode(abilityForCounterAttack), abilityForCounterAttack, this, GetAnimationCode(abilityForCounterAttack), null, new List<UnitBase>() { attackerUnit }, null, null, null), null, before, "NonMainAttack");
+            attackerUnit.AttackTarget(before, this, attackerBaseDamage, attackerDiceDamage, attackerDiceTimes, attackerDamageType);
+        }
+        else if (thisSpeed == attackerSpeed)
+        {
+            //units attack eachother at the same time
+        }
+        else if (thisSpeed - attackerSpeed == -1)
+        {
+            attackerUnit.AttackTarget(before, this, attackerBaseDamage, attackerDiceDamage, attackerDiceTimes, attackerDamageType);
+            Parse(new StackItem(GetLogicCode(abilityForCounterAttack), abilityForCounterAttack, this, GetAnimationCode(abilityForCounterAttack), null, new List<UnitBase>() { attackerUnit }, null, null, null), null, before, "NonMainAttack");
+        }
+        else if (thisSpeed - attackerSpeed <= -2)
+        {
+            attackerUnit.AttackTarget(before, this, attackerBaseDamage, attackerDiceDamage, attackerDiceTimes, attackerDamageType);
+        }
+        return;
+        //}
+        //}
     }
 
     public bool CanHit(UnitBase unitBase, string attackType)
@@ -305,17 +296,27 @@ public abstract class UnitBase : MonoBehaviour
         return b;
     }
 
+    /*
+    public bool ValidateTargetForAttack(UnitBase targetUnit, string s, string canHit, int minRange, int maxRange)
+    {
+        //CodeObject ability = GetTargetCode(s);
+        //return Manager.TileManager.AttackableAndHostileTo(this, targetUnit, ability.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetUnit);
+        return Manager.TileManager.AttackableAndHostileTo(this, targetUnit, canHit) && Manager.TileManager.WithinRange(minRange, maxRange, this, targetUnit);
+    }
+    */
+
+    /*
     public bool CanCounterAttack(UnitBase targetUnit)
     {
         foreach (string s in Abilities)
         {
-            if (GetTargetCode(s).Task == "Attack" && ValidateTargetForAttack(targetUnit, s)/* todo move target validation to triggerpart of the stackchain*/)
+            if (GetTargetCode(s).Task == "Attack" && ValidateTargetForAttack(targetUnit, s))
             {
                 return true;
             }
         }
         return false;
-    }
+    }*/
 
     public List<Unit> SpawnUnit(bool before, List<Vector3Int> tile, string script, int unitTeam)
     {
@@ -323,7 +324,6 @@ public abstract class UnitBase : MonoBehaviour
         else
         {
             Actioned = true;
-            //Unit unit = SpawnUnit(Tile, AbilityLogicCode.GetVariable("unitID"), Team);
             List<Unit> units = new List<Unit>();
             foreach (Vector3Int t in tile)
             {
@@ -335,22 +335,17 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    protected void ChangeForm(string form)
+    protected void AttackTarget(bool before, UnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType)
     {
-        data = Manager.AssetManager.LoadUnitBaseData(form);
-        animator.ChangeModel(form);
+        int cover = target.CoverBonus;
+        int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(baseDamage, diceDamage, diceTimes, cover));
+        target.CalculateAndTakeDamage(before, this, damageType, totaldamage);
     }
 
-    protected CodeObject GetLogicCode(string s) => data.GetLogicCode(s);
-
-    protected CodeObject GetTargetCode(string s) => data.GetTargetCode(s);
-
-    protected CodeObject GetAnimationCode(string s) => data.GetAnimationCode(s);
-
-    protected bool ValidateTargetForAttack(UnitBase targetUnit, string s)
+    protected void ChangeForm(string form)
     {
-        CodeObject ability = GetTargetCode(s);
-        return Manager.TileManager.AttackableAndHostileTo(this, targetUnit, ability.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(ability.GetVariable("minRange")), int.Parse(ability.GetVariable("maxRange")), this, targetUnit);
+        Data = Manager.AssetManager.LoadUnitBaseData(form);
+        animator.ChangeModel(form);
     }
 
     /*
