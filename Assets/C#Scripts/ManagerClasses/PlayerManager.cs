@@ -26,7 +26,7 @@ public class PlayerManager
 
     public int TeamTurn => turnOrder[turnCount % TeamsTotal]; //team thats taking current turn
     public int ClockFrame => RoundCount % clockTotal; // time of day night cycle, 0 is dawn/morning, 1 is midday, 2 is afternoon, 3 dusk/evening, 4 is night, is 5 late night approaching early dawn
-    public bool IsDay => ClockFrame < 3 ? true : false;
+    public bool IsDay => ClockFrame < clockTotal/2 ? true : false;
 
     private class Player
     {

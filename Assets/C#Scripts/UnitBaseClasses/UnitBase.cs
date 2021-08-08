@@ -142,7 +142,7 @@ public abstract class UnitBase : MonoBehaviour
         EventsManager.InvokeOnObjectDestroyUnitBase(this);
     }
 
-    protected virtual void CalculateAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
+    protected virtual void CalculateDamageTakenAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
     {
         //add take damage event here
         int damageCalculated = (int)Math.Round(GetResistance(damageType) * damage);
@@ -263,6 +263,10 @@ public abstract class UnitBase : MonoBehaviour
         else if (thisSpeed == attackerSpeed)
         {
             //units attack eachother at the same time
+            //attackerUnit.AttackTarget(before, this, attackerBaseDamage, attackerDiceDamage, attackerDiceTimes, attackerDamageType);
+            int damage = attackerUnit.CalculateAttackDamage(attackerBaseDamage, attackerDiceDamage, attackerDiceTimes, CoverBonus);
+            Parse(new StackItem(GetLogicCode(abilityForCounterAttack), abilityForCounterAttack, this, GetAnimationCode(abilityForCounterAttack), null, new List<UnitBase>() { attackerUnit }, null, null, null), null, before, "NonMainAttack");
+            CalculateDamageTakenAndTakeDamage(before, attackerUnit, attackerDamageType, damage);
         }
         else if (thisSpeed - attackerSpeed == -1)
         {
@@ -337,9 +341,14 @@ public abstract class UnitBase : MonoBehaviour
 
     protected void AttackTarget(bool before, UnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType)
     {
-        int cover = target.CoverBonus;
-        int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(baseDamage, diceDamage, diceTimes, cover));
-        target.CalculateAndTakeDamage(before, this, damageType, totaldamage);
+        //int totaldamage = (int)Math.Round(HPPercentage * Rolldamage(baseDamage, diceDamage, diceTimes, cover));
+        int totaldamage = CalculateAttackDamage(baseDamage, diceDamage, diceTimes, target.CoverBonus);
+        target.CalculateDamageTakenAndTakeDamage(before, this, damageType, totaldamage);
+    }
+
+    protected int CalculateAttackDamage(int baseDamage, int diceDamage, int diceTimes, int cover)
+    {
+        return (int)Math.Round(HPPercentage * Rolldamage(baseDamage, diceDamage, diceTimes, cover));
     }
 
     protected void ChangeForm(string form)

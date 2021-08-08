@@ -133,9 +133,9 @@ public class Building : UnitBase
         //Race_ = Race.noRace;
     }
 
-    protected override void CalculateAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
+    protected override void CalculateDamageTakenAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
     {
-        base.CalculateAndTakeDamage(before, unit, damageType, damage);
+        base.CalculateDamageTakenAndTakeDamage(before, unit, damageType, damage);
         if (!before) { RebalanceHold(damage, unit); }
     }
 
