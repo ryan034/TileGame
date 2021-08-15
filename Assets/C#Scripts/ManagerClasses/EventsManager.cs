@@ -9,8 +9,8 @@ public class EventsManager : MonoBehaviour
     public static event Action<UnitBase, List<UnitBase>> OnMainAttack;
     public static event Action<UnitBase, List<UnitBase>> OnBeforeMainAttack;
 
-    public static event Action<UnitBase, List<UnitBase>> OnNonMainAttack;
-    public static event Action<UnitBase, List<UnitBase>> OnBeforeNonMainAttack;
+    public static event Action<UnitBase, UnitBase> OnAttack; //when unitbase attacks another unitbase
+    public static event Action<UnitBase, UnitBase> OnBeforeAttack;
 
     public static event Action<UnitBase, UnitBase> OnCapture;
     public static event Action<UnitBase, UnitBase> OnBeforeCapture;
@@ -30,14 +30,14 @@ public class EventsManager : MonoBehaviour
 
     private List<StackItem> currentStack = new List<StackItem>();
 
-    public static void InvokeOnNonMainAttack(UnitBase attacker, List<UnitBase> defender)
+    public static void InvokeOnAttack(UnitBase attacker, UnitBase defender)
     {
-        OnNonMainAttack?.Invoke(attacker, defender);
+        OnAttack?.Invoke(attacker, defender);
     }
 
-    public static void InvokeOnBeforeNonMainAttack(UnitBase attacker, List<UnitBase> defender)
+    public static void InvokeOnBeforeAttack(UnitBase attacker, UnitBase defender)
     {
-        OnBeforeNonMainAttack?.Invoke(attacker, defender);
+        OnBeforeAttack?.Invoke(attacker, defender);
     }
 
     public static void InvokeOnMainAttack(UnitBase attacker, List<UnitBase> defender)
@@ -105,10 +105,10 @@ public class EventsManager : MonoBehaviour
         OnObjectDestroyBuilding?.Invoke(unit);
     }
 
-    public void AddToStack(CodeObject code, string name, UnitBase owner, CodeObject animation, List<int> intData = null, List<UnitBase> targetData = null, List<Unit> unitTargetData = null, List<Building> buildingTargetData = null, List<Vector3Int> vectorData = null)
+    public void AddToStack(CodeObject code, string name, UnitBase owner, CodeObject animation, List<int> intData = null, List<UnitBase> targetData = null, List<Unit> unitTargetData = null, List<Building> buildingTargetData = null, List<Vector3Int> vectorData = null, string additionalVariable = "")
     {
         int i = currentStack.Count;
-        StackItem s = new StackItem(code, name, owner, animation, intData, targetData, unitTargetData, buildingTargetData, vectorData);
+        StackItem s = new StackItem(code, name, owner, animation, intData, targetData, unitTargetData, buildingTargetData, vectorData, additionalVariable);
         currentStack.Add(s);
         Parse(s, null, true);
         if (i == 0) { StartCoroutine(ResolveStack()); }

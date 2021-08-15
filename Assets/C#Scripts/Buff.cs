@@ -81,7 +81,7 @@ public class Buff
     private void OnMainAttack(UnitBase attacker, List<UnitBase> defender)
     {
         defender.Insert(0, attacker);
-        if (code.ContainsKey("OnMainAttack") && Parse(code["OnMainAttack"].filterCode, owner, defender))
+        if (code.ContainsKey("OnMainAttack") && ParseReturnBool(code["OnMainAttack"].filterCode, owner, defender))
         {
             Manager.EventsManager.AddToStack(code["OnMainAttack"].logicCode, name, owner, code["OnMainAttack"].animationCode, null, defender);
             //this is where counterattack would be triggered
@@ -90,7 +90,7 @@ public class Buff
 
     private void OnKill(UnitBase destroyer, UnitBase destroyee)
     {
-        if (code.ContainsKey("OnKill") && Parse(code["OnKill"].filterCode, owner, new List<UnitBase>() { destroyer, destroyee }))
+        if (code.ContainsKey("OnKill") && ParseReturnBool(code["OnKill"].filterCode, owner, new List<UnitBase>() { destroyer, destroyee }))
         {
             Manager.EventsManager.AddToStack(code["OnKill"].logicCode, name, owner, code["OnKill"].animationCode, null, new List<UnitBase>() { destroyer, destroyee });
         }
@@ -98,7 +98,7 @@ public class Buff
 
     private void OnDeathUnitBase(UnitBase dead)
     {
-        if (code.ContainsKey("OnDeathUnitBase") && Parse(code["OnDeathUnitBase"].filterCode, owner, new List<UnitBase>() { dead }))
+        if (code.ContainsKey("OnDeathUnitBase") && ParseReturnBool(code["OnDeathUnitBase"].filterCode, owner, new List<UnitBase>() { dead }))
         {
             //extract animation code from s and set it to animation
             Manager.EventsManager.AddToStack(code["OnDeathUnitBase"].logicCode, name, owner, code["OnDeathUnitBase"].animationCode, null, new List<UnitBase>() { dead });
@@ -107,7 +107,7 @@ public class Buff
 
     private void OnSpawnUnit(Building spawner, Unit spawned)
     {
-        if (code.ContainsKey("OnSpawnUnit") && Parse(code["OnSpawnUnit"].filterCode, owner, null, new List<Unit>() { spawned }, new List<Building>() { spawner }, null))
+        if (code.ContainsKey("OnSpawnUnit") && ParseReturnBool(code["OnSpawnUnit"].filterCode, owner, null, new List<Unit>() { spawned }, new List<Building>() { spawner }, null))
         {
             Manager.EventsManager.AddToStack(code["OnSpawnUnit"].logicCode, name, owner, code["OnSpawnUnit"].animationCode, null, new List<UnitBase>() { spawner, spawned });
         }

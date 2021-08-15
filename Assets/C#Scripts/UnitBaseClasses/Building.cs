@@ -59,7 +59,7 @@ public class Building : UnitBase
     }
 
     //public bool Neutral => data.neutral;
-    public int BuildingCover => Data.buildingCover + buffs.Sum(x => x.buildingCover)/*+ other modifiers*/;
+    public int BuildingCover => UnitData.buildingCover + buffs.Sum(x => x.buildingCover)/*+ other modifiers*/;
 
     /*
     public override string Race
@@ -119,7 +119,7 @@ public class Building : UnitBase
 
     public override void RefreshSprite() => animator.RefreshBuildingSprite();
 
-    protected override void DestroyThis(UnitBase killer)
+    public override void DestroyThis(UnitBase killer)
     {
         EventsManager.InvokeOnDeathBuilding(this);
         EventsManager.InvokeOnDeathUnitBase(this);
@@ -133,7 +133,7 @@ public class Building : UnitBase
         //Race_ = Race.noRace;
     }
 
-    protected override void CalculateDamageTakenAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
+    public override void CalculateDamageTakenAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
     {
         base.CalculateDamageTakenAndTakeDamage(before, unit, damageType, damage);
         if (!before) { RebalanceHold(damage, unit); }

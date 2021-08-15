@@ -20,6 +20,7 @@
           <baseDamage>10</baseDamage>
           <diceDamage>6</diceDamage>
           <diceTimes>3</diceTimes>
+          <speed>1</speed>
         </CodeObject>]]>
       </code>
       <animation>
@@ -43,8 +44,11 @@
       </target>
       <code>
         <![CDATA[<CodeObject>
-          <task>Capture</task>
-          <captureDamage>10</captureDamage>
+          <task>IsAlive</task>
+          <true>
+            <task>Capture</task>
+            <captureDamage>10</captureDamage>
+          </true>
         </CodeObject>]]>
       </code>
       <animation>
