@@ -83,7 +83,7 @@ public class Manager : MonoBehaviour
         {
             if (manager.animationManager == null)
             {
-                manager.animationManager = Instantiate(manager.animationManager).GetComponent<AnimationManager>();
+                manager.animationManager = Instantiate(manager.animationManagerPrefab).GetComponent<AnimationManager>();
             }
             return manager.animationManager;
         }

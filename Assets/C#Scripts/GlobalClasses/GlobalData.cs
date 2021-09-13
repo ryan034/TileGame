@@ -25,7 +25,7 @@ public static class GlobalData
         race4 };
         */
     public static readonly Quaternion globalRotation = Quaternion.Euler(-40, 0, 0);
-    public static readonly Quaternion rotation = Quaternion.Euler(90, 0, 180);
+    public static readonly Quaternion rotation = Quaternion.Euler(-90, 0, 0);
 
     public static int cameraView = 25;
 

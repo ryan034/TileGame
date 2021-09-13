@@ -46,6 +46,7 @@ public class AssetManager : MonoBehaviour
             //p = Instantiate(p, new Vector3(0, 0, 0), rotation);
             p = Instantiate(p, asset);
             GameObject rootGameObject = new GameObject();
+            rootGameObject.transform.rotation = rotation;
             rootGameObject.AddComponent<Unit>();
             //rootGameObject.AddComponent<UnitAnimator>();
             p.transform.parent = rootGameObject.transform;
@@ -86,6 +87,7 @@ public class AssetManager : MonoBehaviour
             //p = Instantiate(p, new Vector3(0, 0, 0), rotation);
             p = Instantiate(p, asset);
             GameObject rootGameObject = new GameObject();
+            rootGameObject.transform.rotation = rotation;
             rootGameObject.AddComponent<Building>();
             //rootGameObject.AddComponent<UnitAnimator>();
             p.transform.parent = rootGameObject.transform;
@@ -184,7 +186,7 @@ public class AssetManager : MonoBehaviour
 
     private GameObject Instantiate(GameObject p, string name)
     {
-        GameObject g = Instantiate(p, new Vector3(0, 0, 0), rotation);
+        GameObject g = Instantiate(p);
         g.name = name;
         return g;
     }

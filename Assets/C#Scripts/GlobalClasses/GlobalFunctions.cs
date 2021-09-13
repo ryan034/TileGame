@@ -6,16 +6,16 @@ using static GlobalData;
 public static class GlobalFunctions
 {
 
-    public static Vector3 LocalToWord(Vector3Int localplace)
+    public static Vector3 LocalToWord(Vector3Int localPlace)
     {
         float w = (Mathf.Sqrt(3) * tileRadius) / pixelPerUnit;
         float h = 0.75f * (2 * tileRadius / (float)pixelPerUnit);
         float offset = 0;
-        if (Math.Abs(localplace.y) % 2 == 1)
+        if (Math.Abs(localPlace.y) % 2 == 1)
         {
             offset = w / 2;
         }
-        return new Vector3(localplace.x * w + offset, localplace.y * h, localplace.z);
+        return new Vector3(localPlace.x * w + offset, localPlace.y * h, localPlace.z);
     }
 
     public static List<Vector3Int> Neighbours(Vector3Int centre)
@@ -29,11 +29,11 @@ public static class GlobalFunctions
         return neighbours;
     }
 
-    public static List<Vector3Int> CircleCoords(int radiusinner, int radiusouter, Vector3Int centre)//radiusinner=1,radiusouter=1 for melee 
+    public static List<Vector3Int> CircleCoords(int radiusInner, int radiusOuter, Vector3Int centre)//radiusinner=1,radiusouter=1 for melee 
     {
         List<Vector3Int> circlecoords = new List<Vector3Int>();
         List<Vector3Int> cube_direction = new List<Vector3Int>() { new Vector3Int(+1, -1, 0), new Vector3Int(+1, 0, -1), new Vector3Int(0, +1, -1), new Vector3Int(-1, +1, 0), new Vector3Int(-1, 0, +1), new Vector3Int(0, -1, +1) };
-        for (int r = radiusinner; r <= radiusouter; r++)
+        for (int r = radiusInner; r <= radiusOuter; r++)
         {
             Vector3Int cube = OffsetToCube(centre) + cube_direction[4] * r;
             for (int i = 0; i < 6; i++)

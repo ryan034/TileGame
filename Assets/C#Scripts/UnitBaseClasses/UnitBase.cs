@@ -113,7 +113,7 @@ public abstract class UnitBase : MonoBehaviour
         internalVariables = new InternalVariables();
         animator = gameObject.AddComponent<UnitAnimator>();
         animator.Load(this);
-        this.UnitData = data;
+        UnitData = data;
         foreach (string s in data.Buffs)
         {
             buffs.Add(Buff.Load(this, s));

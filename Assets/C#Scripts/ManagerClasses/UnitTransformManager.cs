@@ -6,7 +6,7 @@ using static GlobalData;
 
 public class UnitTransformManager : MonoBehaviour
 {
-    public void QueuePath(UnitBase unit, List<Vector3Int> path)
+    public void QueuePath(Unit unit, List<Vector3Int> path)
     {
         StartCoroutine(SmoothLerp(unit, path));
     }
@@ -25,9 +25,10 @@ public class UnitTransformManager : MonoBehaviour
 
     public void RotateTo(UnitBase unit, Vector3Int v)
     {
-        if (LocalToWord(v) != unit.transform.position)
+        if (v != unit.Tile.LocalPlace)
         {
-            unit.transform.forward = LocalToWord(v) - unit.transform.position;
+            Vector3 f = LocalToWord(v) - unit.transform.position;
+            unit.transform.forward = new Vector3(f.x, f.y, 0);
         }
     }
 
@@ -40,14 +41,14 @@ public class UnitTransformManager : MonoBehaviour
         yield break;
     }
 
-    private IEnumerator SmoothLerp(UnitBase unit, List<Vector3Int> path)
+    private IEnumerator SmoothLerp(Unit unit, List<Vector3Int> path)
     {
         WaitForSeconds w = new WaitForSeconds(.01f);
         Pointer.globalInstance.haltInput = true;
-        //unit.Animate("Run");
+        unit.Animate("Run");
         foreach (Vector3Int v in path)
         {
-            //RotateTo(unit, v);
+            RotateTo(unit, v);
 
             Vector3 finalPos = LocalToWord(v);
             while (Vector3.Distance(unit.transform.position, finalPos) > 0.01f)
@@ -57,7 +58,7 @@ public class UnitTransformManager : MonoBehaviour
             }
             unit.transform.position = finalPos;
         }
-        //unit.Animate("Idle");
+        unit.Animate("Idle");
         Pointer.globalInstance.haltInput = false;
     }
 
