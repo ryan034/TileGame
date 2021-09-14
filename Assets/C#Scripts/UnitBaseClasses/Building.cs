@@ -35,8 +35,34 @@ public class Building : UnitBase
     //public int currentcapturehp; //normally 20
     //damaging building is like permanently partially capturing a building but to the nuetral side
 
-    private Dictionary<int, int> hold = new Dictionary<int, int>();
+    //private Dictionary<int, int> hold = new Dictionary<int, int>();
     //private string race;
+
+    private Hold hold = new Hold();
+
+    private class Hold
+    {
+        private Dictionary<int, int> hold = new Dictionary<int, int>();
+
+        public int this[int index]
+        {
+            get
+            {
+                if (!hold.ContainsKey(index))
+                {
+                    hold[index] = 0;
+                }
+                return hold[index];
+            }
+            set
+            {
+                hold[index] = value;
+            }
+        }
+
+        public List<int> Keys => hold.Keys.ToList();
+        public List<int> Values => hold.Values.ToList();
+    }
 
     protected override int DamageTaken
     {

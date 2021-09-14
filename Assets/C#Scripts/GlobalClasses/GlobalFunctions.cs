@@ -15,7 +15,7 @@ public static class GlobalFunctions
         {
             offset = w / 2;
         }
-        return new Vector3(localPlace.x * w + offset, localPlace.y * h, localPlace.z);
+        return new Vector3(localPlace.x * w + offset, localPlace.z, localPlace.y * h);
     }
 
     public static List<Vector3Int> Neighbours(Vector3Int centre)

@@ -24,10 +24,10 @@ public static class GlobalData
         [EnumMember(Value = "race4")]
         race4 };
         */
-    public static readonly Quaternion globalRotation = Quaternion.Euler(-40, 0, 0);
-    public static readonly Quaternion rotation = Quaternion.Euler(-90, 0, 0);
+    //public static readonly Quaternion globalRotation = Quaternion.Euler(-40, 0, 0);
+    //public static readonly Quaternion rotation = Quaternion.Euler(-90, 0, 0);
 
-    public static int cameraView = 25;
+    public static readonly Vector3 pointerOffset = new Vector3(0, 0.5f, 0);
 
     public static readonly int pixelPerUnit = 100;
     public static readonly int tileRadius = 60;
@@ -56,8 +56,10 @@ public static class GlobalData
     public static readonly string buildingModAssetPath = Path.Combine(Application.streamingAssetsPath, "Prefabs/BuildingPrefabs/");
     public static readonly string tileModAssetPath = Path.Combine(Application.streamingAssetsPath, "Prefabs/TilePrefabs/");
     
-    public static float animationSpeed = 15f;
-    public static int animationTime = 50;
+    public static readonly float animationSpeed = 15f;
+    //public static readonly int animationTime = 50; //will uncomment when it is needed
+
+    //configurable statics below
     public static int clockTotal = 6;
 
     //public static float elevated_units = 0.25f;

@@ -7,6 +7,7 @@ using static GlobalFunctions;
 public class TileManager
 {
     private Unit heldUnit;
+    private Vector3 heldUnitForward;
     private Vector3Int heldLocation;
     private Vector3Int currentLocation;
     //private int maxX;
@@ -151,6 +152,7 @@ public class TileManager
         if (SelectedTile.unit != null && SelectedTile.unit.SameTeam(Manager.PlayerManager.TeamTurn) && !SelectedTile.unit.Actioned && heldUnit == null)
         {
             heldUnit = SelectedTile.unit;
+            heldUnitForward = heldUnit.transform.forward;
             heldLocation = unitBases[heldUnit];
             if (SomewhereToMove)
             {
@@ -195,6 +197,7 @@ public class TileManager
     {
         CurrentLocation = heldLocation;
         WipeTiles();
+        heldUnit.transform.forward = heldUnitForward;
         heldUnit = null;
         return tiles[CurrentLocation].tile.transform.position;
     }
@@ -215,6 +218,7 @@ public class TileManager
             }
             else
             {
+                heldUnit.transform.forward = heldUnitForward;
                 heldUnit = null;
                 Pointer.globalInstance.GoToOpenMode();
             }

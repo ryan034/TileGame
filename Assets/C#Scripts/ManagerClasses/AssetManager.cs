@@ -44,9 +44,9 @@ public class AssetManager : MonoBehaviour
             }
             GameObject p = unitBaseCache[asset];
             //p = Instantiate(p, new Vector3(0, 0, 0), rotation);
-            p = Instantiate(p, asset);
+            p = InstantiateWithName(p, asset);
             GameObject rootGameObject = new GameObject();
-            rootGameObject.transform.rotation = rotation;
+            //rootGameObject.transform.rotation = rotation;
             rootGameObject.AddComponent<Unit>();
             //rootGameObject.AddComponent<UnitAnimator>();
             p.transform.parent = rootGameObject.transform;
@@ -85,9 +85,9 @@ public class AssetManager : MonoBehaviour
             }
             GameObject p = unitBaseCache[asset];
             //p = Instantiate(p, new Vector3(0, 0, 0), rotation);
-            p = Instantiate(p, asset);
+            p = InstantiateWithName(p, asset);
             GameObject rootGameObject = new GameObject();
-            rootGameObject.transform.rotation = rotation;
+            //rootGameObject.transform.rotation = rotation;
             rootGameObject.AddComponent<Building>();
             //rootGameObject.AddComponent<UnitAnimator>();
             p.transform.parent = rootGameObject.transform;
@@ -124,7 +124,7 @@ public class AssetManager : MonoBehaviour
             }
             GameObject p = unitBaseCache[model];
             //p = Instantiate(p, new Vector3(0, 0, 0), rotation);
-            p = Instantiate(p, model);
+            p = InstantiateWithName(p, model);
             return p;
         }
         return null;
@@ -184,7 +184,7 @@ public class AssetManager : MonoBehaviour
         }
     }
 
-    private GameObject Instantiate(GameObject p, string name)
+    private GameObject InstantiateWithName(GameObject p, string name)
     {
         GameObject g = Instantiate(p);
         g.name = name;
@@ -221,7 +221,7 @@ public class AssetManager : MonoBehaviour
                 }
             }
             GameObject prefab = tileCache[asset];
-            prefab = Instantiate(prefab as GameObject, new Vector3(0, 0, 0), rotation);
+            prefab = Instantiate(prefab as GameObject);
             prefab.GetComponent<TileObject>().Load(localPlace, terrain);
 
             InstantiateBuilding(true, localPlace, building, buildingTeam);

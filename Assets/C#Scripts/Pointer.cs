@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using static GlobalData;
 
 public class Pointer : MonoBehaviour
 {
@@ -67,7 +68,7 @@ public class Pointer : MonoBehaviour
     private void UpdatePosition(Vector3 v)
     {
         //Debug.Log(v);
-        transform.position = v + new Vector3(0, 0, -0.5f);
+        transform.position = v + pointerOffset;
         //CameraController.globalInstance.UpdateCamera(transform.position);
         //UpdatePosition(tiles[CurrentLocation].tile.transform.position);
     }

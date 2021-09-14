@@ -28,6 +28,22 @@ public class UnitAnimator : MonoBehaviour
         animator = transform.GetChild(0).gameObject.GetComponent<Animator>();
     }
 
+    private void HideModel(bool b, Animator a = null)
+    {
+        a = a ?? animator;
+        if (a.gameObject.GetComponent<MeshRenderer>() != null)
+        {
+            a.gameObject.GetComponent<MeshRenderer>().enabled = b;
+        }
+        else
+        {
+            foreach (Transform child in a.transform)
+            {
+                child.gameObject.SetActive(b);
+            }
+        }
+    }
+
     public void RefreshUnitSprite()
     {
         //called when team is  or unit is actioned or if tile goes in fog
@@ -49,7 +65,8 @@ public class UnitAnimator : MonoBehaviour
         }
         if (unitBase.Actioned) { w = .5f; }
         if (unitBase.Tile.Building != null && !unitBase.Tile.Building.SameTeam(unitBase.Team) && unitBase.Invisible) { unitBase.Invisible = false; }
-        animator.gameObject.SetActive(active);
+        //animator.gameObject.SetActive(active);
+        HideModel(active);
     }
 
     public void RefreshBuildingSprite()
@@ -163,12 +180,15 @@ public class UnitAnimator : MonoBehaviour
             }
             foreach (Transform child in transform)
             {
-                child.gameObject.SetActive(false);
+                if (child.GetComponent<Animator>() != null)
+                {
+                    HideModel(false, child.GetComponent<Animator>());
+                    //child.gameObject.SetActive(false);}
+                }
+                //transform.Find(model).gameObject.SetActive(true);
+                animator = transform.Find(model).gameObject.GetComponent<Animator>();
+                HideModel(true);
             }
-            //transform.Find(model).gameObject.SetActive(true);
-            animator = transform.Find(model).gameObject.GetComponent<Animator>();
-            animator.gameObject.SetActive(true);
         }
     }
-
 }

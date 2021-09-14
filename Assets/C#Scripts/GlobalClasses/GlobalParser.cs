@@ -291,7 +291,7 @@ public static class GlobalParser
         }
         else
         {
-            string item = abilityTargetCode.GetListVariables("targets")[owner.TargetCount];
+            string item = abilityTargetCode.GetListVariables("targets")[owner.TargetCount];// always checks if target acceptable with the last requirement of targetlist
             switch (item)
             {
                 case "hostileVisibleBuildingOnTile":

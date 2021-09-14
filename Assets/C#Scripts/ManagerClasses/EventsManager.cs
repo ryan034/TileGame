@@ -122,6 +122,7 @@ public class EventsManager : MonoBehaviour
             s = currentStack[currentStack.Count - 1];
             yield return Manager.AnimationManager.ParseAnimation(s);
             Parse(s);
+            s.owner.ClearTargets();
             currentStack.Remove(s);
         }
     }

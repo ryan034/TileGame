@@ -25,11 +25,15 @@ public class UnitTransformManager : MonoBehaviour
 
     public void RotateTo(UnitBase unit, Vector3Int v)
     {
-        if (v != unit.Tile.LocalPlace)
+        if (Vector3.Distance(LocalToWord(v), unit.transform.position) > 0.01f)
         {
-            Vector3 f = LocalToWord(v) - unit.transform.position;
-            unit.transform.forward = new Vector3(f.x, f.y, 0);
+            unit.transform.forward = LocalToWord(v) - unit.transform.position;
         }
+    }
+
+    public void RotateTo(UnitBase unit, Vector3 v)
+    {
+        unit.transform.forward = v;
     }
 
     private IEnumerator WaitForAnimation(UnitBase unit, string s)
@@ -53,7 +57,7 @@ public class UnitTransformManager : MonoBehaviour
             Vector3 finalPos = LocalToWord(v);
             while (Vector3.Distance(unit.transform.position, finalPos) > 0.01f)
             {
-                unit.transform.position = Vector3.MoveTowards(unit.transform.position, new Vector3(finalPos.x, finalPos.y, 0), animationSpeed * Time.deltaTime);
+                unit.transform.position = Vector3.MoveTowards(unit.transform.position, finalPos, animationSpeed * Time.deltaTime);
                 yield return w;
             }
             unit.transform.position = finalPos;

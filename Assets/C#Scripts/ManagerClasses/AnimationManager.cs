@@ -6,6 +6,7 @@ public class AnimationManager : MonoBehaviour
 
     public IEnumerator ParseAnimation(StackItem stackItem)
     {
+        Vector3 forward = stackItem.owner.transform.forward;
         CodeObject code = stackItem.animationCode;
         if (code.Task == "Animate")
         {
@@ -37,5 +38,6 @@ public class AnimationManager : MonoBehaviour
                 yield return stackItem.owner.PlayAnimationAndFinish(code.GetVariable("animation"));
             }
         }
+        Manager.UnitTransformManager.RotateTo(stackItem.owner, forward);
     }
 }

@@ -210,7 +210,6 @@ public abstract class UnitBase : MonoBehaviour
         if (ValidateTargetAndCommit(abilityKey, GetTargetCode(abilityKey), this, target, buildingList, unitList, unitBaseList, vectorList, intList))
         {
             Manager.EventsManager.AddToStack(GetLogicCode(abilityKey), abilityKey, this, GetAnimationCode(abilityKey), intList, unitBaseList, unitList, buildingList, vectorList, "MainAttack");
-            ClearTargets();
         }
     }
 
