@@ -162,7 +162,7 @@ public class Building : UnitBase
     public override void CalculateDamageTakenAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
     {
         base.CalculateDamageTakenAndTakeDamage(before, unit, damageType, damage);
-        if (!before) { RebalanceHold(damage, unit); }
+        if (!before) { RebalanceHoldAfterTakingHPDamage(damage, unit); }
     }
 
     /*
@@ -227,7 +227,7 @@ public class Building : UnitBase
         ChangeBuildingUsingRace(unit.Race);
         Team = unit.Team;
         Actioned = true;
-        Animate("Captured");
+        //Animate("Captured");
     }
 
     private void ClearHold()
@@ -238,14 +238,14 @@ public class Building : UnitBase
         }
     }
 
-    private int RemoveFromHold(int damage, int team)
+    private int RemoveFromHold(int damage, UnitBase unit)
     {
         int residual = damage;
         List<int> sortedList = new List<int>(hold.Keys);
         sortedList.OrderByDescending(o => hold[o]).ToList();
         foreach (int i in sortedList)
         {
-            if (i != team)
+            if (i != unit.Team)
             {
                 hold[i] -= residual;
                 if (hold[i] > 0)
@@ -259,18 +259,18 @@ public class Building : UnitBase
                 }
             }
         }
+        ConvertedBy(unit);
         return residual;
     }
 
-    private void RebalanceHold(int damage, UnitBase unit)
+    private void RebalanceHoldAfterTakingHPDamage(int damage, UnitBase unit)
     {
         if (HPCurrent > 0)
         {
-            int residual = RemoveFromHold(damage, unit.Team);
-            if (residual > 0)
+            int residual = RemoveFromHold(damage, unit);
+            if (residual >= 0)
             {
                 hold[unit.Team] -= residual;
-                ConvertedBy(unit);
             }
         }
     }
@@ -280,22 +280,16 @@ public class Building : UnitBase
         int residual;
         if (HPCurrent > 0)
         {
-            residual = RemoveFromHold(damage, unit.Team);
-            if (residual > 0)
-            {
-                //DamageTaken -= residual;// heals the building
-                ConvertedBy(unit);
-            }
+            residual = RemoveFromHold(damage, unit);
         }
         else
         {
             residual = hold.Values.Sum() + damage - HPMax;
-            if (residual > 0)
+            if (residual >= 0)
             {
-                residual = RemoveFromHold(residual, unit.Team);
-                if (residual > 0)
+                residual = RemoveFromHold(residual, unit);
+                if (residual >= 0)
                 {
-                    ConvertedBy(unit);
                     DamageTaken = 0;
                 }
             }

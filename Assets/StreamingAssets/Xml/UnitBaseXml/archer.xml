@@ -47,7 +47,7 @@
           <task>IsAlive</task>
           <true>
             <task>Capture</task>
-            <captureDamage>10</captureDamage>
+            <captureDamage>500</captureDamage>
           </true>
         </CodeObject>]]>
       </code>

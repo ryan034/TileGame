@@ -302,6 +302,7 @@ public class TileManager
     {
         if (heldUnit != null)
         {
+            Debugger.AddToLog("end unit turn");
             heldUnit.Actioned = true;
             RefreshFogOfWar(heldUnit.Team);
             heldUnit = null;

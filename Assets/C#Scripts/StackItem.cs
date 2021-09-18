@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class StackItem
 {
-    public string additionalVariable;
+    public bool mainPhase;
 
     public readonly CodeObject code;
     public readonly string name;
@@ -28,13 +28,13 @@ public class StackItem
     }
     */
 
-    public StackItem(CodeObject code, string name, UnitBase owner, CodeObject animationCode, List<int> intData, List<UnitBase> unitBaseData, List<Unit> unitData, List<Building> buildingData, List<Vector3Int> vectorData, string additionalVariable= "")
+    public StackItem(CodeObject code, string name, UnitBase owner, CodeObject animationCode, List<int> intData, List<UnitBase> unitBaseData, List<Unit> unitData, List<Building> buildingData, List<Vector3Int> vectorData, bool mainPhase = false)
     {
         this.code = code;
         this.name = name;
         this.owner = owner;
         this.animationCode = animationCode;
-        this.additionalVariable = additionalVariable;
+        this.mainPhase = mainPhase;
         if (intData == null) { this.intData = new List<int>(); } else { this.intData = intData; }
         if (unitBaseData == null) { this.unitBaseData = new List<UnitBase>(); } else { this.unitBaseData = unitBaseData; }
         if (unitData == null) { this.unitData = new List<Unit>(); } else { this.unitData = unitData; }

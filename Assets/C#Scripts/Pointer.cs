@@ -22,7 +22,7 @@ public class Pointer : MonoBehaviour
     }
     */
     public bool haltInput;
-    private bool windowUpBefore;
+    //private bool windowUpBefore;
     private readonly float waitTime = 0.1f;
     private float timer;
     private Mode mode = Mode.open;

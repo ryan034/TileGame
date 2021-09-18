@@ -105,10 +105,11 @@ public class EventsManager : MonoBehaviour
         OnObjectDestroyBuilding?.Invoke(unit);
     }
 
-    public void AddToStack(CodeObject code, string name, UnitBase owner, CodeObject animation, List<int> intData = null, List<UnitBase> targetData = null, List<Unit> unitTargetData = null, List<Building> buildingTargetData = null, List<Vector3Int> vectorData = null, string additionalVariable = "")
+    public void AddToStack(CodeObject code, string name, UnitBase owner, CodeObject animation, List<int> intData = null, List<UnitBase> targetData = null, List<Unit> unitTargetData = null, List<Building> buildingTargetData = null, List<Vector3Int> vectorData = null, bool mainPhase = false)
     {
+        Debugger.AddToLog("added to stack " + name);
         int i = currentStack.Count;
-        StackItem s = new StackItem(code, name, owner, animation, intData, targetData, unitTargetData, buildingTargetData, vectorData, additionalVariable);
+        StackItem s = new StackItem(code, name, owner, animation, intData, targetData, unitTargetData, buildingTargetData, vectorData, mainPhase);
         currentStack.Add(s);
         Parse(s, null, true);
         if (i == 0) { StartCoroutine(ResolveStack()); }
@@ -116,15 +117,19 @@ public class EventsManager : MonoBehaviour
 
     private IEnumerator ResolveStack()
     {
+        Pointer.globalInstance.haltInput = true;
         StackItem s;
         while (currentStack.Count > 0)
         {
             s = currentStack[currentStack.Count - 1];
             yield return Manager.AnimationManager.ParseAnimation(s);
+            Debugger.AddToLog("resolving " + s.name);
             Parse(s);
             s.owner.ClearTargets();
             currentStack.Remove(s);
         }
+        Manager.TileManager.EndHeldUnitTurn();
+        Manager.TileManager.WipeTiles();
+        Pointer.globalInstance.haltInput = false;
     }
-
 }

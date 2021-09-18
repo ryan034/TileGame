@@ -30,11 +30,7 @@ public class AnimationManager : MonoBehaviour
             }
             if (code.GetVariable("animation") != "")
             {
-                /*
-                if (code.GetVariable("duration") == "finish")
-                {
-                    yield return stackItem.owner.PlayAnimationAndFinish(code.GetVariable("animation"));
-                }*/
+                //if (code.GetVariable("duration") == "finish"){yield return stackItem.owner.PlayAnimationAndFinish(code.GetVariable("animation"));}
                 yield return stackItem.owner.PlayAnimationAndFinish(code.GetVariable("animation"));
             }
         }

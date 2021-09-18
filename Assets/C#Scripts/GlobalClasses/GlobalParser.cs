@@ -33,10 +33,10 @@ public static class GlobalParser
     public static void Parse(StackItem data, CodeObject currentCode = null, bool before = false)
     {
         if (currentCode == null) { currentCode = data.code; }
-        if (data.additionalVariable == "MainAtack" && data.code.Task == "Attack")
+        if (data.mainPhase && data.code.Task == "Attack")
         {
             //implement battle
-            data.additionalVariable = "";
+            data.mainPhase = false;
             for (int i = 0; i < data.unitBaseData.Count; i++)
             {
                 foreach (string s in data.unitBaseData[i].Abilities)
@@ -76,6 +76,7 @@ public static class GlobalParser
         if (currentCode.IsConditional)
         {
             bool v = ParseConditionalControlFlowCode(currentCode, data.owner, data.unitBaseData, data.unitData, data.buildingData, data.intData);
+            //Debugger.AddToLog("Evaluated Conditonal to be:" + (v ? "true" : "false"));
             if (v)
             {
                 foreach (CodeObject c in currentCode.GetCodeObjects("true"))
@@ -108,11 +109,14 @@ public static class GlobalParser
         switch (conditional.Task)
         {
             case "IsAlive":
+                Debugger.AddToLog("Evaluate IsAlive " + (owner.HPCurrent > 0 ? "true" : "false"));
                 //maybe have this default to owner but if variable <to> is present then have it evaluate to.HPCurrent > 0
                 return owner.HPCurrent > 0;
             case "NotDisarmed":
+                Debugger.AddToLog("Evaluate NotDisarmed " + (owner.Disarmed ? "true" : "false"));
                 return !owner.Disarmed;
             case "NotSilenced":
+                Debugger.AddToLog("Evaluate NotSilenced " + (owner.Silenced ? "true" : "false"));
                 return !owner.Silenced;
             case "CanCounterAttack":
                 UnitBase u, v;
@@ -145,12 +149,15 @@ public static class GlobalParser
                 foreach (string s in u.Abilities)
                 {
                     CodeObject c = u.GetTargetCode(s);
+                    Debugger.AddToLog("Evaluate CanCounterAttack " + (c.Task == "Attack" && Manager.TileManager.AttackableAndHostileTo(u, v, c.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), u, v) ? "true" : "false"));
                     return c.Task == "Attack" && Manager.TileManager.AttackableAndHostileTo(u, v, c.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), u, v);
                 }
                 //if (conditional.GetVariable("scope") == "all") { return true; }
                 //if (conditional.Task == "OnAttack" && conditional.GetVariable("scope") == "self" && conditional.GetVariable("side") == "defender") { return (list[1] == owner); }
+                Debugger.AddToLog("Evaluate CanCounterAttack " + (false ? "true" : "false"));
                 return false;
         }
+        Debugger.AddToLog("Defautled to false, task not found");
         return false;
     }
 
@@ -159,10 +166,12 @@ public static class GlobalParser
         switch (code.Task)
         {
             case "Attack": // only refers to main attack
+                Debugger.AddToLog("Parse Attack " + (before ? "before resolution" : "after resolution"));
                 //int toCode = code.GetVariable("to") == "" ? 0 : int.Parse(code.GetVariable("to"));
                 data.owner.DamageTarget(before, data.unitBaseData[0], int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")));
                 break;
             case "CounterAttack": //refers to when a unit is forced to attack another outside of main attack
+                Debugger.AddToLog("Parse CounterAttack " + (before ? "before resolution" : "after resolution"));
                 UnitBase u, v;
                 string toCode = code.GetVariable("to") == "" ? "0" : code.GetVariable("to");
                 string fromCode = code.GetVariable("from") == "" ? "0" : code.GetVariable("from");
@@ -201,11 +210,13 @@ public static class GlobalParser
                 }
                 break;
             case "Capture":
+                Debugger.AddToLog("Parse Capture " + (before ? "before resolution" : "after resolution"));
                 int to = code.GetVariable("to") == "" ? 0 : int.Parse(code.GetVariable("to"));
                 int from = code.GetVariable("from") == "" ? 0 : int.Parse(code.GetVariable("from"));
                 data.unitData[from].Capture(before, data.buildingData[to], int.Parse(code.GetVariable("captureDamage")));
                 return;
             case "SpawnUnit":
+                Debugger.AddToLog("Parse SpawnUnit " + (before ? "before resolution" : "after resolution"));
                 from = code.GetVariable("from") == "" ? 0 : int.Parse(code.GetVariable("from"));
                 data.unitBaseData[from].SpawnUnit(before, data.vectorData, code.GetVariable("unitID"), data.unitBaseData[0].Team);
                 return;

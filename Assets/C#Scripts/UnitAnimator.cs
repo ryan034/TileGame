@@ -98,7 +98,8 @@ public class UnitAnimator : MonoBehaviour
     public void Animate(string code)
     {
         //parse code
-        animator.Play(code);
+        //animator.Play(code);
+        animator.Play(code, 0, 0f);
     }
 
     /*
@@ -143,8 +144,7 @@ public class UnitAnimator : MonoBehaviour
 
     public IEnumerator DestroyUnit()
     {
-        Animate("Death");
-        yield return StartCoroutine(WaitForAnimation("Death"));
+        yield return PlayAnimationAndFinish("Death");
         Destroy(gameObject);
     }
     /*
@@ -162,7 +162,8 @@ public class UnitAnimator : MonoBehaviour
     public bool IsPlaying(string animationCode)
     {
         //parse animation code
-        return animator.GetCurrentAnimatorStateInfo(0).IsName(animationCode); // for now this is the function
+        return animator.GetCurrentAnimatorStateInfo(0).length > animator.GetCurrentAnimatorStateInfo(0).normalizedTime && animator.GetCurrentAnimatorStateInfo(0).IsName(animationCode);
+        //return animator.GetCurrentAnimatorStateInfo(0).IsName(animationCode); // for now this is the function
     }
 
     public void ChangeModel(string model)
@@ -174,7 +175,8 @@ public class UnitAnimator : MonoBehaviour
                 GameObject g = Manager.AssetManager.InstantiateModel(model);
                 if (g != null)
                 {
-                    g.transform.parent = gameObject.transform;
+                    g.transform.parent = transform;
+                    g.transform.localPosition = new Vector3(0, 0, 0);
                 }
                 else { return; }
             }
