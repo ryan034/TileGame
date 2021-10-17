@@ -34,13 +34,13 @@ public class Buff
     {
         public readonly CodeObject filterCode;
         public readonly CodeObject logicCode;
-        public readonly CodeObject animationCode;
+        //public readonly CodeObject animationCode;
 
-        public EventCodeBlock(string trigger, string code, string animation)
+        public EventCodeBlock(string trigger, string code)
         {
             filterCode = CodeObject.LoadCode(trigger);
             logicCode = CodeObject.LoadCode(code);
-            animationCode = CodeObject.LoadCode(animation);
+            //animationCode = CodeObject.LoadCode(animation);
         }
     }
 
@@ -83,7 +83,7 @@ public class Buff
         defender.Insert(0, attacker);
         if (code.ContainsKey("OnMainAttack") && ParseReturnBool(code["OnMainAttack"].filterCode, owner, defender))
         {
-            Manager.EventsManager.AddToStack(code["OnMainAttack"].logicCode, name, owner, code["OnMainAttack"].animationCode, null, defender);
+            Manager.EventsManager.AddToStack(code["OnMainAttack"].logicCode, name, owner, targetData: defender);
             //this is where counterattack would be triggered
         }
     }
@@ -92,7 +92,7 @@ public class Buff
     {
         if (code.ContainsKey("OnKill") && ParseReturnBool(code["OnKill"].filterCode, owner, new List<UnitBase>() { destroyer, destroyee }))
         {
-            Manager.EventsManager.AddToStack(code["OnKill"].logicCode, name, owner, code["OnKill"].animationCode, null, new List<UnitBase>() { destroyer, destroyee });
+            Manager.EventsManager.AddToStack(code["OnKill"].logicCode, name, owner, targetData: new List<UnitBase>() { destroyer, destroyee });
         }
     }
 
@@ -101,15 +101,15 @@ public class Buff
         if (code.ContainsKey("OnDeathUnitBase") && ParseReturnBool(code["OnDeathUnitBase"].filterCode, owner, new List<UnitBase>() { dead }))
         {
             //extract animation code from s and set it to animation
-            Manager.EventsManager.AddToStack(code["OnDeathUnitBase"].logicCode, name, owner, code["OnDeathUnitBase"].animationCode, null, new List<UnitBase>() { dead });
+            Manager.EventsManager.AddToStack(code["OnDeathUnitBase"].logicCode, name, owner, targetData: new List<UnitBase>() { dead });
         }
     }
 
     private void OnSpawnUnit(Building spawner, Unit spawned)
     {
-        if (code.ContainsKey("OnSpawnUnit") && ParseReturnBool(code["OnSpawnUnit"].filterCode, owner, null, new List<Unit>() { spawned }, new List<Building>() { spawner }, null))
+        if (code.ContainsKey("OnSpawnUnit") && ParseReturnBool(code["OnSpawnUnit"].filterCode, owner, listUnit: new List<Unit>() { spawned }, listBuilding: new List<Building>() { spawner }))
         {
-            Manager.EventsManager.AddToStack(code["OnSpawnUnit"].logicCode, name, owner, code["OnSpawnUnit"].animationCode, null, new List<UnitBase>() { spawner, spawned });
+            Manager.EventsManager.AddToStack(code["OnSpawnUnit"].logicCode, name, owner, targetData: new List<UnitBase>() { spawner, spawned });
         }
     }
 
@@ -154,7 +154,7 @@ public class Buff
         captureDamage = loaded.captureDamage;
         foreach (BuffScript.EventCodeBlock b in loaded.code)
         {
-            code[b.event_] = new EventCodeBlock(b.trigger, b.code, b.animation);
+            code[b.event_] = new EventCodeBlock(b.trigger, b.code);
         }
     }
 
@@ -180,7 +180,7 @@ public class Buff
 
         foreach (BuffXml.EventCodeBlock b in loaded.code)
         {
-            code[b.event_] = new EventCodeBlock(b.trigger, b.code, b.animation);
+            code[b.event_] = new EventCodeBlock(b.trigger, b.code);
         }
     }
 

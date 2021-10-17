@@ -245,7 +245,7 @@ public class TileManager
             List<Vector3Int> path = GetPath(SelectedTile);
             HeldUnitTile.unit = null;
             tiles[path[path.Count - 1]].unit = heldUnit;
-            Manager.UnitTransformManager.QueuePath(heldUnit, path);
+            Manager.UnitTransformManager.StartCoroutineQueuePath(heldUnit, path);
             unitBases[heldUnit] = path[path.Count - 1];
             WipeTiles();
             if (SelectedTile == HeldUnitTile)
@@ -337,7 +337,7 @@ public class TileManager
         }
     }
 
-    public Unit SpawnUnit(Vector3Int v, string unitScript, int unitTeam) => Manager.AssetManager.InstantiateUnit(false, v, unitScript, unitTeam);
+    public Unit SpawnUnit(Vector3Int v, string unitScript, int unitTeam) { if (tiles[v].unit == null) {return Manager.AssetManager.InstantiateUnit(false, v, unitScript, unitTeam); } return null; }
     //newunit.teamcolour = teamcolours[unitteam];
 
     public void DestroyUnitBase(UnitBase unit)//destroyed unit sight still stays for a turn

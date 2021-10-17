@@ -10,12 +10,10 @@ public class Manager : MonoBehaviour
     private AssetManager assetManager;
     private EventsManager eventsManager;
     private UnitTransformManager unitTransformManager;
-    private AnimationManager animationManager;
 
     [SerializeField] private GameObject assetManagerPrefab;
     [SerializeField] private GameObject eventsManagerPrefab;
     [SerializeField] private GameObject unitTransformManagerPrefab;
-    [SerializeField] private GameObject animationManagerPrefab;
 
     public static TileManager TileManager
     {
@@ -74,18 +72,6 @@ public class Manager : MonoBehaviour
                 manager.unitTransformManager = Instantiate(manager.unitTransformManagerPrefab).GetComponent<UnitTransformManager>();
             }
             return manager.unitTransformManager;
-        }
-    }
-
-    public static AnimationManager AnimationManager
-    {
-        get
-        {
-            if (manager.animationManager == null)
-            {
-                manager.animationManager = Instantiate(manager.animationManagerPrefab).GetComponent<AnimationManager>();
-            }
-            return manager.animationManager;
         }
     }
 

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Linq;
 using UnityEngine;
 using static GlobalData;
 using static GlobalFunctions;
+using static GlobalAnimationParser;
 
 public class Unit : UnitBase
 {
@@ -26,15 +28,16 @@ public class Unit : UnitBase
         Manager.PlayerManager.LoadPlayer(Team);
     }
 
-    public override void DestroyThis(UnitBase killer)
+    public override IEnumerator DestroyThis(UnitBase killer)
     {
         //dead = true;
         EventsManager.InvokeOnDeathUnit(this);
-        base.DestroyThis(killer);
+        yield return base.DestroyThis(killer);
         EventsManager.InvokeOnObjectDestroyUnit(this);
+        Destroy(gameObject);
     }
 
-    public void Capture(bool before, Building building, int cDamage)
+    public IEnumerator Capture(bool before, Building building, int cDamage, CodeObject c)
     {
         if (before)
         {
@@ -42,6 +45,14 @@ public class Unit : UnitBase
         }
         else
         {
+            if (c != null)
+            {
+                yield return ParseAnimation(new StackItem(c, "capture animation", this));
+            }
+            else
+            {
+                yield return PlayAnimationAndFinish("Capture");
+            }
             int damage = (int)Math.Round(HPPercentage * (cDamage + CaptureDamage));
             building.TakeCaptureDamage(damage, this);
             EventsManager.InvokeOnCapture(this, Tile.Building);

@@ -49,13 +49,13 @@ public class UnitBaseData
     {
         public readonly CodeObject targetCode; //for targets and addtomenu
         public readonly CodeObject logicCode;
-        public readonly CodeObject animationCode;
+        //public readonly CodeObject animationCode;
 
-        public ActiveAbility(CodeObject targetCode, CodeObject logicCode, CodeObject animationCode)
+        public ActiveAbility(CodeObject targetCode, CodeObject logicCode)
         {
             this.targetCode = targetCode;
             this.logicCode = logicCode;
-            this.animationCode = animationCode;
+            //this.animationCode = animationCode;
         }
     }
 
@@ -78,7 +78,7 @@ public class UnitBaseData
         buildingCover = unitScript.buildingCover; //normally 10
         foreach (UnitBaseScript.ActiveAbility item in unitScript.abilitiesCode)
         {
-            abilitiesCode[item.name] = new ActiveAbility(CodeObject.LoadCode(item.target), CodeObject.LoadCode(item.code), CodeObject.LoadCode(item.animation));
+            abilitiesCode[item.name] = new ActiveAbility(CodeObject.LoadCode(item.target), CodeObject.LoadCode(item.code));
         }
         foreach (UnitBaseScript.BuildingConversion item in unitScript.buildingConversions)
         {
@@ -114,7 +114,7 @@ public class UnitBaseData
         buildingCover = unitXml.buildingCover; //normally 10
         foreach (UnitBaseXml.ActiveAbility item in unitXml.abilitiesCode)
         {
-            abilitiesCode[item.name] = new ActiveAbility(CodeObject.LoadCode(item.target), CodeObject.LoadCode(item.code), CodeObject.LoadCode(item.animation));
+            abilitiesCode[item.name] = new ActiveAbility(CodeObject.LoadCode(item.target), CodeObject.LoadCode(item.code));
         }
         foreach (UnitBaseXml.BuildingConversion item in unitXml.buildingConversions)
         {
@@ -141,10 +141,11 @@ public class UnitBaseData
         return abilitiesCode[s].targetCode;
     }
 
+    /*
     public CodeObject GetAnimationCode(string s)
     {
         return abilitiesCode[s].animationCode;
-    }
+    }*/
 
     public string GetConvertedForm(string race)
     {
@@ -154,24 +155,5 @@ public class UnitBaseData
         }
         else { return ""; }
     }
-    /*
-public UnitScript(UnitXml unitXml)
-{
-unitName = unitXml.unitName;
-buffs = unitXml.buffs;
-abilitiesCode = unitXml.abilitiesCode; 
-materials = unitXml.materials; 
-unitTags = unitXml.unitTags; 
-race = unitXml.race; 
-armourType = unitXml.armourType; 
-movementType = unitXml.movementType; 
-dayVision = unitXml.dayVision; 
-nightVision = unitXml.nightVision; 
-hP = unitXml.hP; 
-mP = unitXml.mP; 
-armour = unitXml.armour; 
 
-infiltrator = unitXml.infiltrator; 
-movementTotal = unitXml.movementTotal; //total movement pts
-}*/
 }

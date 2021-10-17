@@ -1,8 +1,10 @@
 ﻿using static GlobalFunctions;
+using static GlobalAnimationParser;
 using static GlobalData;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using System.Collections;
 
 public class Building : UnitBase
 {
@@ -145,8 +147,9 @@ public class Building : UnitBase
 
     public override void RefreshSprite() => animator.RefreshBuildingSprite();
 
-    public override void DestroyThis(UnitBase killer)
+    public override IEnumerator DestroyThis(UnitBase killer)
     {
+        yield return PlayAnimationAndFinish("Death");
         EventsManager.InvokeOnDeathBuilding(this);
         EventsManager.InvokeOnDeathUnitBase(this);
         EventsManager.InvokeOnKill(killer, this);
@@ -159,9 +162,9 @@ public class Building : UnitBase
         //Race_ = Race.noRace;
     }
 
-    public override void CalculateDamageTakenAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
+    public override IEnumerator CalculateDamageTakenAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
     {
-        base.CalculateDamageTakenAndTakeDamage(before, unit, damageType, damage);
+        yield return base.CalculateDamageTakenAndTakeDamage(before, unit, damageType, damage);
         if (!before) { RebalanceHoldAfterTakingHPDamage(damage, unit); }
     }
 

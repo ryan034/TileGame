@@ -33,7 +33,7 @@ public class UnitBaseXml
         public string name;
         public string target;
         public string code;
-        public string animation;
+        //public string animation;
     }
     public struct BuildingConversion
     {

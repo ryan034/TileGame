@@ -10,11 +10,11 @@ public class UnitAnimator : MonoBehaviour
 
     private IEnumerator WaitForAnimation(string s)
     {
+        yield return new WaitForSeconds(2f);
         while (IsPlaying(s))
         {
             yield return null;
         }
-        yield break;
     }
 
     private IEnumerator WaitForDuration(float duration)
@@ -101,59 +101,19 @@ public class UnitAnimator : MonoBehaviour
         //animator.Play(code);
         animator.Play(code, 0, 0f);
     }
-
     /*
-    public IEnumerator ParseAnimation(StackItem stackItem)
-    {
-        CodeObject code = stackItem.animationCode;
-        if (code.Task == "Animate")
-        {
-            if (code.GetVariable("to") != "")
-            {
-                UnitBase u;
-                string indexCode = code.GetVariable("to");
-                switch (indexCode[0])
-                {
-                    case 'u':
-                        u = stackItem.unitData[int.Parse(indexCode.Substring(1))];
-                        break;
-                    case 'b':
-                        u = stackItem.buildingData[int.Parse(indexCode.Substring(1))];
-                        break;
-                    default:
-                        u = stackItem.unitBaseData[int.Parse(indexCode)];
-                        break;
-                }
-                Manager.UnitTransformManager.RotateTo(unitBase, u.Tile.LocalPlace);
-            }
-            if (code.GetVariable("animation") != "")
-            {
-                animator.Play(code.GetVariable("animation"));
-            }
-            if (code.GetVariable("duration") == "finish")
-            {
-                //int i = int.Parse(code.GetVariable("duration"));
-                yield return StartCoroutine(WaitForAnimation(code.GetVariable("animation")));
-            }
-            else
-            {
-                yield return StartCoroutine(WaitForDuration(int.Parse(code.GetVariable("duration"))));
-            }
-        }
-    }*/
-
     public IEnumerator DestroyUnit()
     {
         yield return PlayAnimationAndFinish("Death");
         Destroy(gameObject);
     }
-    /*
+
     public IEnumerator PlayWaitForDuration(float v)
     {
         yield return StartCoroutine(WaitForDuration(v));
     }*/
 
-    public IEnumerator PlayAnimationAndFinish(string s)
+    public IEnumerator StartCoroutinePlayAnimationAndFinish(string s)
     {
         Animate(s);
         yield return StartCoroutine(WaitForAnimation(s));

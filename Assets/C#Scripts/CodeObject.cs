@@ -5,8 +5,8 @@ using System.Xml.Linq;
 
 public class CodeObject
 {
-    private Dictionary<string, string> variablesSingle = new Dictionary<string, string>();
-    private List<KeyValuePair<string, CodeObject>> functionsList = new List<KeyValuePair<string, CodeObject>>();
+    //private Dictionary<string, string> variablesSingle = new Dictionary<string, string>();
+    private Dictionary<string, List<CodeObject>> functionsList = new Dictionary<string, List<CodeObject>>();
     private Dictionary<string, List<string>> variablesList = new Dictionary<string, List<string>>();
 
     // all variablesSingle contribute to control of codeobject: 
@@ -32,7 +32,12 @@ public class CodeObject
                     result.variablesList[i.Name.LocalName] = new List<string>();
                     i.Elements().ToList().ForEach(x => { result.variablesList[i.Name.LocalName].Add(x.Value); });
                 }
-                else result.functionsList.Add(new KeyValuePair<string, CodeObject>(i.Name.LocalName, LoadCode(null, i))); //if it's not a collection, but it has child elements then it's either a complex property or a simple property create a property with the current child elements name and process its properties
+                else
+                {
+                    if (result.functionsList.ContainsKey(i.Name.LocalName)) { result.functionsList[i.Name.LocalName].Add(LoadCode(null, i)); }
+                    else { result.functionsList[i.Name.LocalName] = new List<CodeObject>() { LoadCode(null, i) }; }
+                }
+                //result.functionsList.Add(new KeyValuePair<string, CodeObject>(i.Name.LocalName, LoadCode(null, i))); //if it's not a collection, but it has child elements then it's either a complex property or a simple property create a property with the current child elements name and process its properties
             }
             else
             {
@@ -40,7 +45,9 @@ public class CodeObject
                 {
                     //Debug.Log(i.Name.LocalName);
                     //Debug.Log(i.Value);
-                    result.variablesSingle[i.Name.LocalName] = i.Value; // create a property and just add the value
+                    //result.variablesList[i.Name.LocalName] = i.Value; // create a property and just add the value
+                    if (result.variablesList.ContainsKey(i.Name.LocalName)) { result.variablesList[i.Name.LocalName].Add(i.Value); }
+                    else { result.variablesList[i.Name.LocalName] = new List<string>() { i.Value }; }
                 }
                 else
                 {
@@ -55,15 +62,12 @@ public class CodeObject
     {
         get
         {
-            foreach (KeyValuePair<string, CodeObject> s in functionsList)
-            {
-                if (s.Key == "true" || s.Key == "false") { return true; }
-            }
+            if (functionsList.ContainsKey("true") || functionsList.ContainsKey("false")) { return true; }
             return false;
         }
     }
 
-    public string GetVariable(string s) { if (variablesSingle.ContainsKey(s)) { return variablesSingle[s]; } else { return ""; } }
+    public string GetVariable(string s) => variablesList.ContainsKey(s) ? variablesList[s][0] : "";
 
     public ReadOnlyCollection<string> GetListVariables(string s)
     {
@@ -71,15 +75,18 @@ public class CodeObject
         {
             return variablesList[s].AsReadOnly();
         }
-        return null;
+        return new List<string>().AsReadOnly();
     }
 
-    public IEnumerable<CodeObject> GetCodeObjects(string s)
+    public CodeObject GetCodeObject(string s) => functionsList.ContainsKey(s) ? functionsList[s][0] : null;
+
+    public ReadOnlyCollection<CodeObject> GetCodeObjects(string s)
     {
-        foreach (KeyValuePair<string, CodeObject> f in functionsList)
+        if (functionsList.ContainsKey(s))
         {
-            if (f.Key == s) { yield return f.Value; }
+            return functionsList[s].AsReadOnly();
         }
+        return new List<CodeObject>().AsReadOnly();
     }
     /*
     private static string Pluralize(string localName)

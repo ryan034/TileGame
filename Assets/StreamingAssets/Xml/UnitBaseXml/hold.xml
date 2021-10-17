@@ -4,6 +4,28 @@
   <buffs>
   </buffs>
   <abilitiesCode>
+    <ActiveAbility>
+      <name>Archer</name>
+      <target>
+        <![CDATA[<CodeObject>
+          <task>OnSite</task>
+          <targets>
+            <target>noUnitOnThisTile</target>
+            <target>thisUnitBase</target>
+            <target>thisLocalPlace</target>
+          </targets>
+        </CodeObject>]]>
+      </target>
+      <code>
+        <![CDATA[<CodeObject>
+          <task>IsAlive</task>
+          <true>
+            <task>SpawnUnit</task>
+            <unitID>archer</unitID>
+          </true>
+        </CodeObject>]]>
+      </code>
+    </ActiveAbility>
   </abilitiesCode>
   <unitTags>
   </unitTags>

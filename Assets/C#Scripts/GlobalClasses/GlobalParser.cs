@@ -1,7 +1,7 @@
-using System;
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
-
+using System.Linq;
 public static class GlobalParser
 {
 
@@ -30,13 +30,14 @@ public static class GlobalParser
         return v;
     }
 
-    public static void Parse(StackItem data, CodeObject currentCode = null, bool before = false)
+    public static IEnumerator Parse(StackItem data, CodeObject currentCode = null, bool before = false, bool mainPhase = false)
     {
         if (currentCode == null) { currentCode = data.code; }
-        if (data.mainPhase && data.code.Task == "Attack")
+        if (mainPhase && data.code.Task == "Attack")
         {
             //implement battle
-            data.mainPhase = false;
+            Debugger.AddToLog("Main Attack " + (before ? "before resolution" : "after resolution"));
+            //data.mainPhase = false;
             for (int i = 0; i < data.unitBaseData.Count; i++)
             {
                 foreach (string s in data.unitBaseData[i].Abilities)
@@ -46,32 +47,36 @@ public static class GlobalParser
                     {
                         int targetSpeed = data.unitBaseData[i].GetLogicCode(s).GetVariable("speed") == "" ? 0 : int.Parse(data.unitBaseData[i].GetLogicCode(s).GetVariable("speed"));
                         int speed = currentCode.GetVariable("speed") == "" ? 0 : int.Parse(currentCode.GetVariable("speed"));
-                        if (targetSpeed - speed >= 1)
+                        if (targetSpeed - (speed + 1) >= 1)
                         {
-                            Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), s, data.unitBaseData[i], data.unitBaseData[i].GetAnimationCode(s), null, new List<UnitBase>() { data.owner }, null, null, null), null, before);
-                            Parse(data, data.code, before);
+                            Debugger.AddToLog("Attack is slower than target");
+                            yield return Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), s, data.unitBaseData[i], unitBaseData: new List<UnitBase>() { data.owner }), before: before);
+                            yield return Parse(data, data.code, before);
                         }
-                        else if (targetSpeed == speed)
+                        else if (targetSpeed == (speed + 1))
                         {
+                            Debugger.AddToLog("Attack at same time");
                             //units attack eachother at the same time
                             //int damage = attackerUnit.CalculateAttackDamage(attackerBaseDamage, attackerDiceDamage, attackerDiceTimes, CoverBonus);
                             //Parse(new StackItem(GetLogicCode(abilityForCounterAttack), abilityForCounterAttack, this, GetAnimationCode(abilityForCounterAttack), null, new List<UnitBase>() { attackerUnit }, null, null, null), null, before);
                             //CalculateDamageTakenAndTakeDamage(before, attackerUnit, attackerDamageType, damage);
                         }
-                        else if (targetSpeed - speed == -1)
+                        else if (targetSpeed - (speed + 1) == -1)
                         {
-                            Parse(data, data.code, before);
-                            Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), s, data.unitBaseData[i], data.unitBaseData[i].GetAnimationCode(s), null, new List<UnitBase>() { data.owner }, null, null, null), null, before);
+                            Debugger.AddToLog("Attack is faster than target");
+                            yield return Parse(data, data.code, before);
+                            yield return Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), s, data.unitBaseData[i], unitBaseData: new List<UnitBase>() { data.owner }), before: before);
                         }
-                        else if (targetSpeed - speed <= -2)
+                        else if (targetSpeed - (speed + 1) <= -2)
                         {
-                            Parse(data, data.code, before);
+                            Debugger.AddToLog("Attack is unretaliated");
+                            yield return Parse(data, data.code, before);
                         }
                         break;
                     }
                 }
             }
-            return;
+            yield break;
         }
         if (currentCode.IsConditional)
         {
@@ -81,23 +86,23 @@ public static class GlobalParser
             {
                 foreach (CodeObject c in currentCode.GetCodeObjects("true"))
                 {
-                    Parse(data, c, before);
+                    yield return Parse(data, c, before);
                 }
             }
             else
             {
                 foreach (CodeObject c in currentCode.GetCodeObjects("false"))
                 {
-                    Parse(data, c, before);
+                    yield return Parse(data, c, before);
                 }
             }
         }
         else
         {
-            ParseCode(currentCode, data, before);
+            yield return ParseCode(currentCode, data, before);
             foreach (CodeObject c in currentCode.GetCodeObjects("next"))
             {
-                Parse(data, c, before);
+                yield return Parse(data, c, before);
             }
         }
     }
@@ -161,14 +166,15 @@ public static class GlobalParser
         return false;
     }
 
-    public static void ParseCode(CodeObject code, StackItem data, bool before)
+
+    public static IEnumerator ParseCode(CodeObject code, StackItem data, bool before)
     {
         switch (code.Task)
         {
             case "Attack": // only refers to main attack
                 Debugger.AddToLog("Parse Attack " + (before ? "before resolution" : "after resolution"));
                 //int toCode = code.GetVariable("to") == "" ? 0 : int.Parse(code.GetVariable("to"));
-                data.owner.DamageTarget(before, data.unitBaseData[0], int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")));
+                yield return data.owner.DamageTarget(before, data.unitBaseData[0], int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")), code.GetCodeObject("animation") );
                 break;
             case "CounterAttack": //refers to when a unit is forced to attack another outside of main attack
                 Debugger.AddToLog("Parse CounterAttack " + (before ? "before resolution" : "after resolution"));
@@ -204,7 +210,7 @@ public static class GlobalParser
                     CodeObject c = u.GetTargetCode(s);
                     if (c.Task == "Attack" && Manager.TileManager.AttackableAndHostileTo(u, v, c.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), u, v))
                     {
-                        Parse(new StackItem(u.GetLogicCode(s), s, u, u.GetAnimationCode(s), null, new List<UnitBase>() { v }, null, null, null), null, before); //parse the counter attack and send it
+                        yield return Parse(new StackItem(u.GetLogicCode(s), s, u, unitBaseData: new List<UnitBase>() { v }), before: before); //parse the attack and send it
                         break;
                     }
                 }
@@ -213,13 +219,15 @@ public static class GlobalParser
                 Debugger.AddToLog("Parse Capture " + (before ? "before resolution" : "after resolution"));
                 int to = code.GetVariable("to") == "" ? 0 : int.Parse(code.GetVariable("to"));
                 int from = code.GetVariable("from") == "" ? 0 : int.Parse(code.GetVariable("from"));
-                data.unitData[from].Capture(before, data.buildingData[to], int.Parse(code.GetVariable("captureDamage")));
-                return;
+                yield return data.unitData[from].Capture(before, data.buildingData[to], int.Parse(code.GetVariable("captureDamage")), code.GetCodeObject("animation"));
+                break;
             case "SpawnUnit":
                 Debugger.AddToLog("Parse SpawnUnit " + (before ? "before resolution" : "after resolution"));
                 from = code.GetVariable("from") == "" ? 0 : int.Parse(code.GetVariable("from"));
-                data.unitBaseData[from].SpawnUnit(before, data.vectorData, code.GetVariable("unitID"), data.unitBaseData[0].Team);
-                return;
+                //data.unitBaseData[from].SpawnUnit(before, data.vectorData, code.GetVariable("unitID"), data.unitBaseData[from].Team, code.GetCodeObject("animation"));
+                break;
+            //default:
+                //yield break;
         }
     }
 
@@ -323,7 +331,7 @@ public static class GlobalParser
         return false;
     }
 
-    public static void ChooseMenuAbility(string abilityKey, CodeObject abilityTargetCode, CodeObject abilityLogicCode, CodeObject abilityAnimation, UnitBase owner)
+    public static void ChooseMenuAbility(string abilityKey, CodeObject abilityTargetCode, CodeObject abilityLogicCode, UnitBase owner)
     {
         switch (abilityTargetCode.Task)
         {
@@ -354,9 +362,15 @@ public static class GlobalParser
                         case "thisUnit":
                             uList.Add(owner.Tile.Unit);
                             break;
+                        case "thisUnitBase":
+                            uBList.Add(owner.Tile.Building);
+                            break;
+                        case "thisLocalPlace":
+                            vList.Add(owner.Tile.LocalPlace);
+                            break;
                     }
                 }
-                Manager.EventsManager.AddToStack(abilityLogicCode, abilityKey, owner, abilityAnimation, iList, uBList, uList, bList, vList);
+                Manager.EventsManager.AddToStack(abilityLogicCode, abilityKey, owner, iList, uBList, uList, bList, vList);
                 return;
         }
     }

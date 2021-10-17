@@ -31,7 +31,7 @@ public class BuffXml
         public string event_;
         public string trigger;
         public string code;
-        public string animation;
+        //public string animation;
     }
 
     public static BuffXml Load(string file)

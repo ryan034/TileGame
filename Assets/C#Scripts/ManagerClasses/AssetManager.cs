@@ -21,6 +21,7 @@ public class AssetManager : MonoBehaviour
     {
         if (asset != "")
         {
+            Debug.Log("asset" + asset);
             if (!unitBaseCache.ContainsKey(asset))
             {
                 if (File.Exists(unitModAssetPath + asset + '/' + asset))
@@ -52,7 +53,7 @@ public class AssetManager : MonoBehaviour
             p.transform.parent = rootGameObject.transform;
             Unit unit = rootGameObject.GetComponent<Unit>();
             UnitBaseData data = LoadUnitBaseData(asset);
-            unit.Load(true, localPlace, data, unitTeam);
+            unit.Load(initial, localPlace, data, unitTeam);
             return unit;
         }
         return null;
@@ -93,7 +94,7 @@ public class AssetManager : MonoBehaviour
             p.transform.parent = rootGameObject.transform;
             Building building = rootGameObject.GetComponent<Building>();
             UnitBaseData data = LoadUnitBaseData(asset);
-            building.Load(true, localPlace, data, buildingTeam);
+            building.Load(initial, localPlace, data, buildingTeam);
             return building;
         }
         return null;

@@ -6,7 +6,7 @@ using static GlobalData;
 
 public class UnitTransformManager : MonoBehaviour
 {
-    public void QueuePath(Unit unit, List<Vector3Int> path)
+    public void StartCoroutineQueuePath(Unit unit, List<Vector3Int> path)
     {
         StartCoroutine(SmoothLerp(unit, path));
     }
