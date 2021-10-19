@@ -109,7 +109,7 @@ public class EventsManager : MonoBehaviour
     {
         Debugger.AddToLog("added to stack " + name);
         int i = currentStack.Count;
-        StackItem s = new StackItem(code, name, owner, intData, targetData, unitTargetData, buildingTargetData, vectorData);
+        StackItem s = new StackItem(code, owner, name, intData, targetData, unitTargetData, buildingTargetData, vectorData);
         currentStack.Add(s);
         Parse(s, before: true, mainPhase: mainPhase);
         if (i == 0) { StartCoroutine(ResolveStack()); }

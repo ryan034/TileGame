@@ -7,7 +7,6 @@ using static GlobalData;
 using static GlobalFunctions;
 using static GlobalParser;
 using static GlobalAnimationParser;
-using System.Threading.Tasks;
 
 public abstract class UnitBase : MonoBehaviour
 {
@@ -186,7 +185,7 @@ public abstract class UnitBase : MonoBehaviour
 
     //public IEnumerator PlayWaitForDuration(float v) => animator.PlayWaitForDuration(v);
 
-    public IEnumerator PlayAnimationAndFinish(string v) => animator.StartCoroutinePlayAnimationAndFinish(v);
+    public IEnumerator PlayAnimationAndFinish(string v) => animator.PlayAnimationAndFinish(v);
 
     public void SetUp(List<string> menu)
     {
@@ -239,17 +238,17 @@ public abstract class UnitBase : MonoBehaviour
         return b;
     }
 
-    /*
-    public List<Unit> SpawnUnit(bool before, List<Vector3Int> tile, string script, int unitTeam, CodeObject c)
+
+    public IEnumerator SpawnUnit(bool before, List<Vector3Int> tile, string script, int unitTeam, CodeObject c)
     {
-        if (before) { EventsManager.InvokeOnBeforeSpawnUnit(this); return null; }
+        if (before) { EventsManager.InvokeOnBeforeSpawnUnit(this); }//return null; }
         else
         {
             //Manager.AnimationManager.AddToAnimationQueue(c, this);
 
             if (c != null)
             {
-                yield return ParseAnimation(new StackItem(c, "spawn animation", this));
+                yield return ParseAnimation(new StackItem(c, this));
             }
             else
             {
@@ -263,31 +262,31 @@ public abstract class UnitBase : MonoBehaviour
                 if (unit != null) { units.Add(unit); unit.Actioned = true; }
             }
             EventsManager.InvokeOnSpawnUnit(this, units);
-            return units;
-        }
-    }*/
-
-    public async Task<List<Unit>> SpawnUnit(bool before, List<Vector3Int> tile, string script, int unitTeam, CodeObject c)
-    {
-        if (before) { EventsManager.InvokeOnBeforeSpawnUnit(this); return null; }
-        else
-        {
-            if (c != null)
-            {
-                //await ParseAnimation(new StackItem(c, "spawn animation", this));
-                //yield return ParseAnimation(new StackItem(c, "spawn animation", this));
-            }
-            Actioned = true;
-            List<Unit> units = new List<Unit>();
-            foreach (Vector3Int t in tile)
-            {
-                Unit unit = Manager.TileManager.SpawnUnit(t, script, unitTeam);
-                if (unit != null) { units.Add(unit); unit.Actioned = true; }
-            }
-            EventsManager.InvokeOnSpawnUnit(this, units);
-            return units;
+            //return units;
         }
     }
+    /*
+    public async Task<List<Unit>> SpawnUnit(bool before, List<Vector3Int> tile, string script, int unitTeam, CodeObject c)
+    {
+    if (before) { EventsManager.InvokeOnBeforeSpawnUnit(this); return null; }
+    else
+    {
+        if (c != null)
+        {
+            //await ParseAnimation(new StackItem(c, "spawn animation", this));
+            //yield return ParseAnimation(new StackItem(c, "spawn animation", this));
+        }
+        Actioned = true;
+        List<Unit> units = new List<Unit>();
+        foreach (Vector3Int t in tile)
+        {
+            Unit unit = Manager.TileManager.SpawnUnit(t, script, unitTeam);
+            if (unit != null) { units.Add(unit); unit.Actioned = true; }
+        }
+        EventsManager.InvokeOnSpawnUnit(this, units);
+        return units;
+    }
+}*/
 
     public IEnumerator DamageTarget(bool before, UnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType, CodeObject c)
     {
@@ -299,7 +298,7 @@ public abstract class UnitBase : MonoBehaviour
         {
             if (c != null)
             {
-                yield return ParseAnimation(new StackItem(c, "damage animation", this));
+                yield return ParseAnimation(new StackItem(c, this));
             }
             else
             {

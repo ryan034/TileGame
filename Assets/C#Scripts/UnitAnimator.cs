@@ -17,10 +17,11 @@ public class UnitAnimator : MonoBehaviour
         }
     }
 
+    /*
     private IEnumerator WaitForDuration(float duration)
     {
         yield return new WaitForSeconds(duration);
-    }
+    }*/
 
     public void Load(UnitBase unitBase)
     {
@@ -113,10 +114,10 @@ public class UnitAnimator : MonoBehaviour
         yield return StartCoroutine(WaitForDuration(v));
     }*/
 
-    public IEnumerator StartCoroutinePlayAnimationAndFinish(string s)
+    public IEnumerator PlayAnimationAndFinish(string s)
     {
         Animate(s);
-        yield return StartCoroutine(WaitForAnimation(s));
+        return WaitForAnimation(s);
     }
 
     public bool IsPlaying(string animationCode)

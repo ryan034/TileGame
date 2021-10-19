@@ -50,7 +50,7 @@ public static class GlobalParser
                         if (targetSpeed - (speed + 1) >= 1)
                         {
                             Debugger.AddToLog("Attack is slower than target");
-                            yield return Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), s, data.unitBaseData[i], unitBaseData: new List<UnitBase>() { data.owner }), before: before);
+                            yield return Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), data.unitBaseData[i], s, unitBaseData: new List<UnitBase>() { data.owner }), before: before);
                             yield return Parse(data, data.code, before);
                         }
                         else if (targetSpeed == (speed + 1))
@@ -65,7 +65,7 @@ public static class GlobalParser
                         {
                             Debugger.AddToLog("Attack is faster than target");
                             yield return Parse(data, data.code, before);
-                            yield return Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), s, data.unitBaseData[i], unitBaseData: new List<UnitBase>() { data.owner }), before: before);
+                            yield return Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), data.unitBaseData[i], s, unitBaseData: new List<UnitBase>() { data.owner }), before: before);
                         }
                         else if (targetSpeed - (speed + 1) <= -2)
                         {
@@ -174,7 +174,7 @@ public static class GlobalParser
             case "Attack": // only refers to main attack
                 Debugger.AddToLog("Parse Attack " + (before ? "before resolution" : "after resolution"));
                 //int toCode = code.GetVariable("to") == "" ? 0 : int.Parse(code.GetVariable("to"));
-                yield return data.owner.DamageTarget(before, data.unitBaseData[0], int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")), code.GetCodeObject("animation") );
+                yield return data.owner.DamageTarget(before, data.unitBaseData[0], int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")), code.GetCodeObject("animation"));
                 break;
             case "CounterAttack": //refers to when a unit is forced to attack another outside of main attack
                 Debugger.AddToLog("Parse CounterAttack " + (before ? "before resolution" : "after resolution"));
@@ -210,7 +210,7 @@ public static class GlobalParser
                     CodeObject c = u.GetTargetCode(s);
                     if (c.Task == "Attack" && Manager.TileManager.AttackableAndHostileTo(u, v, c.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), u, v))
                     {
-                        yield return Parse(new StackItem(u.GetLogicCode(s), s, u, unitBaseData: new List<UnitBase>() { v }), before: before); //parse the attack and send it
+                        yield return Parse(new StackItem(u.GetLogicCode(s), u, s, unitBaseData: new List<UnitBase>() { v }), before: before); //parse the attack and send it
                         break;
                     }
                 }
@@ -224,9 +224,9 @@ public static class GlobalParser
             case "SpawnUnit":
                 Debugger.AddToLog("Parse SpawnUnit " + (before ? "before resolution" : "after resolution"));
                 from = code.GetVariable("from") == "" ? 0 : int.Parse(code.GetVariable("from"));
-                //data.unitBaseData[from].SpawnUnit(before, data.vectorData, code.GetVariable("unitID"), data.unitBaseData[from].Team, code.GetCodeObject("animation"));
+                yield return data.unitBaseData[from].SpawnUnit(before, data.vectorData, code.GetVariable("unitID"), data.unitBaseData[from].Team, code.GetCodeObject("animation"));
                 break;
-            //default:
+                //default:
                 //yield break;
         }
     }

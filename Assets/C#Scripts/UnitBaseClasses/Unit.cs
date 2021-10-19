@@ -47,7 +47,7 @@ public class Unit : UnitBase
         {
             if (c != null)
             {
-                yield return ParseAnimation(new StackItem(c, "capture animation", this));
+                yield return ParseAnimation(new StackItem(c, this));
             }
             else
             {

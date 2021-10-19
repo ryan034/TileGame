@@ -27,7 +27,7 @@ public class StackItem
     }
     */
 
-    public StackItem(CodeObject code, string name, UnitBase owner, List<int> intData = null, List<UnitBase> unitBaseData = null, List<Unit> unitData = null, List<Building> buildingData = null, List<Vector3Int> vectorData = null)
+    public StackItem(CodeObject code, UnitBase owner, string name = "", List<int> intData = null, List<UnitBase> unitBaseData = null, List<Unit> unitData = null, List<Building> buildingData = null, List<Vector3Int> vectorData = null)
     {
         this.code = code;
         this.name = name;
