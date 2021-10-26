@@ -8,19 +8,26 @@ using static GlobalFunctions;
 using static GlobalParser;
 using static GlobalAnimationParser;
 
-public abstract class UnitBase : MonoBehaviour
+public abstract class UnitBase : MonoBehaviour, IUnitBase
 {
+    protected static TileManager tileManager = TileManager.GlobalInstance;
+    protected static PlayerManager playerManager = PlayerManager.GlobalInstance;
+    protected static EventsManager eventsManager;
+    protected static AssetManager assetManager;
+
     protected UnitAnimator animator;
     protected InternalVariables internalVariables;
 
     protected string abilityKey;
 
-    protected List<Unit> unitList = new List<Unit>();
-    protected List<Building> buildingList = new List<Building>();
+    protected List<IUnit> unitList = new List<IUnit>();
+    protected List<IBuilding> buildingList = new List<IBuilding>();
     protected List<Vector3Int> vectorList = new List<Vector3Int>();
     protected List<int> intList = new List<int>();
-    protected List<UnitBase> unitBaseList = new List<UnitBase>();
+    protected List<IUnitBase> unitBaseList = new List<IUnitBase>();
     public int TargetCount => unitList.Count + buildingList.Count + vectorList.Count + intList.Count + unitBaseList.Count;
+
+    public Vector3 Forward { get => transform.forward; set { transform.forward = value; } }
 
     protected List<Buff> buffs = new List<Buff>();
 
@@ -70,7 +77,7 @@ public abstract class UnitBase : MonoBehaviour
         }
     }
 
-    public UnitBaseData UnitData { get; protected set; }
+    protected UnitBaseData UnitData;
 
     public string Name => UnitData.name;
     public string Race => UnitData.race;
@@ -79,6 +86,7 @@ public abstract class UnitBase : MonoBehaviour
 
     public int DayVision => UnitData.dayVision + buffs.Sum(x => x.dayVision);
     public int NightVision => UnitData.nightVision + buffs.Sum(x => x.nightVision);
+    public int Vision => playerManager.IsDay ? TerrainVision(Tile.TerrainType, MovementType, DayVision) : TerrainVision(Tile.TerrainType, MovementType, NightVision);
     public int HPMax => UnitData.hP + buffs.Sum(x => x.hP);
     public int MPMax => UnitData.mP + buffs.Sum(x => x.mP);
     public int Armour => UnitData.armour + buffs.Sum(x => x.armour);
@@ -86,9 +94,13 @@ public abstract class UnitBase : MonoBehaviour
     public bool Disarmed => buffs.Select(x => x.disarmed).Contains(true);
     public bool Silenced => buffs.Select(x => x.silenced).Contains(true);
 
+    public bool CurrentTurn => SameTeam(playerManager.TeamTurn);
+
     public int HPCurrent => HPMax - DamageTaken;
     public int MPCurrent => MPMax - ManaUsed;
     public double HPPercentage => Math.Max((double)HPCurrent / HPMax, 0);
+    public double MPPercentage => Math.Max((double)MPCurrent / MPMax, 0);
+
     public int Team { get => internalVariables.team; set { internalVariables.team = value; Tile.RefreshSprite(); } }
 
     public bool Actioned { get => internalVariables.actioned; set { internalVariables.actioned = value; Tile.RefreshSprite(); } } //alreadymoved and attacked
@@ -96,7 +108,7 @@ public abstract class UnitBase : MonoBehaviour
 
     public IEnumerable<string> Abilities => UnitData.Abilities;
 
-    public TileObject Tile => Manager.TileManager.GetTile(this);
+    public virtual TileObject Tile { get; protected set; }
 
     public virtual int CoverBonus => terrainDefenseMatrix[MovementType, Tile.TerrainType];
 
@@ -109,8 +121,11 @@ public abstract class UnitBase : MonoBehaviour
         public int manaUsed;
     }
 
+    public static void EndAndStartNextTurn() { playerManager.IncrementTurn(); tileManager.EndAndStartNextTurn(playerManager.TeamTurn); }
+
     public virtual void Load(bool initial, Vector3Int localPlace, UnitBaseData data, int team)
     {
+        tileManager.AddUnitBase(this);
         internalVariables = new InternalVariables();
         animator = gameObject.AddComponent<UnitAnimator>();
         animator.Load(this);
@@ -119,10 +134,12 @@ public abstract class UnitBase : MonoBehaviour
         {
             buffs.Add(Buff.Load(this, s));
         }
-        Manager.UnitTransformManager.SnapMove(this, localPlace);
+        SnapMove(localPlace);
         EventsManager.OnObjectDestroyUnitBase += OnObjectDestroyUnitBase;
         EventsManager.OnObjectDestroyUnit += OnObjectDestroyUnit;
         EventsManager.OnObjectDestroyBuilding += OnObjectDestroyBuilding;
+        eventsManager = Manager.EventsManager;
+        assetManager = Manager.AssetManager;
     }
 
     public virtual bool SameTeam(int team_) => team_ == Team;
@@ -131,12 +148,20 @@ public abstract class UnitBase : MonoBehaviour
 
     public virtual void RefreshSprite() => animator.RefreshUnitSprite();
 
-    public virtual IEnumerator DestroyThis(UnitBase killer)
+    public virtual void MoveToTile(TileObject destination)
+    {
+        //Tile.Unit = null;
+        //Tile.MoveUnitFromTileTo(destination, this);
+        Tile = destination;
+        //Tile.Unit = unit;
+    }
+
+    public virtual IEnumerator DestroyThis(IUnitBase killer)
     {
         yield return PlayAnimationAndFinish("Death");
         EventsManager.InvokeOnDeathUnitBase(this);
         EventsManager.InvokeOnKill(killer, this);
-        Manager.TileManager.DestroyUnitBase(this); /*deference everything from here and change state to destroyed*/
+        tileManager.DestroyUnitBase(this); /*deference everything from here and change state to destroyed*/
         foreach (Buff buff in buffs) { buff.Destroy(); }
         EventsManager.OnObjectDestroyUnitBase -= OnObjectDestroyUnitBase;
         EventsManager.OnObjectDestroyUnit -= OnObjectDestroyUnit;
@@ -144,7 +169,7 @@ public abstract class UnitBase : MonoBehaviour
         EventsManager.InvokeOnObjectDestroyUnitBase(this);
     }
 
-    public virtual IEnumerator CalculateDamageTakenAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
+    public virtual IEnumerator CalculateDamageTakenAndTakeDamage(bool before, IUnitBase unit, int damageType, int damage)
     {
         //add take damage event here
         int damageCalculated = (int)Math.Round(GetResistance(damageType) * damage);
@@ -187,6 +212,26 @@ public abstract class UnitBase : MonoBehaviour
 
     public IEnumerator PlayAnimationAndFinish(string v) => animator.PlayAnimationAndFinish(v);
 
+    public void AddToStack(CodeObject abilityLogicCode, string abilityKey, List<int> iList, List<IUnitBase> uBList, List<IUnit> uList, List<IBuilding> bList, List<Vector3Int> vList, bool mainPhase = false) => eventsManager.AddToStack(abilityLogicCode, abilityKey, this, iList, uBList, uList, bList, vList, mainPhase);
+
+    public void SnapMove(Vector3Int v)
+    {
+        transform.position = LocalToWorld(v);
+    }
+
+    public void SetForward(Vector3 v)
+    {
+        Forward = v;
+    }
+
+    public void RotateTo(Vector3Int v)
+    {
+        if (Vector3.Distance(LocalToWorld(v), transform.position) > 0.01f)
+        {
+            transform.forward = LocalToWorld(v) - transform.position;
+        }
+    }
+
     public void SetUp(List<string> menu)
     {
         foreach (string s in Abilities)
@@ -216,11 +261,56 @@ public abstract class UnitBase : MonoBehaviour
     {
         if (ValidateTargetAndCommit(abilityKey, GetTargetCode(abilityKey), this, target, buildingList, unitList, unitBaseList, vectorList, intList))
         {
-            Manager.EventsManager.AddToStack(GetLogicCode(abilityKey), abilityKey, this, intList, unitBaseList, unitList, buildingList, vectorList, true);
+            AddToStack(GetLogicCode(abilityKey), abilityKey, intList, unitBaseList, unitList, buildingList, vectorList, true);
+            TileObject.WipeTiles();
         }
     }
 
-    public bool CanHit(UnitBase unitBase, string attackType)
+    public bool VisibleAndHostileTo(int team_)
+    {
+        if (!SameTeam(team_) && !Charming)
+        {
+            //TileObject tileOfTarget = Tile;
+            //int targetTerrain = tileOfTarget.TerrainType;
+            if (team_ == playerManager.TeamTurn) { return !Invisible && Tile.CanSee; };
+            return tileManager.VisibleAndHostileTo(team_, this);
+            /*
+            foreach (IUnitBase unitLooking in unitBases)
+            {
+                if (unitLooking.SameTeam(team_))
+                {
+                    TileObject tileOfLooker = unitLooking.Tile;
+                    int terrain = tileOfLooker.TerrainType;
+                    int movement = unitLooking.MovementType;
+                    //int vision = Manager.PlayerManager.IsDay ? TerrainVision(terrain, movement, unitLooking.DayVision) : TerrainVision(terrain, movement, unitLooking.NightVision);
+                    if (Distance(tileOfLooker.LocalPlace, tileOfTarget.LocalPlace) > unitLooking.Vision)
+                    {
+                        seen = false;
+                    }
+                    else if (CanSee(terrain, targetTerrain, movement))
+                    {
+                        seen = !Invisible;
+                        if (seen)
+                        { return seen; }
+                    }
+                }
+            }*/
+        }
+        return false;
+    }
+
+
+    public bool WithinRange(int min, int max, IUnitBase targetUnit)
+    {
+        return Distance(targetUnit.Tile.LocalPlace, Tile.LocalPlace) >= min && Distance(targetUnit.Tile.LocalPlace, Tile.LocalPlace) <= max;
+    }
+
+    public bool CanAttackAndHostileTo(IUnitBase defender, string attackType)
+    {
+        return CanHit(defender, attackType) && defender.VisibleAndHostileTo(Team) && defender.HPCurrent > 0;
+    }
+
+    public bool CanHit(IUnitBase unitBase, string attackType)
     {
         bool b = false;
         switch (attackType)
@@ -244,51 +334,38 @@ public abstract class UnitBase : MonoBehaviour
         if (before) { EventsManager.InvokeOnBeforeSpawnUnit(this); }//return null; }
         else
         {
-            //Manager.AnimationManager.AddToAnimationQueue(c, this);
-
             if (c != null)
             {
                 yield return ParseAnimation(new StackItem(c, this));
             }
             else
             {
-                yield return PlayAnimationAndFinish("spawn");
+                //yield return PlayAnimationAndFinish("Spawn");
             }
             Actioned = true;
-            List<Unit> units = new List<Unit>();
+            List<IUnit> units = new List<IUnit>();
             foreach (Vector3Int t in tile)
             {
-                Unit unit = Manager.TileManager.SpawnUnit(t, script, unitTeam);
+                IUnit unit = TileObject.TileAt(t).Unit == null ? assetManager.InstantiateUnit(false, t, script, unitTeam) : null;
                 if (unit != null) { units.Add(unit); unit.Actioned = true; }
             }
             EventsManager.InvokeOnSpawnUnit(this, units);
             //return units;
         }
     }
-    /*
-    public async Task<List<Unit>> SpawnUnit(bool before, List<Vector3Int> tile, string script, int unitTeam, CodeObject c)
-    {
-    if (before) { EventsManager.InvokeOnBeforeSpawnUnit(this); return null; }
-    else
-    {
-        if (c != null)
-        {
-            //await ParseAnimation(new StackItem(c, "spawn animation", this));
-            //yield return ParseAnimation(new StackItem(c, "spawn animation", this));
-        }
-        Actioned = true;
-        List<Unit> units = new List<Unit>();
-        foreach (Vector3Int t in tile)
-        {
-            Unit unit = Manager.TileManager.SpawnUnit(t, script, unitTeam);
-            if (unit != null) { units.Add(unit); unit.Actioned = true; }
-        }
-        EventsManager.InvokeOnSpawnUnit(this, units);
-        return units;
-    }
-}*/
 
-    public IEnumerator DamageTarget(bool before, UnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType, CodeObject c)
+    public IEnumerable<TileObject> AddTargetTiles(int min, int max)
+    {
+        foreach (Vector3Int v in CircleCoords(min, max, Tile.LocalPlace))
+        {
+            if (tileManager.TileAt(v) != null)
+            {
+                yield return tileManager.TileAt(v);
+            }
+        }
+    }
+
+    public IEnumerator DamageTarget(bool before, IUnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType, CodeObject animationCode)
     {
         if (before)
         {
@@ -296,23 +373,24 @@ public abstract class UnitBase : MonoBehaviour
         }
         else
         {
-            if (c != null)
+            if (animationCode != null)
             {
-                yield return ParseAnimation(new StackItem(c, this));
+                yield return ParseAnimation(new StackItem(animationCode, this));
             }
             else
             {
                 //yield return default animation behaviour
                 Vector3 forward = transform.forward;
-                Manager.UnitTransformManager.RotateTo(this, target.Tile.LocalPlace);
+                RotateTo(target.Tile.LocalPlace);
                 yield return PlayAnimationAndFinish("Attack");
-                Manager.UnitTransformManager.RotateTo(this, forward);
+                SetForward(forward);
             }
         }
         int totaldamage = CalculateAttackDamage(baseDamage, diceDamage, diceTimes, target.CoverBonus);
         yield return target.CalculateDamageTakenAndTakeDamage(before, this, damageType, totaldamage);
         if (!before) { EventsManager.InvokeOnAttack(this, target); }
     }
+
 
     protected int CalculateAttackDamage(int baseDamage, int diceDamage, int diceTimes, int cover)
     {
@@ -321,7 +399,7 @@ public abstract class UnitBase : MonoBehaviour
 
     protected void ChangeForm(string form)
     {
-        UnitData = Manager.AssetManager.LoadUnitBaseData(form);
+        UnitData = assetManager.LoadUnitBaseData(form);
         animator.ChangeModel(form);
     }
 
@@ -332,9 +410,10 @@ public abstract class UnitBase : MonoBehaviour
         //some buffs may not stack but rather in duration
     }*/
 
-    protected void OnObjectDestroyUnitBase(UnitBase unit) { unitBaseList.Remove(unit); }
+    protected void OnObjectDestroyUnitBase(IUnitBase unit) { unitBaseList.Remove(unit); }
 
-    protected void OnObjectDestroyUnit(Unit unit) { unitList.Remove(unit); }
+    protected void OnObjectDestroyUnit(IUnit unit) { unitList.Remove(unit); }
 
-    protected void OnObjectDestroyBuilding(Building unit) { buildingList.Remove(unit); }
+    protected void OnObjectDestroyBuilding(IBuilding unit) { buildingList.Remove(unit); }
+
 }

@@ -48,13 +48,13 @@ public IEnumerator ParseAnimation(StackItem stackItem)
 
     public static IEnumerator ParseAnimation(StackItem stackItem)
     {
-        Vector3 forward = stackItem.owner.transform.forward;
+        Vector3 forward = stackItem.owner.Forward;
         CodeObject code = stackItem.code;
         if (code.Task == "Animate")
         {
             if (code.GetVariable("to") != "")
             {
-                UnitBase u;
+                IUnitBase u;
                 string indexCode = code.GetVariable("to");
                 switch (indexCode[0])
                 {
@@ -68,7 +68,7 @@ public IEnumerator ParseAnimation(StackItem stackItem)
                         u = stackItem.unitBaseData[int.Parse(indexCode)];
                         break;
                 }
-                Manager.UnitTransformManager.RotateTo(stackItem.owner, u.Tile.LocalPlace);
+                stackItem.owner.RotateTo(u.Tile.LocalPlace);
             }
             if (code.GetVariable("animation") != "")
             {
@@ -76,7 +76,7 @@ public IEnumerator ParseAnimation(StackItem stackItem)
                 yield return stackItem.owner.PlayAnimationAndFinish(code.GetVariable("animation"));
             }
         }
-        Manager.UnitTransformManager.RotateTo(stackItem.owner, forward);
+        stackItem.owner.SetForward(forward);
     }
 
     /*

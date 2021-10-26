@@ -27,6 +27,16 @@ public static class GlobalData
     //public static readonly Quaternion globalRotation = Quaternion.Euler(-40, 0, 0);
     //public static readonly Quaternion rotation = Quaternion.Euler(-90, 0, 0);
 
+    public static readonly KeyCode up = KeyCode.UpArrow;
+    public static readonly KeyCode down = KeyCode.DownArrow;
+    public static readonly KeyCode left = KeyCode.LeftArrow;
+    public static readonly KeyCode right = KeyCode.RightArrow;
+
+    public static readonly KeyCode forward = KeyCode.A;
+    public static readonly KeyCode back = KeyCode.B;
+
+    public static readonly float waitTime = 0.1f;
+
     public static readonly Vector3 pointerOffset = new Vector3(0, 0.5f, 0);
 
     public static readonly int pixelPerUnit = 100;

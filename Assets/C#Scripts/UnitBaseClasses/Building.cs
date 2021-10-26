@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEngine;
 using System.Collections;
 
-public class Building : UnitBase
+public class Building : UnitBase, IBuilding
 {
     /*buildings can be captured or destroyed and then captured. An occupied building is disabled. 
      * capturing data model based on hold
@@ -124,7 +124,7 @@ public class Building : UnitBase
 
     public override void Load(bool initial, Vector3Int localPlace, UnitBaseData data, int team)
     {
-        Manager.TileManager.AddBuilding(this, localPlace);
+        MoveToTile(TileObject.TileAt(localPlace));
         base.Load(initial, localPlace, data, team);
         //if (team == -1 && !Neutral) { DamageTaken = HP; }
         //else { Team = team; }
@@ -141,13 +141,21 @@ public class Building : UnitBase
         {
             if (initial) { internalVariables.team = MapTeam(team); }
             else { Team = team; }
-            Manager.PlayerManager.LoadPlayer(Team);
+            playerManager.LoadPlayer(Team);
         }
+    }
+
+    public override void MoveToTile(TileObject destination)
+    {
+        //Tile.Unit = null;
+        destination.MoveBuildingFromTileTo(Tile, this);
+        base.MoveToTile(destination);
+        //Tile.Unit = unit;
     }
 
     public override void RefreshSprite() => animator.RefreshBuildingSprite();
 
-    public override IEnumerator DestroyThis(UnitBase killer)
+    public override IEnumerator DestroyThis(IUnitBase killer)
     {
         yield return PlayAnimationAndFinish("Death");
         EventsManager.InvokeOnDeathBuilding(this);
@@ -162,30 +170,11 @@ public class Building : UnitBase
         //Race_ = Race.noRace;
     }
 
-    public override IEnumerator CalculateDamageTakenAndTakeDamage(bool before, UnitBase unit, int damageType, int damage)
+    public override IEnumerator CalculateDamageTakenAndTakeDamage(bool before, IUnitBase unit, int damageType, int damage)
     {
         yield return base.CalculateDamageTakenAndTakeDamage(before, unit, damageType, damage);
         if (!before) { RebalanceHoldAfterTakingHPDamage(damage, unit); }
     }
-
-    /*
-    public override void ExecuteChosenAbility(string s)
-    {
-        abilityKey = s;
-        switch (AbilityLogicCode.Task)
-        {
-            //need to add to stack instead
-            case "Spawn":
-                //execute parsed code for selected abilities
-                //EventsManager.InvokeOnSpawn(this, unit);
-                EventsManager.globalInstance.AddToStack(AbilityLogicCode, abilityKey, this, AbilityAnimation, null, new List<UnitBase>() { this });
-                //EventsManager.InvokeOnBeforeSpawn(this, unit);
-                abilityKey = "";
-                return;
-        }
-        ////parse code and execute based on string s
-        base.ExecuteChosenAbility(s);
-    }*/
 
     public override void StartOfTurn()
     {
@@ -225,7 +214,7 @@ public class Building : UnitBase
         internalVariables.damageTaken = HPMax;
     }
 
-    private void ConvertedBy(UnitBase unit)
+    private void ConvertedBy(IUnitBase unit)
     {
         ChangeBuildingUsingRace(unit.Race);
         Team = unit.Team;
@@ -241,7 +230,7 @@ public class Building : UnitBase
         }
     }
 
-    private int RemoveFromHold(int damage, UnitBase unit)
+    private int RemoveFromHold(int damage, IUnitBase unit)
     {
         int residual = damage;
         List<int> sortedList = new List<int>(hold.Keys);
@@ -266,7 +255,7 @@ public class Building : UnitBase
         return residual;
     }
 
-    private void RebalanceHoldAfterTakingHPDamage(int damage, UnitBase unit)
+    private void RebalanceHoldAfterTakingHPDamage(int damage, IUnitBase unit)
     {
         if (HPCurrent > 0)
         {
@@ -278,7 +267,7 @@ public class Building : UnitBase
         }
     }
 
-    public void TakeCaptureDamage(int damage, Unit unit)
+    public void TakeCaptureDamage(int damage, IUnit unit)
     {
         int residual;
         if (HPCurrent > 0)

@@ -6,7 +6,9 @@ public class UnitAnimator : MonoBehaviour
 {
     //for reactionary animations such as take damage, death etc
     private Animator animator;
-    private UnitBase unitBase;
+    private IUnitBase unitBase;
+
+    protected static AssetManager assetManager;
 
     private IEnumerator WaitForAnimation(string s)
     {
@@ -23,10 +25,11 @@ public class UnitAnimator : MonoBehaviour
         yield return new WaitForSeconds(duration);
     }*/
 
-    public void Load(UnitBase unitBase)
+    public void Load(IUnitBase unitBase)
     {
         this.unitBase = unitBase;
         animator = transform.GetChild(0).gameObject.GetComponent<Animator>();
+        assetManager = Manager.AssetManager;
     }
 
     private void HideModel(bool b, Animator a = null)
@@ -54,12 +57,12 @@ public class UnitAnimator : MonoBehaviour
         float a = 1f;
         float w = 1f;
         bool active = true;
-        if (!unitBase.SameTeam(Manager.PlayerManager.TeamTurn))
+        if (!unitBase.CurrentTurn)
         {
             if (!unitBase.Tile.CanSee || unitBase.Invisible)//hide sprite
             { active = false; }
         }
-        else if (unitBase.Invisible && unitBase.SameTeam(Manager.PlayerManager.TeamTurn))
+        else if (unitBase.Invisible && unitBase.CurrentTurn)
         {
             //sprite is opaque
             a = .5f;
@@ -133,7 +136,7 @@ public class UnitAnimator : MonoBehaviour
         {
             if (transform.Find(model) == null)
             {
-                GameObject g = Manager.AssetManager.InstantiateModel(model);
+                GameObject g = assetManager.InstantiateModel(model);
                 if (g != null)
                 {
                     g.transform.parent = transform;

@@ -5,7 +5,7 @@ using System.Linq;
 public static class GlobalParser
 {
 
-    public static bool ParseReturnBool(CodeObject filter, UnitBase owner, List<UnitBase> list = null, List<Unit> listUnit = null, List<Building> listBuilding = null, List<int> listInt = null)
+    public static bool ParseReturnBool(CodeObject filter, IUnitBase owner, List<IUnitBase> list = null, List<IUnit> listUnit = null, List<IBuilding> listBuilding = null, List<int> listInt = null)
     {
         bool v = ParseConditionalControlFlowCode(filter, owner, list, listUnit, listBuilding, listInt);
         bool b;
@@ -43,14 +43,14 @@ public static class GlobalParser
                 foreach (string s in data.unitBaseData[i].Abilities)
                 {
                     CodeObject c = data.unitBaseData[i].GetTargetCode(s);
-                    if (c.Task == "Attack" && Manager.TileManager.AttackableAndHostileTo(data.unitBaseData[i], data.owner, c.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), data.unitBaseData[i], data.owner))
+                    if (c.Task == "Attack" && data.unitBaseData[i].CanAttackAndHostileTo(data.owner, c.GetVariable("canHit")) && data.unitBaseData[i].WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), data.owner))
                     {
                         int targetSpeed = data.unitBaseData[i].GetLogicCode(s).GetVariable("speed") == "" ? 0 : int.Parse(data.unitBaseData[i].GetLogicCode(s).GetVariable("speed"));
                         int speed = currentCode.GetVariable("speed") == "" ? 0 : int.Parse(currentCode.GetVariable("speed"));
                         if (targetSpeed - (speed + 1) >= 1)
                         {
                             Debugger.AddToLog("Attack is slower than target");
-                            yield return Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), data.unitBaseData[i], s, unitBaseData: new List<UnitBase>() { data.owner }), before: before);
+                            yield return Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), data.unitBaseData[i], s, unitBaseData: new List<IUnitBase>() { data.owner }), before: before);
                             yield return Parse(data, data.code, before);
                         }
                         else if (targetSpeed == (speed + 1))
@@ -65,7 +65,7 @@ public static class GlobalParser
                         {
                             Debugger.AddToLog("Attack is faster than target");
                             yield return Parse(data, data.code, before);
-                            yield return Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), data.unitBaseData[i], s, unitBaseData: new List<UnitBase>() { data.owner }), before: before);
+                            yield return Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), data.unitBaseData[i], s, unitBaseData: new List<IUnitBase>() { data.owner }), before: before);
                         }
                         else if (targetSpeed - (speed + 1) <= -2)
                         {
@@ -109,7 +109,7 @@ public static class GlobalParser
 
     //public static bool ParseConditionalControlFlowCode(CodeObject code, StackItem data) { return ParseConditionalControlFlowCode(code, data.owner, data.unitBaseData, data.unitData, data.buildingData, data.intData); }
 
-    public static bool ParseConditionalControlFlowCode(CodeObject conditional, UnitBase owner, List<UnitBase> list, List<Unit> listUnit, List<Building> listBuilding, List<int> listInt)
+    public static bool ParseConditionalControlFlowCode(CodeObject conditional, IUnitBase owner, List<IUnitBase> list, List<IUnit> listUnit, List<IBuilding> listBuilding, List<int> listInt)
     {
         switch (conditional.Task)
         {
@@ -124,7 +124,7 @@ public static class GlobalParser
                 Debugger.AddToLog("Evaluate NotSilenced " + (owner.Silenced ? "true" : "false"));
                 return !owner.Silenced;
             case "CanCounterAttack":
-                UnitBase u, v;
+                IUnitBase u, v;
                 string fromCode = conditional.GetVariable("from") == "" ? "0" : conditional.GetVariable("from");
                 string toCode = conditional.GetVariable("to") == "" ? "0" : conditional.GetVariable("to");
                 switch (fromCode[0])
@@ -154,8 +154,8 @@ public static class GlobalParser
                 foreach (string s in u.Abilities)
                 {
                     CodeObject c = u.GetTargetCode(s);
-                    Debugger.AddToLog("Evaluate CanCounterAttack " + (c.Task == "Attack" && Manager.TileManager.AttackableAndHostileTo(u, v, c.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), u, v) ? "true" : "false"));
-                    return c.Task == "Attack" && Manager.TileManager.AttackableAndHostileTo(u, v, c.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), u, v);
+                    Debugger.AddToLog("Evaluate CanCounterAttack " + (c.Task == "Attack" && u.CanAttackAndHostileTo(v, c.GetVariable("canHit")) && u.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), v) ? "true" : "false"));
+                    return c.Task == "Attack" && u.CanAttackAndHostileTo(v, c.GetVariable("canHit")) && u.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), v);
                 }
                 //if (conditional.GetVariable("scope") == "all") { return true; }
                 //if (conditional.Task == "OnAttack" && conditional.GetVariable("scope") == "self" && conditional.GetVariable("side") == "defender") { return (list[1] == owner); }
@@ -178,7 +178,7 @@ public static class GlobalParser
                 break;
             case "CounterAttack": //refers to when a unit is forced to attack another outside of main attack
                 Debugger.AddToLog("Parse CounterAttack " + (before ? "before resolution" : "after resolution"));
-                UnitBase u, v;
+                IUnitBase u, v;
                 string toCode = code.GetVariable("to") == "" ? "0" : code.GetVariable("to");
                 string fromCode = code.GetVariable("from") == "" ? "0" : code.GetVariable("from");
                 switch (fromCode[0])
@@ -208,9 +208,9 @@ public static class GlobalParser
                 foreach (string s in u.Abilities)
                 {
                     CodeObject c = u.GetTargetCode(s);
-                    if (c.Task == "Attack" && Manager.TileManager.AttackableAndHostileTo(u, v, c.GetVariable("canHit")) && Manager.TileManager.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), u, v))
+                    if (c.Task == "Attack" && u.CanAttackAndHostileTo(v, c.GetVariable("canHit")) && u.WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), v))
                     {
-                        yield return Parse(new StackItem(u.GetLogicCode(s), u, s, unitBaseData: new List<UnitBase>() { v }), before: before); //parse the attack and send it
+                        yield return Parse(new StackItem(u.GetLogicCode(s), u, s, unitBaseData: new List<IUnitBase>() { v }), before: before); //parse the attack and send it
                         break;
                     }
                 }
@@ -231,16 +231,16 @@ public static class GlobalParser
         }
     }
 
-    public static void AddToMenu(string s, UnitBase owner, CodeObject abilityTargetCode, List<string> menu)
+    public static void AddToMenu(string s, IUnitBase owner, CodeObject abilityTargetCode, List<string> menu)
     {
         switch (abilityTargetCode.Task)
         {
             case "Attack":
                 if (!owner.Disarmed)
                 {
-                    foreach (Vector3Int v in Manager.TileManager.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
+                    foreach (TileObject v in owner.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
                     {
-                        if (Manager.TileManager.HostileAttackableUnitOrBuildingOnTile(owner, v, abilityTargetCode.GetVariable("canHit")) != null)
+                        if (v.HostileAttackableUnitOrBuildingOnTile(owner, abilityTargetCode.GetVariable("canHit")) != null)
                         {
                             menu.Add(s);
                             return;
@@ -257,9 +257,9 @@ public static class GlobalParser
                         switch (target)
                         {
                             case "hostileVisibleBuildingOnTile":
-                                foreach (Vector3Int v in Manager.TileManager.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
+                                foreach (TileObject v in owner.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
                                 {
-                                    if (Manager.TileManager.HostileVisibleBuildingOnTile(owner.Team, v) != null)
+                                    if (v.HostileVisibleBuildingOnTile(owner.Team) != null)
                                     {
                                         b = true;
                                         break;
@@ -267,9 +267,9 @@ public static class GlobalParser
                                 }
                                 break;
                             case "hostileVisibleUnitOnTile":
-                                foreach (Vector3Int v in Manager.TileManager.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
+                                foreach (TileObject v in owner.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
                                 {
-                                    if (Manager.TileManager.HostileVisibleUnitOnTile(owner.Team, v) != null)
+                                    if (v.HostileVisibleUnitOnTile(owner.Team) != null)
                                     {
                                         b = true;
                                         break;
@@ -288,7 +288,7 @@ public static class GlobalParser
                     switch (target)
                     {
                         case "hostileVisibleBuildingOnThisTile":
-                            if (Manager.TileManager.HostileVisibleBuildingOnTile(owner.Team, owner.Tile.LocalPlace) == null) { return; }
+                            if (owner.Tile.HostileVisibleBuildingOnTile(owner.Team) == null) { return; }
                             break;
                     }
                 }
@@ -297,12 +297,13 @@ public static class GlobalParser
         }
     }
 
-    public static bool ValidateTargetAndCommit(string abilityKey, CodeObject abilityTargetCode, UnitBase owner, Vector3Int target, List<Building> buildingList, List<Unit> unitList, List<UnitBase> unitBaseList, List<Vector3Int> vectorList, List<int> intList)
+    public static bool ValidateTargetAndCommit(string abilityKey, CodeObject abilityTargetCode, IUnitBase owner, Vector3Int target, List<IBuilding> buildingList, List<IUnit> unitList, List<IUnitBase> unitBaseList, List<Vector3Int> vectorList, List<int> intList)
     {
         //first validates whether target can be added as a valid target and then returns true when all requirements are fulfilled and the ability can be added to the stack
+        TileObject targetTile = TileObject.TileAt(target);
         if (abilityTargetCode.Task == "Attack")
         {
-            unitBaseList.Add(Manager.TileManager.HostileAttackableUnitOrBuildingOnTile(owner, target, abilityTargetCode.GetVariable("canHit")));
+            unitBaseList.Add(targetTile.HostileAttackableUnitOrBuildingOnTile(owner, abilityTargetCode.GetVariable("canHit")));
             if (owner.TargetCount == int.Parse(abilityTargetCode.GetVariable("targets")))
             {
                 return true;
@@ -314,10 +315,10 @@ public static class GlobalParser
             switch (item)
             {
                 case "hostileVisibleBuildingOnTile":
-                    if (Manager.TileManager.HostileVisibleBuildingOnTile(owner.Team, target) != null) { buildingList.Add(Manager.TileManager.HostileVisibleBuildingOnTile(owner.Team, target)); }
+                    if (targetTile.HostileVisibleBuildingOnTile(owner.Team) != null) { buildingList.Add(targetTile.HostileVisibleBuildingOnTile(owner.Team)); }
                     break;
                 case "hostileVisibleUnitOnTile":
-                    if (Manager.TileManager.HostileVisibleUnitOnTile(owner.Team, target) != null) { unitList.Add(Manager.TileManager.HostileVisibleUnitOnTile(owner.Team, target)); }
+                    if (targetTile.HostileVisibleUnitOnTile(owner.Team) != null) { unitList.Add(targetTile.HostileVisibleUnitOnTile(owner.Team)); }
                     break;
                 case "v":
                     vectorList.Add(target);
@@ -331,25 +332,25 @@ public static class GlobalParser
         return false;
     }
 
-    public static void ChooseMenuAbility(string abilityKey, CodeObject abilityTargetCode, CodeObject abilityLogicCode, UnitBase owner)
+    public static void ChooseMenuAbility(string abilityKey, CodeObject abilityTargetCode, CodeObject abilityLogicCode, IUnitBase owner)
     {
         switch (abilityTargetCode.Task)
         {
             //tasks can be spells, attacks or abilities. attacks are always (multi) target by default (ie cannot target ground)
             case "Attack":
-                List<Vector3Int> targets = new List<Vector3Int>();
-                foreach (Vector3Int v in Manager.TileManager.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
+                List<TileObject> targets = new List<TileObject>();
+                foreach (TileObject v in owner.AddTargetTiles(int.Parse(abilityTargetCode.GetVariable("minRange")), int.Parse(abilityTargetCode.GetVariable("maxRange"))))
                 {
-                    if (Manager.TileManager.HostileAttackableUnitOrBuildingOnTile(owner, v, abilityTargetCode.GetVariable("canHit")) != null)
+                    if (v.HostileAttackableUnitOrBuildingOnTile(owner, abilityTargetCode.GetVariable("canHit")) != null)
                     { targets.Add(v); }
                 }
-                Manager.TileManager.SetUpTargetTiles(targets);
+                foreach (TileObject t in targets) { t.IsTarget = true; }
                 Pointer.globalInstance.GoToAttackingMode();
                 return;
             case "OnSite":            //onsite for spawn and capture
-                List<UnitBase> uBList = new List<UnitBase>();
-                List<Unit> uList = new List<Unit>();
-                List<Building> bList = new List<Building>();
+                List<IUnitBase> uBList = new List<IUnitBase>();
+                List<IUnit> uList = new List<IUnit>();
+                List<IBuilding> bList = new List<IBuilding>();
                 List<int> iList = new List<int>();
                 List<Vector3Int> vList = new List<Vector3Int>();
                 foreach (string s in abilityTargetCode.GetListVariables("targets"))
@@ -370,7 +371,7 @@ public static class GlobalParser
                             break;
                     }
                 }
-                Manager.EventsManager.AddToStack(abilityLogicCode, abilityKey, owner, iList, uBList, uList, bList, vList);
+                owner.AddToStack(abilityLogicCode, abilityKey, iList, uBList, uList, bList, vList);
                 return;
         }
     }

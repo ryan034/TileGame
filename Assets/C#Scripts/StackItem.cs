@@ -7,12 +7,12 @@ public class StackItem
 
     public readonly CodeObject code;
     public readonly string name;
-    public readonly UnitBase owner;
+    public readonly IUnitBase owner;
 
     public List<int> intData = new List<int>();
-    public List<UnitBase> unitBaseData = new List<UnitBase>();
-    public List<Unit> unitData = new List<Unit>();
-    public List<Building> buildingData = new List<Building>();
+    public List<IUnitBase> unitBaseData = new List<IUnitBase>();
+    public List<IUnit> unitData = new List<IUnit>();
+    public List<IBuilding> buildingData = new List<IBuilding>();
     public List<Vector3Int> vectorData = new List<Vector3Int>();
 
     /*
@@ -27,16 +27,16 @@ public class StackItem
     }
     */
 
-    public StackItem(CodeObject code, UnitBase owner, string name = "", List<int> intData = null, List<UnitBase> unitBaseData = null, List<Unit> unitData = null, List<Building> buildingData = null, List<Vector3Int> vectorData = null)
+    public StackItem(CodeObject code, IUnitBase owner, string name = "", List<int> intData = null, List<IUnitBase> unitBaseData = null, List<IUnit> unitData = null, List<IBuilding> buildingData = null, List<Vector3Int> vectorData = null)
     {
         this.code = code;
         this.name = name;
         this.owner = owner;
         //this.mainPhase = mainPhase;
         if (intData == null) { this.intData = new List<int>(); } else { this.intData = intData; }
-        if (unitBaseData == null) { this.unitBaseData = new List<UnitBase>(); } else { this.unitBaseData = unitBaseData; }
-        if (unitData == null) { this.unitData = new List<Unit>(); } else { this.unitData = unitData; }
-        if (buildingData == null) { this.buildingData = new List<Building>(); } else { this.buildingData = buildingData; }
+        if (unitBaseData == null) { this.unitBaseData = new List<IUnitBase>(); } else { this.unitBaseData = unitBaseData; }
+        if (unitData == null) { this.unitData = new List<IUnit>(); } else { this.unitData = unitData; }
+        if (buildingData == null) { this.buildingData = new List<IBuilding>(); } else { this.buildingData = buildingData; }
         if (vectorData == null) { this.vectorData = new List<Vector3Int>(); } else { this.vectorData = vectorData; }
     }
 }

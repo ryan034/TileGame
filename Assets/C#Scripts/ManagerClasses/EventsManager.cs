@@ -6,106 +6,106 @@ using System.Collections;
 
 public class EventsManager : MonoBehaviour
 {
-    public static event Action<UnitBase, List<UnitBase>> OnMainAttack;
-    public static event Action<UnitBase, List<UnitBase>> OnBeforeMainAttack;
+    public static event Action<IUnitBase, List<IUnitBase>> OnMainAttack;
+    public static event Action<IUnitBase, List<IUnitBase>> OnBeforeMainAttack;
 
-    public static event Action<UnitBase, UnitBase> OnAttack; //when unitbase attacks another unitbase
-    public static event Action<UnitBase, UnitBase> OnBeforeAttack;
+    public static event Action<IUnitBase, IUnitBase> OnAttack; //when unitbase attacks another unitbase
+    public static event Action<IUnitBase, IUnitBase> OnBeforeAttack;
 
-    public static event Action<UnitBase, UnitBase> OnCapture;
-    public static event Action<UnitBase, UnitBase> OnBeforeCapture;
+    public static event Action<IUnitBase, IUnitBase> OnCapture;
+    public static event Action<IUnitBase, IUnitBase> OnBeforeCapture;
 
-    public static event Action<UnitBase, List<Unit>> OnSpawnUnit;
-    public static event Action<UnitBase> OnBeforeSpawnUnit;
+    public static event Action<IUnitBase, List<IUnit>> OnSpawnUnit;
+    public static event Action<IUnitBase> OnBeforeSpawnUnit;
 
-    public static event Action<UnitBase, UnitBase> OnKill;
+    public static event Action<IUnitBase, IUnitBase> OnKill;
 
-    public static event Action<UnitBase> OnDeathUnitBase; //deathrattle effects different to OnObjectDestroyUnitBase as it deals with in game effects
-    public static event Action<Building> OnDeathBuilding; //deathrattle effects different to OnObjectDestroyUnitBase as it deals with in game effects
-    public static event Action<Unit> OnDeathUnit; //deathrattle effects different to OnObjectDestroyUnitBase as it deals with in game effects
+    public static event Action<IUnitBase> OnDeathUnitBase; //deathrattle effects different to OnObjectDestroyUnitBase as it deals with in game effects
+    public static event Action<IBuilding> OnDeathBuilding; //deathrattle effects different to OnObjectDestroyUnitBase as it deals with in game effects
+    public static event Action<IUnit> OnDeathUnit; //deathrattle effects different to OnObjectDestroyUnitBase as it deals with in game effects
 
-    public static event Action<UnitBase> OnObjectDestroyUnitBase; //called for memory management reasons,
-    public static event Action<Unit> OnObjectDestroyUnit; //called for memory management reasons,
-    public static event Action<Building> OnObjectDestroyBuilding; //called for memory management reasons,
+    public static event Action<IUnitBase> OnObjectDestroyUnitBase; //called for memory management reasons,
+    public static event Action<IUnit> OnObjectDestroyUnit; //called for memory management reasons,
+    public static event Action<IBuilding> OnObjectDestroyBuilding; //called for memory management reasons,
 
     private List<StackItem> currentStack = new List<StackItem>();
 
-    public static void InvokeOnAttack(UnitBase attacker, UnitBase defender)
+    public static void InvokeOnAttack(IUnitBase attacker, IUnitBase defender)
     {
         OnAttack?.Invoke(attacker, defender);
     }
 
-    public static void InvokeOnBeforeAttack(UnitBase attacker, UnitBase defender)
+    public static void InvokeOnBeforeAttack(IUnitBase attacker, IUnitBase defender)
     {
         OnBeforeAttack?.Invoke(attacker, defender);
     }
 
-    public static void InvokeOnMainAttack(UnitBase attacker, List<UnitBase> defender)
+    public static void InvokeOnMainAttack(IUnitBase attacker, List<IUnitBase> defender)
     {
         OnMainAttack?.Invoke(attacker, defender);
     }
 
-    public static void InvokeOnBeforeMainAttack(UnitBase attacker, List<UnitBase> defender)
+    public static void InvokeOnBeforeMainAttack(IUnitBase attacker, List<IUnitBase> defender)
     {
         OnBeforeMainAttack?.Invoke(attacker, defender);
     }
 
-    public static void InvokeOnCapture(Unit unit, Building building)
+    public static void InvokeOnCapture(IUnit unit, IBuilding building)
     {
         OnCapture?.Invoke(unit, building);
     }
 
-    public static void InvokeOnBeforeCapture(Unit unit, Building building)
+    public static void InvokeOnBeforeCapture(IUnit unit, IBuilding building)
     {
         OnBeforeCapture?.Invoke(unit, building);
     }
 
-    public static void InvokeOnSpawnUnit(UnitBase spawner, List<Unit> unit)
+    public static void InvokeOnSpawnUnit(IUnitBase spawner, List<IUnit> unit)
     {
         OnSpawnUnit?.Invoke(spawner, unit);
     }
 
-    public static void InvokeOnBeforeSpawnUnit(UnitBase spawner)
+    public static void InvokeOnBeforeSpawnUnit(IUnitBase spawner)
     {
         OnBeforeSpawnUnit?.Invoke(spawner);
     }
 
-    public static void InvokeOnKill(UnitBase killer, UnitBase killed)
+    public static void InvokeOnKill(IUnitBase killer, IUnitBase killed)
     {
         OnKill?.Invoke(killer, killed);
     }
 
-    public static void InvokeOnDeathUnitBase(UnitBase unitBase)
+    public static void InvokeOnDeathUnitBase(IUnitBase unitBase)
     {
         OnDeathUnitBase?.Invoke(unitBase);
     }
 
-    public static void InvokeOnDeathBuilding(Building building)
+    public static void InvokeOnDeathBuilding(IBuilding building)
     {
         OnDeathBuilding?.Invoke(building);
     }
 
-    public static void InvokeOnDeathUnit(Unit unit)
+    public static void InvokeOnDeathUnit(IUnit unit)
     {
         OnDeathUnit?.Invoke(unit);
     }
 
-    public static void InvokeOnObjectDestroyUnitBase(UnitBase unit)
+    public static void InvokeOnObjectDestroyUnitBase(IUnitBase unit)
     {
         OnObjectDestroyUnitBase?.Invoke(unit);
     }
 
-    public static void InvokeOnObjectDestroyUnit(Unit unit)
+    public static void InvokeOnObjectDestroyUnit(IUnit unit)
     {
         OnObjectDestroyUnit?.Invoke(unit);
     }
 
-    public static void InvokeOnObjectDestroyBuilding(Building unit)
+    public static void InvokeOnObjectDestroyBuilding(IBuilding unit)
     {
         OnObjectDestroyBuilding?.Invoke(unit);
     }
 
-    public void AddToStack(CodeObject code, string name, UnitBase owner, List<int> intData = null, List<UnitBase> targetData = null, List<Unit> unitTargetData = null, List<Building> buildingTargetData = null, List<Vector3Int> vectorData = null, bool mainPhase = false)
+    public void AddToStack(CodeObject code, string name, IUnitBase owner, List<int> intData = null, List<IUnitBase> targetData = null, List<IUnit> unitTargetData = null, List<IBuilding> buildingTargetData = null, List<Vector3Int> vectorData = null, bool mainPhase = false)
     {
         Debugger.AddToLog("added to stack " + name);
         int i = currentStack.Count;
@@ -128,8 +128,7 @@ public class EventsManager : MonoBehaviour
             s.owner.ClearTargets();
             currentStack.Remove(s);
         }
-        Manager.TileManager.EndHeldUnitTurn();
-        Manager.TileManager.WipeTiles();
+        Pointer.globalInstance.EndHeldUnitTurn();
         Pointer.globalInstance.haltInput = false;
     }
 }

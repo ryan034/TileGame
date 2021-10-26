@@ -9,12 +9,10 @@ public class Manager : MonoBehaviour
 
     private AssetManager assetManager;
     private EventsManager eventsManager;
-    private UnitTransformManager unitTransformManager;
 
     [SerializeField] private GameObject assetManagerPrefab;
     [SerializeField] private GameObject eventsManagerPrefab;
-    [SerializeField] private GameObject unitTransformManagerPrefab;
-
+    
     public static TileManager TileManager
     {
         get
@@ -63,18 +61,6 @@ public class Manager : MonoBehaviour
         }
     }
 
-    public static UnitTransformManager UnitTransformManager
-    {
-        get
-        {
-            if (manager.unitTransformManager == null)
-            {
-                manager.unitTransformManager = Instantiate(manager.unitTransformManagerPrefab).GetComponent<UnitTransformManager>();
-            }
-            return manager.unitTransformManager;
-        }
-    }
-
     private void Awake()
     {
         if (manager == null)
@@ -93,6 +79,5 @@ public class Manager : MonoBehaviour
         //GameObject prefab = Instantiate(myLoadedAssetBundle, new Vector3(0, 0, 0), rotation);
         AssetManager.SpawnMap("bootybay");
         Pointer.globalInstance.Setup();
-        PlayerManager.EndAndStartNextTurn();
     }
 }

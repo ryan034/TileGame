@@ -46,15 +46,15 @@ public class UIWindow : MonoBehaviour
 
     public void Execute()
     {
-        Manager.TileManager.Execute(menu[index]);
+        Pointer.globalInstance.Execute(menu[index]);
         gameObject.SetActive(false);
     }
 
-    public void SpawnMenu()
+    public void SpawnMenu(List<string> menu_)
     {
         index = 0;
-        menu.Clear();
-        Manager.TileManager.GetMenuOptions(menu);
+        menu = menu_;
+        //Manager.TileManager.GetMenuOptions(menu);
         if (menu.Count == 0)
         {
             return;

@@ -5,7 +5,9 @@ using System;
 
 public class Buff
 {
-    private UnitBase owner;
+    private static AssetManager assetManager = Manager.AssetManager;
+
+    private IUnitBase owner;
 
     private Dictionary<string, EventCodeBlock> code = new Dictionary<string, EventCodeBlock>();
     private List<string> unitTags = new List<string>();
@@ -78,44 +80,44 @@ public class Buff
         }
     }
 
-    private void OnMainAttack(UnitBase attacker, List<UnitBase> defender)
+    private void OnMainAttack(IUnitBase attacker, List<IUnitBase> defender)
     {
         defender.Insert(0, attacker);
         if (code.ContainsKey("OnMainAttack") && ParseReturnBool(code["OnMainAttack"].filterCode, owner, defender))
         {
-            Manager.EventsManager.AddToStack(code["OnMainAttack"].logicCode, name, owner, targetData: defender);
+            owner.AddToStack(code["OnMainAttack"].logicCode, name, targetData: defender);
             //this is where counterattack would be triggered
         }
     }
 
-    private void OnKill(UnitBase destroyer, UnitBase destroyee)
+    private void OnKill(IUnitBase destroyer, IUnitBase destroyee)
     {
-        if (code.ContainsKey("OnKill") && ParseReturnBool(code["OnKill"].filterCode, owner, new List<UnitBase>() { destroyer, destroyee }))
+        if (code.ContainsKey("OnKill") && ParseReturnBool(code["OnKill"].filterCode, owner, new List<IUnitBase>() { destroyer, destroyee }))
         {
-            Manager.EventsManager.AddToStack(code["OnKill"].logicCode, name, owner, targetData: new List<UnitBase>() { destroyer, destroyee });
+            owner.AddToStack(code["OnKill"].logicCode, name, targetData: new List<IUnitBase>() { destroyer, destroyee });
         }
     }
 
-    private void OnDeathUnitBase(UnitBase dead)
+    private void OnDeathUnitBase(IUnitBase dead)
     {
-        if (code.ContainsKey("OnDeathUnitBase") && ParseReturnBool(code["OnDeathUnitBase"].filterCode, owner, new List<UnitBase>() { dead }))
+        if (code.ContainsKey("OnDeathUnitBase") && ParseReturnBool(code["OnDeathUnitBase"].filterCode, owner, new List<IUnitBase>() { dead }))
         {
             //extract animation code from s and set it to animation
-            Manager.EventsManager.AddToStack(code["OnDeathUnitBase"].logicCode, name, owner, targetData: new List<UnitBase>() { dead });
+            owner.AddToStack(code["OnDeathUnitBase"].logicCode, name, targetData: new List<IUnitBase>() { dead });
         }
     }
 
-    private void OnSpawnUnit(Building spawner, Unit spawned)
+    private void OnSpawnUnit(IBuilding spawner, IUnit spawned)
     {
-        if (code.ContainsKey("OnSpawnUnit") && ParseReturnBool(code["OnSpawnUnit"].filterCode, owner, listUnit: new List<Unit>() { spawned }, listBuilding: new List<Building>() { spawner }))
+        if (code.ContainsKey("OnSpawnUnit") && ParseReturnBool(code["OnSpawnUnit"].filterCode, owner, listUnit: new List<IUnit>() { spawned }, listBuilding: new List<IBuilding>() { spawner }))
         {
-            Manager.EventsManager.AddToStack(code["OnSpawnUnit"].logicCode, name, owner, targetData: new List<UnitBase>() { spawner, spawned });
+            owner.AddToStack(code["OnSpawnUnit"].logicCode, name, targetData: new List<IUnitBase>() { spawner, spawned });
         }
     }
 
-    public static Buff Load(UnitBase unit, string script)
+    public static Buff Load(IUnitBase unit, string script)
     {
-        Buff loaded = Manager.AssetManager.LoadBuff(script);
+        Buff loaded = assetManager.LoadBuff(script);
         loaded.owner = unit;
         /*
         name = loaded.buffName;

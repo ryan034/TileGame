@@ -17,7 +17,7 @@ public class AssetManager : MonoBehaviour
     private Dictionary<string, GameObject> unitBaseCache = new Dictionary<string, GameObject>();
     private Dictionary<string, UnitBaseData> unitDataCache = new Dictionary<string, UnitBaseData>();
 
-    public Unit InstantiateUnit(bool initial, Vector3Int localPlace, string asset, int unitTeam)
+    public IUnit InstantiateUnit(bool initial, Vector3Int localPlace, string asset, int unitTeam)
     {
         if (asset != "")
         {
@@ -51,7 +51,7 @@ public class AssetManager : MonoBehaviour
             rootGameObject.AddComponent<Unit>();
             //rootGameObject.AddComponent<UnitAnimator>();
             p.transform.parent = rootGameObject.transform;
-            Unit unit = rootGameObject.GetComponent<Unit>();
+            IUnit unit = rootGameObject.GetComponent<IUnit>();
             UnitBaseData data = LoadUnitBaseData(asset);
             unit.Load(initial, localPlace, data, unitTeam);
             return unit;
@@ -59,7 +59,7 @@ public class AssetManager : MonoBehaviour
         return null;
     }
 
-    public Building InstantiateBuilding(bool initial, Vector3Int localPlace, string asset, int buildingTeam)
+    public IBuilding InstantiateBuilding(bool initial, Vector3Int localPlace, string asset, int buildingTeam)
     {
         if (asset != "")
         {
@@ -92,7 +92,7 @@ public class AssetManager : MonoBehaviour
             rootGameObject.AddComponent<Building>();
             //rootGameObject.AddComponent<UnitAnimator>();
             p.transform.parent = rootGameObject.transform;
-            Building building = rootGameObject.GetComponent<Building>();
+            IBuilding building = rootGameObject.GetComponent<IBuilding>();
             UnitBaseData data = LoadUnitBaseData(asset);
             building.Load(initial, localPlace, data, buildingTeam);
             return building;

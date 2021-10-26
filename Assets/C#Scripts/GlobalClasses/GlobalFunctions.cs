@@ -6,7 +6,7 @@ using static GlobalData;
 public static class GlobalFunctions
 {
 
-    public static Vector3 LocalToWord(Vector3Int localPlace)
+    public static Vector3 LocalToWorld(Vector3Int localPlace)
     {
         float w = (Mathf.Sqrt(3) * tileRadius) / pixelPerUnit;
         float h = 0.75f * (2 * tileRadius / (float)pixelPerUnit);

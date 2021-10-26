@@ -18,9 +18,16 @@ public class PlayerManager
      * pick a random combination of 2 choices at age 3 not picked and a random hero not spawned at age 1 or 2 (the hero choice is randomly generated after hero choice at age 1 and 2)
     */
 
+    private static PlayerManager globalInstance;
+    public static PlayerManager GlobalInstance
+    {
+        get { if (globalInstance == null) { globalInstance = new PlayerManager(); } return globalInstance; }
+    }
+
     private Dictionary<int, Player> players = new Dictionary<int, Player>();
     private List<int> turnOrder = new List<int>();
     private int turnCount = -1; //first turn is 0
+
     private int TeamsTotal => players.Count;
     private int RoundCount => turnCount % TeamsTotal; // number of completed rounds
 
@@ -72,10 +79,9 @@ public class PlayerManager
         if (!turnOrder.Contains(team)) { turnOrder.Add(team); }
     }
 
-    public void EndAndStartNextTurn()
+    public void IncrementTurn()
     {
         turnCount = turnCount + 1;
-        Manager.TileManager.EndAndStartNextTurn(TeamTurn);
     }
 
 }
