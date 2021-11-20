@@ -82,7 +82,7 @@ public interface IUnitBase
 
     IEnumerator SpawnUnit(bool before, List<Vector3Int> vectorData, string v, int team, CodeObject codeObject);
 
-    IEnumerator DamageTarget(bool before, IUnitBase unitBase, int v1, int v2, int v3, int v4, CodeObject codeObject);
+    IEnumerator AttackTarget(bool before, IUnitBase unitBase, int v1, int v2, int v3, int v4, CodeObject codeObject);
 
     bool CanAttackAndHostileTo(IUnitBase owner, string v);
 

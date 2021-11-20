@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -33,10 +34,55 @@ public class StackItem
         this.name = name;
         this.owner = owner;
         //this.mainPhase = mainPhase;
-        if (intData == null) { this.intData = new List<int>(); } else { this.intData = intData; }
-        if (unitBaseData == null) { this.unitBaseData = new List<IUnitBase>(); } else { this.unitBaseData = unitBaseData; }
-        if (unitData == null) { this.unitData = new List<IUnit>(); } else { this.unitData = unitData; }
-        if (buildingData == null) { this.buildingData = new List<IBuilding>(); } else { this.buildingData = buildingData; }
-        if (vectorData == null) { this.vectorData = new List<Vector3Int>(); } else { this.vectorData = vectorData; }
+        if (intData != null) { this.intData = intData; }
+        if (unitBaseData != null) { this.unitBaseData = unitBaseData; }
+        if (unitData != null) { this.unitData = unitData; }
+        if (buildingData != null) { this.buildingData = buildingData; }
+        if (vectorData != null) { this.vectorData = vectorData; }
+
+        EventsManager.OnObjectDestroyUnitBase += OnObjectDestroyUnitBase;
+        EventsManager.OnObjectDestroyUnit += OnObjectDestroyUnit;
+        EventsManager.OnObjectDestroyBuilding += OnObjectDestroyBuilding;
+    }
+
+    public void Destroy()
+    {
+        EventsManager.OnObjectDestroyUnitBase -= OnObjectDestroyUnitBase;
+        EventsManager.OnObjectDestroyUnit -= OnObjectDestroyUnit;
+        EventsManager.OnObjectDestroyBuilding -= OnObjectDestroyBuilding;
+    }
+    /*
+    public void SetUp()
+    {
+        EventsManager.OnObjectDestroyUnitBase += OnObjectDestroyUnitBase;
+        EventsManager.OnObjectDestroyUnit += OnObjectDestroyUnit;
+        EventsManager.OnObjectDestroyBuilding += OnObjectDestroyBuilding;
+    }*/
+
+    private void OnObjectDestroyUnitBase(IUnitBase unitBase)
+    {
+        //unitBaseData.Remove(unitBase);
+        if (unitBaseData.Contains(unitBase))
+        {
+            unitBaseData[unitBaseData.FindIndex(ind => ind.Equals(unitBase))] = new NullUnitBase();
+        }
+    }
+
+    private void OnObjectDestroyUnit(IUnit unit)
+    {
+        //unitData.Remove(unit);
+        if (unitData.Contains(unit))
+        {
+            unitData[unitData.FindIndex(ind => ind.Equals(unit))] = new NullUnit();
+        }
+    }
+
+    private void OnObjectDestroyBuilding(IBuilding building)
+    {
+        //buildingData.Remove(building);
+        if (buildingData.Contains(building))
+        {
+            buildingData[buildingData.FindIndex(ind => ind.Equals(building))] = new NullBuilding();
+        }
     }
 }

@@ -101,8 +101,6 @@ public class UnitAnimator : MonoBehaviour
 
     public void Animate(string code)
     {
-        //parse code
-        //animator.Play(code);
         animator.Play(code, 0, 0f);
     }
     /*

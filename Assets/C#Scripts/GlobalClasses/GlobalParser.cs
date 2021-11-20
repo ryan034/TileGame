@@ -30,28 +30,28 @@ public static class GlobalParser
         return v;
     }
 
-    public static IEnumerator Parse(StackItem data, CodeObject currentCode = null, bool before = false, bool mainPhase = false)
+    public static IEnumerator Parse(StackItem originalStackItem, CodeObject currentCode = null, bool before = false, bool mainPhase = false)
     {
-        if (currentCode == null) { currentCode = data.code; }
-        if (mainPhase && data.code.Task == "Attack")
+        if (currentCode == null) { currentCode = originalStackItem.code; /*originalStackItem.SetUp();*/ }
+        if (mainPhase && originalStackItem.code.Task == "Attack")
         {
             //implement battle
             Debugger.AddToLog("Main Attack " + (before ? "before resolution" : "after resolution"));
             //data.mainPhase = false;
-            for (int i = 0; i < data.unitBaseData.Count; i++)
+            for (int i = 0; i < originalStackItem.unitBaseData.Count; i++)
             {
-                foreach (string s in data.unitBaseData[i].Abilities)
+                foreach (string s in originalStackItem.unitBaseData[i].Abilities)
                 {
-                    CodeObject c = data.unitBaseData[i].GetTargetCode(s);
-                    if (c.Task == "Attack" && data.unitBaseData[i].CanAttackAndHostileTo(data.owner, c.GetVariable("canHit")) && data.unitBaseData[i].WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), data.owner))
+                    CodeObject c = originalStackItem.unitBaseData[i].GetTargetCode(s);
+                    if (c.Task == "Attack" && originalStackItem.unitBaseData[i].CanAttackAndHostileTo(originalStackItem.owner, c.GetVariable("canHit")) && originalStackItem.unitBaseData[i].WithinRange(int.Parse(c.GetVariable("minRange")), int.Parse(c.GetVariable("maxRange")), originalStackItem.owner))
                     {
-                        int targetSpeed = data.unitBaseData[i].GetLogicCode(s).GetVariable("speed") == "" ? 0 : int.Parse(data.unitBaseData[i].GetLogicCode(s).GetVariable("speed"));
+                        int targetSpeed = originalStackItem.unitBaseData[i].GetLogicCode(s).GetVariable("speed") == "" ? 0 : int.Parse(originalStackItem.unitBaseData[i].GetLogicCode(s).GetVariable("speed"));
                         int speed = currentCode.GetVariable("speed") == "" ? 0 : int.Parse(currentCode.GetVariable("speed"));
                         if (targetSpeed - (speed + 1) >= 1)
                         {
                             Debugger.AddToLog("Attack is slower than target");
-                            yield return Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), data.unitBaseData[i], s, unitBaseData: new List<IUnitBase>() { data.owner }), before: before);
-                            yield return Parse(data, data.code, before);
+                            yield return Parse(new StackItem(originalStackItem.unitBaseData[i].GetLogicCode(s), originalStackItem.unitBaseData[i], s, unitBaseData: new List<IUnitBase>() { originalStackItem.owner }), before: before);
+                            yield return Parse(originalStackItem, originalStackItem.code, before);
                         }
                         else if (targetSpeed == (speed + 1))
                         {
@@ -64,13 +64,13 @@ public static class GlobalParser
                         else if (targetSpeed - (speed + 1) == -1)
                         {
                             Debugger.AddToLog("Attack is faster than target");
-                            yield return Parse(data, data.code, before);
-                            yield return Parse(new StackItem(data.unitBaseData[i].GetLogicCode(s), data.unitBaseData[i], s, unitBaseData: new List<IUnitBase>() { data.owner }), before: before);
+                            yield return Parse(originalStackItem, originalStackItem.code, before);
+                            yield return Parse(new StackItem(originalStackItem.unitBaseData[i].GetLogicCode(s), originalStackItem.unitBaseData[i], s, unitBaseData: new List<IUnitBase>() { originalStackItem.owner }), before: before);
                         }
                         else if (targetSpeed - (speed + 1) <= -2)
                         {
                             Debugger.AddToLog("Attack is unretaliated");
-                            yield return Parse(data, data.code, before);
+                            yield return Parse(originalStackItem, originalStackItem.code, before);
                         }
                         break;
                     }
@@ -80,31 +80,32 @@ public static class GlobalParser
         }
         if (currentCode.IsConditional)
         {
-            bool v = ParseConditionalControlFlowCode(currentCode, data.owner, data.unitBaseData, data.unitData, data.buildingData, data.intData);
+            bool v = ParseConditionalControlFlowCode(currentCode, originalStackItem.owner, originalStackItem.unitBaseData, originalStackItem.unitData, originalStackItem.buildingData, originalStackItem.intData);
             //Debugger.AddToLog("Evaluated Conditonal to be:" + (v ? "true" : "false"));
             if (v)
             {
                 foreach (CodeObject c in currentCode.GetCodeObjects("true"))
                 {
-                    yield return Parse(data, c, before);
+                    yield return Parse(originalStackItem, c, before);
                 }
             }
             else
             {
                 foreach (CodeObject c in currentCode.GetCodeObjects("false"))
                 {
-                    yield return Parse(data, c, before);
+                    yield return Parse(originalStackItem, c, before);
                 }
             }
         }
         else
         {
-            yield return ParseCode(currentCode, data, before);
+            yield return ParseCode(currentCode, originalStackItem, before);
             foreach (CodeObject c in currentCode.GetCodeObjects("next"))
             {
-                yield return Parse(data, c, before);
+                yield return Parse(originalStackItem, c, before);
             }
         }
+        if (currentCode == originalStackItem.code) { originalStackItem.Destroy(); };
     }
 
     //public static bool ParseConditionalControlFlowCode(CodeObject code, StackItem data) { return ParseConditionalControlFlowCode(code, data.owner, data.unitBaseData, data.unitData, data.buildingData, data.intData); }
@@ -113,10 +114,10 @@ public static class GlobalParser
     {
         switch (conditional.Task)
         {
-            case "IsAlive":
-                Debugger.AddToLog("Evaluate IsAlive " + (owner.HPCurrent > 0 ? "true" : "false"));
-                //maybe have this default to owner but if variable <to> is present then have it evaluate to.HPCurrent > 0
-                return owner.HPCurrent > 0;
+            //case "IsAlive":
+            //Debugger.AddToLog("Evaluate IsAlive " + (owner.HPCurrent > 0 ? "true" : "false"));
+            //maybe have this default to owner but if variable <to> is present then have it evaluate to.HPCurrent > 0
+            //return owner.HPCurrent > 0;
             case "NotDisarmed":
                 Debugger.AddToLog("Evaluate NotDisarmed " + (owner.Disarmed ? "true" : "false"));
                 return !owner.Disarmed;
@@ -174,7 +175,7 @@ public static class GlobalParser
             case "Attack": // only refers to main attack
                 Debugger.AddToLog("Parse Attack " + (before ? "before resolution" : "after resolution"));
                 //int toCode = code.GetVariable("to") == "" ? 0 : int.Parse(code.GetVariable("to"));
-                yield return data.owner.DamageTarget(before, data.unitBaseData[0], int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")), code.GetCodeObject("animation"));
+                yield return data.owner.AttackTarget(before, data.unitBaseData[0], int.Parse(code.GetVariable("baseDamage")), int.Parse(code.GetVariable("diceDamage")), int.Parse(code.GetVariable("diceTimes")), int.Parse(code.GetVariable("damageType")), code.GetCodeObject("animation"));
                 break;
             case "CounterAttack": //refers to when a unit is forced to attack another outside of main attack
                 Debugger.AddToLog("Parse CounterAttack " + (before ? "before resolution" : "after resolution"));
@@ -303,7 +304,8 @@ public static class GlobalParser
         TileObject targetTile = TileObject.TileAt(target);
         if (abilityTargetCode.Task == "Attack")
         {
-            unitBaseList.Add(targetTile.HostileAttackableUnitOrBuildingOnTile(owner, abilityTargetCode.GetVariable("canHit")));
+            //unitBaseList.Add(targetTile.HostileAttackableUnitOrBuildingOnTile(owner, abilityTargetCode.GetVariable("canHit")));
+            if (targetTile.HostileAttackableUnitOrBuildingOnTile(owner, abilityTargetCode.GetVariable("canHit")) != null) { unitBaseList.Add(targetTile.HostileAttackableUnitOrBuildingOnTile(owner, abilityTargetCode.GetVariable("canHit"))); }
             if (owner.TargetCount == int.Parse(abilityTargetCode.GetVariable("targets")))
             {
                 return true;

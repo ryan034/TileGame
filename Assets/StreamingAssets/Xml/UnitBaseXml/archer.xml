@@ -37,7 +37,7 @@
       </target>
       <code>
         <![CDATA[<CodeObject>
-          <task>IsAlive</task>
+          <task>NotDisarmed</task>
           <true>
             <task>Capture</task>
             <captureDamage>500</captureDamage>

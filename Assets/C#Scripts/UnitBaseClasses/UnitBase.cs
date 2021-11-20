@@ -169,6 +169,24 @@ public abstract class UnitBase : MonoBehaviour, IUnitBase
         EventsManager.InvokeOnObjectDestroyUnitBase(this);
     }
 
+    public virtual bool CanHit(IUnitBase unitBase, string attackType)
+    {
+        bool b = false;
+        switch (attackType)
+        {
+            case "same"://flying hits flying, land hits land
+                b = BothLandOrSky(MovementType, unitBase.MovementType);
+                break;
+            case "different"://flying hits land, land hits flying
+                b = !BothLandOrSky(MovementType, unitBase.MovementType);
+                break;
+            case "all":
+                b = true;
+                break;
+        }
+        return b;
+    }
+
     public virtual IEnumerator CalculateDamageTakenAndTakeDamage(bool before, IUnitBase unit, int damageType, int damage)
     {
         //add take damage event here
@@ -190,6 +208,57 @@ public abstract class UnitBase : MonoBehaviour, IUnitBase
                 }
                 //invoke take damage event
             }
+        }
+    }
+
+    public virtual IEnumerator AttackTarget(bool before, IUnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType, CodeObject animationCode)
+    {
+        if (before)
+        {
+            EventsManager.InvokeOnBeforeAttack(this, target);
+        }
+        else
+        {
+            if (animationCode != null)
+            {
+                yield return ParseAnimation(new StackItem(animationCode, this));
+            }
+            else
+            {
+                //yield return default animation behaviour
+                Vector3 forward = transform.forward;
+                RotateTo(target.Tile.LocalPlace);
+                yield return PlayAnimationAndFinish("Attack");
+                SetForward(forward);
+            }
+        }
+        int totaldamage = CalculateAttackDamage(baseDamage, diceDamage, diceTimes, target.CoverBonus);
+        yield return target.CalculateDamageTakenAndTakeDamage(before, this, damageType, totaldamage);
+        if (!before) { EventsManager.InvokeOnAttack(this, target); }
+    }
+
+    public virtual IEnumerator SpawnUnit(bool before, List<Vector3Int> tile, string script, int unitTeam, CodeObject c)
+    {
+        if (before) { EventsManager.InvokeOnBeforeSpawnUnit(this); }//return null; }
+        else
+        {
+            if (c != null)
+            {
+                yield return ParseAnimation(new StackItem(c, this));
+            }
+            else
+            {
+                //yield return PlayAnimationAndFinish("Spawn");
+            }
+            Actioned = true;
+            List<IUnit> units = new List<IUnit>();
+            foreach (Vector3Int t in tile)
+            {
+                IUnit unit = TileObject.TileAt(t).Unit == null ? assetManager.InstantiateUnit(false, t, script, unitTeam) : null;
+                if (unit != null) { units.Add(unit); unit.Actioned = true; }
+            }
+            EventsManager.InvokeOnSpawnUnit(this, units);
+            //return units;
         }
     }
 
@@ -310,50 +379,6 @@ public abstract class UnitBase : MonoBehaviour, IUnitBase
         return CanHit(defender, attackType) && defender.VisibleAndHostileTo(Team) && defender.HPCurrent > 0;
     }
 
-    public bool CanHit(IUnitBase unitBase, string attackType)
-    {
-        bool b = false;
-        switch (attackType)
-        {
-            case "same"://flying hits flying, land hits land
-                b = BothLandOrSky(MovementType, unitBase.MovementType);
-                break;
-            case "different"://flying hits land, land hits flying
-                b = !BothLandOrSky(MovementType, unitBase.MovementType);
-                break;
-            case "all":
-                b = true;
-                break;
-        }
-        return b;
-    }
-
-
-    public IEnumerator SpawnUnit(bool before, List<Vector3Int> tile, string script, int unitTeam, CodeObject c)
-    {
-        if (before) { EventsManager.InvokeOnBeforeSpawnUnit(this); }//return null; }
-        else
-        {
-            if (c != null)
-            {
-                yield return ParseAnimation(new StackItem(c, this));
-            }
-            else
-            {
-                //yield return PlayAnimationAndFinish("Spawn");
-            }
-            Actioned = true;
-            List<IUnit> units = new List<IUnit>();
-            foreach (Vector3Int t in tile)
-            {
-                IUnit unit = TileObject.TileAt(t).Unit == null ? assetManager.InstantiateUnit(false, t, script, unitTeam) : null;
-                if (unit != null) { units.Add(unit); unit.Actioned = true; }
-            }
-            EventsManager.InvokeOnSpawnUnit(this, units);
-            //return units;
-        }
-    }
-
     public IEnumerable<TileObject> AddTargetTiles(int min, int max)
     {
         foreach (Vector3Int v in CircleCoords(min, max, Tile.LocalPlace))
@@ -364,33 +389,6 @@ public abstract class UnitBase : MonoBehaviour, IUnitBase
             }
         }
     }
-
-    public IEnumerator DamageTarget(bool before, IUnitBase target, int baseDamage, int diceDamage, int diceTimes, int damageType, CodeObject animationCode)
-    {
-        if (before)
-        {
-            EventsManager.InvokeOnBeforeAttack(this, target);
-        }
-        else
-        {
-            if (animationCode != null)
-            {
-                yield return ParseAnimation(new StackItem(animationCode, this));
-            }
-            else
-            {
-                //yield return default animation behaviour
-                Vector3 forward = transform.forward;
-                RotateTo(target.Tile.LocalPlace);
-                yield return PlayAnimationAndFinish("Attack");
-                SetForward(forward);
-            }
-        }
-        int totaldamage = CalculateAttackDamage(baseDamage, diceDamage, diceTimes, target.CoverBonus);
-        yield return target.CalculateDamageTakenAndTakeDamage(before, this, damageType, totaldamage);
-        if (!before) { EventsManager.InvokeOnAttack(this, target); }
-    }
-
 
     protected int CalculateAttackDamage(int baseDamage, int diceDamage, int diceTimes, int cover)
     {
@@ -408,12 +406,40 @@ public abstract class UnitBase : MonoBehaviour, IUnitBase
     {
         buffs.Add(buff);
         //some buffs may not stack but rather in duration
-    }*/
-
+    }
+    */
     protected void OnObjectDestroyUnitBase(IUnitBase unit) { unitBaseList.Remove(unit); }
 
     protected void OnObjectDestroyUnit(IUnit unit) { unitList.Remove(unit); }
 
     protected void OnObjectDestroyBuilding(IBuilding unit) { buildingList.Remove(unit); }
 
+    /*
+    protected void OnObjectDestroyUnitBase(IUnitBase unitBase)
+    {
+        //unitBaseData.Remove(unitBase);
+        if (unitBaseList.Contains(unitBase))
+        {
+            unitBaseList[unitBaseList.FindIndex(ind => ind.Equals(unitBase))] = new NullUnitBase();
+        }
+    }
+
+    protected void OnObjectDestroyUnit(IUnit unit)
+    {
+        //unitData.Remove(unit);
+        if (unitList.Contains(unit))
+        {
+            unitList[unitList.FindIndex(ind => ind.Equals(unit))] = new NullUnit();
+        }
+    }
+
+    protected void OnObjectDestroyBuilding(IBuilding building)
+    {
+        //buildingData.Remove(building);
+        if (buildingList.Contains(building))
+        {
+            buildingList[buildingList.FindIndex(ind => ind.Equals(building))] = new NullBuilding();
+        }
+    }
+    */
 }

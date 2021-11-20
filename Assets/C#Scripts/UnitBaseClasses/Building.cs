@@ -86,7 +86,6 @@ public class Building : UnitBase, IBuilding
         }
     }
 
-    //public bool Neutral => data.neutral;
     public int BuildingCover => UnitData.buildingCover + buffs.Sum(x => x.buildingCover)/*+ other modifiers*/;
 
     /*
@@ -172,8 +171,27 @@ public class Building : UnitBase, IBuilding
 
     public override IEnumerator CalculateDamageTakenAndTakeDamage(bool before, IUnitBase unit, int damageType, int damage)
     {
-        yield return base.CalculateDamageTakenAndTakeDamage(before, unit, damageType, damage);
-        if (!before) { RebalanceHoldAfterTakingHPDamage(damage, unit); }
+        if (Race != unaligned && Race != neutral)
+        {
+            yield return base.CalculateDamageTakenAndTakeDamage(before, unit, damageType, damage);
+            if (!before) { RebalanceHoldAfterTakingHPDamage(damage, unit); }
+        }
+    }
+
+    public override IEnumerator AttackTarget(bool before, IUnitBase unitBase, int v1, int v2, int v3, int v4, CodeObject codeObject)
+    {
+        if (Race != unaligned && Race != neutral) { yield return base.AttackTarget(before, unitBase, v1, v2, v3, v4, codeObject); }
+    }
+
+    public override bool CanHit(IUnitBase defender, string attackType)
+    {
+        if (Race != unaligned && Race != neutral) { return base.CanHit(defender, attackType); }
+        return false;
+    }
+
+    public override IEnumerator SpawnUnit(bool before, List<Vector3Int> vectorData, string v, int team, CodeObject codeObject)
+    {
+        if (Race != unaligned && Race != neutral) { yield return base.SpawnUnit(before, vectorData, v, team, codeObject); }
     }
 
     public override void StartOfTurn()
@@ -257,7 +275,7 @@ public class Building : UnitBase, IBuilding
 
     private void RebalanceHoldAfterTakingHPDamage(int damage, IUnitBase unit)
     {
-        if (HPCurrent > 0)
+        if (HPCurrent > 0 /*&& Race != neutral*/)
         {
             int residual = RemoveFromHold(damage, unit);
             if (residual >= 0)
@@ -269,24 +287,37 @@ public class Building : UnitBase, IBuilding
 
     public void TakeCaptureDamage(int damage, IUnit unit)
     {
-        int residual;
-        if (HPCurrent > 0)
+        if (Race != neutral)
         {
-            residual = RemoveFromHold(damage, unit);
-        }
-        else
-        {
-            residual = hold.Values.Sum() + damage - HPMax;
-            if (residual >= 0)
+            int residual;
+            if (HPCurrent > 0)
             {
-                residual = RemoveFromHold(residual, unit);
+                residual = RemoveFromHold(damage, unit);
+            }
+            else
+            {
+                residual = hold.Values.Sum() + damage - HPMax;
                 if (residual >= 0)
                 {
-                    DamageTaken = 0;
+                    residual = RemoveFromHold(residual, unit);
+                    if (residual >= 0)
+                    {
+                        DamageTaken = 0;
+                    }
                 }
             }
+            hold[unit.Team] = hold[unit.Team] + damage > HPMax ? HPMax : hold[unit.Team] + damage;
         }
-        hold[unit.Team] = hold[unit.Team] + damage > HPMax ? HPMax : hold[unit.Team] + damage;
+    }
+    /*
+    public override bool VisibleAndHostileTo(int team)
+    {
+        throw new System.NotImplementedException();
     }
 
+    public bool CanAttackAndHostileTo(IUnitBase owner, string v)
+    {
+        throw new System.NotImplementedException();
+    }
+    */
 }

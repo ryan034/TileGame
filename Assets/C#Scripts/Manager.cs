@@ -4,39 +4,39 @@ public class Manager : MonoBehaviour
 {
     private static Manager manager;
 
-    private TileManager tileManager;
-    private PlayerManager playerManager;
+    //private TileManager tileManager;
+    //private PlayerManager playerManager;
 
     private AssetManager assetManager;
     private EventsManager eventsManager;
 
     [SerializeField] private GameObject assetManagerPrefab;
     [SerializeField] private GameObject eventsManagerPrefab;
-    
-    public static TileManager TileManager
-    {
-        get
-        {
-            if (manager.tileManager == null)
-            {
-                manager.tileManager = new TileManager();
-            }
-            return manager.tileManager;
-        }
-    }
+    /* 
+     public static TileManager TileManager
+     {
+         get
+         {
+             if (manager.tileManager == null)
+             {
+                 manager.tileManager = new TileManager();
+             }
+             return manager.tileManager;
+         }
+     }
 
-    public static PlayerManager PlayerManager
-    {
-        get
-        {
-            if (manager.playerManager == null)
-            {
-                manager.playerManager = new PlayerManager();
-            }
-            return manager.playerManager;
-        }
-    }
-
+     public static PlayerManager PlayerManager
+     {
+         get
+         {
+             if (manager.playerManager == null)
+             {
+                 manager.playerManager = new PlayerManager();
+             }
+             return manager.playerManager;
+         }
+     }
+     */
     public static AssetManager AssetManager
     {
         get

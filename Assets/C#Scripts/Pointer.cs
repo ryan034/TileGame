@@ -36,6 +36,13 @@ public class Pointer : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        EventsManager.OnObjectDestroyUnit += OnObjectDestroyUnit;
+    }
+
+    private void OnDestroy()
+    {
+        EventsManager.OnObjectDestroyUnit -= OnObjectDestroyUnit;
     }
 
     private void Update()
@@ -56,6 +63,10 @@ public class Pointer : MonoBehaviour
         }
     }
 
+    private void OnObjectDestroyUnit(IUnit unit)
+    {
+        if (heldUnit == unit) { heldUnit = null; }
+    }
 
     private void TriggerDirection(Vector3Int v)
     {
@@ -161,8 +172,10 @@ public class Pointer : MonoBehaviour
                 heldUnit.SetUpMovementTiles();
                 GoToMovingMode();
             }
-            else {
-                SpawnMenu(); }
+            else
+            {
+                SpawnMenu();
+            }
         }
         else
         {
