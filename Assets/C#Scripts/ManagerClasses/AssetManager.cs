@@ -29,7 +29,7 @@ public class AssetManager : MonoBehaviour
                     AssetBundle myLoadedAssetBundle = AssetBundle.LoadFromFile(unitModAssetPath + asset + '/' + asset);
                     GameObject myLoadedGameObject = myLoadedAssetBundle.LoadAsset<GameObject>(asset);
                     myLoadedGameObject.name = asset;
-                    //myLoadedGameObject.transform.parent = rootGameObject.transform;
+                    //myLoadedGameObject.transform.parent = rootGameObject.transform;;l'
                     unitBaseCache[asset] = myLoadedGameObject;
                 }
                 else
