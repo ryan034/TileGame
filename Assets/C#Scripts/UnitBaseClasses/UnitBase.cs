@@ -193,7 +193,7 @@ public abstract class UnitBase : MonoBehaviour, IUnitBase
         int damageCalculated = (int)Math.Round(GetResistance(damageType) * damage);
         if (before)
         {
-            //invoke before take damage event
+            EventsManager.InvokeOnBeforeTakeDamage(this, unit, damageType, damage); //invoke before take damage event
         }
         else
         {
@@ -206,7 +206,7 @@ public abstract class UnitBase : MonoBehaviour, IUnitBase
                 {
                     yield return DestroyThis(unit);
                 }
-                //invoke take damage event
+                EventsManager.InvokeOnTakeDamage(this, unit, damageType, damage);                //invoke take damage event
             }
         }
     }
@@ -332,6 +332,11 @@ public abstract class UnitBase : MonoBehaviour, IUnitBase
         {
             AddToStack(GetLogicCode(abilityKey), abilityKey, intList, unitBaseList, unitList, buildingList, vectorList, true);
             TileObject.WipeTiles();
+            if (GetTargetCode(abilityKey).Task == "Spell")
+            {
+                //trigger spell target most likely here since the trigger only exists before resolution
+
+            }
         }
     }
 

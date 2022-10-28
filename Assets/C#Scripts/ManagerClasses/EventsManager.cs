@@ -12,6 +12,9 @@ public class EventsManager : MonoBehaviour
     public static event Action<IUnitBase, IUnitBase> OnAttack; //when unitbase attacks another unitbase
     public static event Action<IUnitBase, IUnitBase> OnBeforeAttack;
 
+    public static event Action<IUnitBase, IUnitBase, int, int> OnTakeDamage; //when unitbase attacks another unitbase
+    public static event Action<IUnitBase, IUnitBase, int, int> OnBeforeTakeDamage;
+
     public static event Action<IUnitBase, IUnitBase> OnCapture;
     public static event Action<IUnitBase, IUnitBase> OnBeforeCapture;
 
@@ -49,7 +52,15 @@ public class EventsManager : MonoBehaviour
     {
         OnBeforeMainAttack?.Invoke(attacker, defender);
     }
+    public static void InvokeOnBeforeTakeDamage(IUnitBase defender, IUnitBase damager, int damageType, int damage)
+    {
+        OnBeforeTakeDamage?.Invoke(defender, damager, damageType, damage);
+    }
 
+    public static void InvokeOnTakeDamage(IUnitBase defender, IUnitBase damager, int damageType, int damage)
+    {
+        OnTakeDamage?.Invoke(defender, damager, damageType, damage);
+    }
     public static void InvokeOnCapture(IUnit unit, IBuilding building)
     {
         OnCapture?.Invoke(unit, building);
@@ -131,4 +142,5 @@ public class EventsManager : MonoBehaviour
         Pointer.globalInstance.EndHeldUnitTurn();
         Pointer.globalInstance.haltInput = false;
     }
+
 }

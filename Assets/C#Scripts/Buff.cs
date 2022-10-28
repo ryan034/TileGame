@@ -60,6 +60,9 @@ public class Buff
             case "OnDeathUnitBase":
                 EventsManager.OnDeathUnitBase += OnDeathUnitBase;
                 break;
+            case "OnTakeDamage":
+                EventsManager.OnTakeDamage += OnTakeDamage;
+                break;
         }
     }
 
@@ -98,6 +101,15 @@ public class Buff
         }
     }
 
+    private void OnTakeDamage(IUnitBase defender, IUnitBase damager, int damageType, int damage)
+    {
+        if (code.ContainsKey("OnTakeDamage") && ParseReturnBool(code["OnTakeDamage"].filterCode, owner, list: new List<IUnitBase>() { defender, damager }, listInt: new List<int>() { damageType, damage }))
+        {
+            owner.AddToStack(code["OnTakeDamage"].logicCode, name, targetData: new List<IUnitBase>() { defender, damager }, intData: new List<int>() { damageType, damage });
+        }
+    }
+
+
     private void OnDeathUnitBase(IUnitBase dead)
     {
         if (code.ContainsKey("OnDeathUnitBase") && ParseReturnBool(code["OnDeathUnitBase"].filterCode, owner, new List<IUnitBase>() { dead }))
@@ -107,7 +119,7 @@ public class Buff
         }
     }
 
-    private void OnSpawnUnit(IBuilding spawner, IUnit spawned)
+    private void OnSpawnUnit(IBuilding spawner, IUnit spawned) //not referenced in event yet
     {
         if (code.ContainsKey("OnSpawnUnit") && ParseReturnBool(code["OnSpawnUnit"].filterCode, owner, listUnit: new List<IUnit>() { spawned }, listBuilding: new List<IBuilding>() { spawner }))
         {
